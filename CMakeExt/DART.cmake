@@ -10,10 +10,7 @@
 #  DART_LIBRARIES          The DART library
 #  DART_INCLUDE_DIRS       The location of DART headers
 
-find_path(
-  DART_PREFIX
-  NAMES include/dart.h
-)
+if (NOT DART_FOUND)
 
 if (NOT DART_PREFIX AND NOT $ENV{DART_BASE} STREQUAL "")
   set(DART_PREFIX $ENV{DART_BASE})
@@ -23,24 +20,40 @@ if (NOT DART_PREFIX AND NOT $ENV{DASH_BASE} STREQUAL "")
   set(DART_PREFIX $ENV{DASH_BASE})
 endif()
 
+find_path(
+  DART_PREFIX
+  NAMES include/dart.h
+)
+
 message(STATUS "Searching for DART library in DART_BASE: " ${DART_PREFIX})
 
 find_library(
-  DART_LIBRARIES
-  NAMES dart-mpi dart-base
+  DART_BASE_LIBRARY
+  NAMES libdart-base.a
+  HINTS ${DART_PREFIX}/lib
+)
+
+find_library(
+  DART_MPI_LIBRARY
+  NAMES libdart-mpi.a
   HINTS ${DART_PREFIX}/lib
 )
 
 find_path(
   DART_INCLUDE_DIRS
-  NAMES dart.h
+  NAMES dash/dart/if/dart.h
   HINTS ${DART_PREFIX}/include
 )
+
+set  (DART_LIBRARIES "")
+list (APPEND DART_LIBRARIES ${DART_BASE_LIBRARY})
+list (APPEND DART_LIBRARIES ${DART_MPI_LIBRARY})
 
 include(FindPackageHandleStandardArgs)
 
 find_package_handle_standard_args(
-  DART DEFAULT_MSG
+  DART
+  DEFAULT_MSG
   DART_LIBRARIES
   DART_INCLUDE_DIRS
 )
@@ -51,10 +64,15 @@ mark_as_advanced(
 )
 
 if (DART_FOUND)
-  if (NOT $ENV{DART_LIB} STREQUAL "")
-#   set(DART_LIBRARIES "$ENV{DART_LIB}")
-  endif()
-  message(STATUS "DART includes:  " ${DART_INCLUDE_DIRS})
-  message(STATUS "DART libraries: " ${DART_LIBRARIES})
+  message(STATUS "DART includes:")
+  foreach (_DART_INC ${DART_INCLUDE_DIRS})
+    message(STATUS "    " ${_DART_INC})
+  endforeach()
+
+  message(STATUS "DART libraries:")
+  foreach (_DART_LIB ${DART_LIBRARIES})
+    message(STATUS "    " ${_DART_LIB})
+  endforeach()
 endif()
 
+endif() # DART_FOUND
