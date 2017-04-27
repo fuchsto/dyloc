@@ -14,6 +14,8 @@
 #include <dylocxx/internal/logging.h>
 #include <dylocxx/internal/macro.h>
 
+#include <dyloc/common/types.h>
+
 
 #ifdef DYLOC_ENABLE_LIKWID
 #  include <likwid.h>
@@ -71,7 +73,7 @@ hwinfo::hwinfo() {
 hwinfo::collect() {
   gethostname(_hw.host, DYLOC_LOCALITY_HOST_MAX_SIZE);
 
-#ifdef DYLOCXX_ENABLE_HWLOC
+#ifdef DYLOC_ENABLE_HWLOC
   DYLOC_LOG_TRACE("dylocxx::hwinfo: using hwloc");
 
   hwloc_topology_t topology;
@@ -243,9 +245,9 @@ hwinfo::collect() {
                   "num_cores:%d core_id:%d cpu_id:%d",
                   _hw.num_numa, _hw.numa_id,
                   _hw.num_cores, _hw.core_id, _hw.cpu_id);
-#endif /* DYLOCXX_ENABLE_HWLOC */
+#endif /* DYLOC_ENABLE_HWLOC */
 
-#ifdef DYLOCXX_ENABLE_PAPI
+#ifdef DYLOC_ENABLE_PAPI
   DYLOC_LOG_TRACE("dylocxx::hwinfo: using PAPI");
 
   const PAPI_hw_info_t * papi_hwinfo = NULL;
@@ -265,9 +267,9 @@ hwinfo::collect() {
     DYLOC_LOG_TRACE("dylocxx::hwinfo: PAPI: num_numa:%d num_cores:%d",
                     _hw.num_numa, _hw.num_cores);
   }
-#endif /* DYLOCXX_ENABLE_PAPI */
+#endif /* DYLOC_ENABLE_PAPI */
 
-#ifdef DYLOCXX__PLATFORM__LINUX
+#ifdef DYLOC__PLATFORM__LINUX
   if (_hw.cpu_id < 0) {
     _hw.cpu_id = sched_getcpu();
   }
@@ -277,7 +279,7 @@ hwinfo::collect() {
     "dylocxx::hwinfo: hwloc or PAPI required if not running on Linux");
 #endif
 
-#ifdef DYLOCXX__ARCH__IS_MIC
+#ifdef DYLOC__ARCH__IS_MIC
   /*
    * Hardware information for Intel MIC can be hard-coded as hardware
    * specs of MIC model variants are invariant:
@@ -299,7 +301,7 @@ hwinfo::collect() {
   }
 #endif
 
-#ifdef DYLOCXX__PLATFORM__POSIX
+#ifdef DYLOC__PLATFORM__POSIX
   if (_hw.num_cores < 0) {
 		/*
      * NOTE: includes hyperthreading
@@ -320,7 +322,7 @@ hwinfo::collect() {
   }
 #endif
 
-#ifdef DYLOCXX_ENABLE_NUMA
+#ifdef DYLOC_ENABLE_NUMA
   DYLOC_LOG_TRACE("dylocxx::hwinfo: using numalib");
   if (_hw.num_numa < 0) {
     _hw.num_numa = numa_max_node() + 1;
