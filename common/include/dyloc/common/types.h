@@ -188,52 +188,52 @@ struct dyloc_locality_domain_s
 
     struct dyloc_locality_domain_s ** aliases;
 
-    int                              num_aliases;
+    int                               num_aliases;
 
     /** Locality scope of the domain. */
-    dyloc_locality_scope_t           scope;
+    dyloc_locality_scope_t            scope;
     /** Level in the domain locality hierarchy. */
-    int                              level;
+    int                               level;
 
     /** The domain's global index within its scope. */
-    int                              global_index;
+    int                               global_index;
     /** The domain's index within its parent domain. */
-    int                              relative_index;
+    int                               relative_index;
 
     /** Pointer to descriptor of parent domain or 0 if no parent domain
      *  is specified. */
     struct dyloc_locality_domain_s  * parent;
 
     /** Number of subordinate domains. */
-    int                              num_domains;
+    int                               arity;
     /** Array of subordinate domains of size \c num_domains or 0 if no
      *  subdomains are specified. */
     struct dyloc_locality_domain_s ** children;
 
     /** Whether sub-domains have identical hardware configuration. */
-    int                              is_symmetric;
+    int                               is_symmetric;
 
     /** Team associated with the domain. */
-    dart_team_t                      team;
+    dart_team_t                       team;
     /** Number of units in the domain. */
-    int                              num_units;
+    int                               num_units;
     /** Global IDs of units in the domain. */
-    dart_global_unit_t             * unit_ids;
+    dart_global_unit_t              * unit_ids;
 
     /* The number of compute nodes in the domain. */
-    int                              num_nodes;
+    int                               num_nodes;
     /* Node (machine) index of the domain or -1 if domain contains
      * multiple compute nodes. */
-    int                              node_id;
+    int                               node_id;
 
     /* Number of cores in the domain. Cores may be heterogeneous unless
      * `is_symmetric` is different from 0. */
-    int                              num_cores;
+    int                               num_cores;
 
     /* The minimum size of the physical or logical shared memory
      * accessible by all units in the domain.
      */
-    int                              shared_mem_bytes;
+    int                               shared_mem_bytes;
 };
 struct dyloc_locality_domain_s;
 typedef struct dyloc_locality_domain_s
