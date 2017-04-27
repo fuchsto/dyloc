@@ -1,4 +1,4 @@
-project(project_dylocxx CXX)
+project(project_libdylocxx CXX)
 
 # ---------------------------------------------------------------------------
 # Dependencies
