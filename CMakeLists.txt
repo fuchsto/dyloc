@@ -49,6 +49,7 @@ include(${CMAKE_SOURCE_DIR}/CMakeExt/InstallHelpers.cmake)
 
 include(${CMAKE_SOURCE_DIR}/CMakeExt/hwloc.cmake)
 include(${CMAKE_SOURCE_DIR}/CMakeExt/DART.cmake)
+include(${CMAKE_SOURCE_DIR}/CMakeExt/MPI.cmake)
 include(${CMAKE_SOURCE_DIR}/CMakeExt/PAPI.cmake)
 include(${CMAKE_SOURCE_DIR}/CMakeExt/NUMA.cmake)
 
@@ -96,6 +97,19 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/shared)
 
 
+set(
+  DART_IMPLEMENTATIONS
+  "mpi" CACHE STRING
+  "Comma-separated list of DASH runtime implementations to use.
+   Default is 'mpi'"
+)
+string(
+  REPLACE "," ";"
+  DART_IMPLEMENTATIONS_LIST
+  ${DART_IMPLEMENTATIONS}
+)
+
+
 # ------------------------------------------------------------------------
 # Build Targets
 
@@ -112,6 +126,8 @@ message(EMPH "Install prefix:           (INSTALL_PREFIX)                 "
         ${CMAKE_INSTALL_PREFIX})
 message(EMPH "Build type:               (CMAKE_BUILD_TYPE)               "
         ${CMAKE_BUILD_TYPE})
+message(EMPH "DART implementation:      (DART_IMPLEMENTATIONS)           "
+        ${DART_IMPLEMENTATIONS})
 
 message(INFO "libnuma support:          (ENABLE_LIBNUMA)                 "
         ${ENABLE_LIBNUMA})

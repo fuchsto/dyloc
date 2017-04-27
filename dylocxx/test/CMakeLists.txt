@@ -1,4 +1,7 @@
-project(project_libdylocxx CXX)
+project(project_libdylocxx_test CXX)
+
+set(DASH_PREFIX ${DASH_PREFIX}
+    PARENT_SCOPE)
 
 set(DART_IMPLEMENTATIONS_LIST ${DART_IMPLEMENTATIONS_LIST}
     PARENT_SCOPE)
@@ -15,7 +18,10 @@ set(ENABLE_LOGGING    ${ENABLE_LOGGING}
 # ---------------------------------------------------------------------------
 # Dependencies
 
+# find_package("DART-MPI" REQUIRED HINTS ${DART_PREFIX})
+
 include(${CMAKE_SOURCE_DIR}/CMakeExt/InstallHelpers.cmake)
+include(${CMAKE_SOURCE_DIR}/CMakeExt/GoogleTest.cmake)
 include(${CMAKE_SOURCE_DIR}/CMakeExt/DART.cmake)
 include(${CMAKE_SOURCE_DIR}/CMakeExt/MPI.cmake)
 include(${CMAKE_SOURCE_DIR}/CMakeExt/hwloc.cmake)
@@ -34,21 +40,8 @@ message(STATUS "Boost include directories: "
 message(STATUS "Boost libraries: "
         ${Boost_LIBRARIES})
 
-
-# ---------------------------------------------------------------------------
-# Source Files
-
-file(GLOB_RECURSE DYLOCXX_SOURCES
-     "src/*.c" "src/*.h" "src/*.cc" "src/*.cpp" )
-file(GLOB_RECURSE DYLOCXX_HEADERS
-     "include/*.h")
-
-
 # ---------------------------------------------------------------------------
 # Linker- and Compiler Flags
-
-set (ADDITIONAL_COMPILE_FLAGS
-     ${ADDITIONAL_COMPILE_FLAGS} -DDYLOCXX)
 
 if (ENABLE_LOGGING)
   set (ADDITIONAL_COMPILE_FLAGS
@@ -89,86 +82,71 @@ if (NUMA_FOUND AND ENABLE_LIBNUMA)
        ${NUMA_LIBRARIES})
 endif()
 
-
-message (STATUS "libdylocxx additional compile flags:")
-set(ADDITIONAL_COMPILE_FLAGS_STR "")
-foreach (ADDITIONAL_FLAG ${ADDITIONAL_COMPILE_FLAGS})
-  message (STATUS "    " ${ADDITIONAL_FLAG})
-  set(ADDITIONAL_COMPILE_FLAGS_STR
-      "${ADDITIONAL_COMPILE_FLAGS_STR} ${ADDITIONAL_FLAG}")
-endforeach()
-message (STATUS "libdylocxx additional libraries:")
-foreach (ADDITIONAL_LIB ${ADDITIONAL_LIBRARIES})
-  message (STATUS "    " ${ADDITIONAL_LIB})
-endforeach()
-
 # ---------------------------------------------------------------------------
+# Source Files
+
+file(GLOB_RECURSE DYLOCXX_TEST_SOURCES
+     "*.h" "*.cc")
 
 set(DYLOCXX_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/include)
-set(DYLOCXX_SOURCE_DIRS
-    ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-set(DYLOC_COMMON_INCLUDE_DIRS
-    ${CMAKE_SOURCE_DIR}/common/include)
-
-include_directories(
-  ${DYLOCXX_INCLUDE_DIRS}
-  ${DYLOC_COMMON_INCLUDE_DIRS}
-  ${DART_INCLUDE_DIRS}
-  ${Boost_INCLUDE_DIRS}
-)
+# ---------------------------------------------------------------------------
 
 foreach (dart_variant ${DART_IMPLEMENTATIONS_LIST})
+  set(DYLOCXX_TEST    "dylocxx-test-${dart_variant}")
+  set(DYLOCXX_LIBRARY "dylocxx-${dart_variant}")
 
-  set(DYLOCXX_TARGET_NAME "dylocxx-${dart_variant}")
+  message(EMPH "DART implementation: ${dart_variant}")
+  message(EMPH "DART libraries:      ${DART_LIBRARIES}")
 
-  add_library(
-    ${DYLOCXX_TARGET_NAME}
-    ${DYLOCXX_HEADERS}
-    ${DYLOCXX_SOURCES}
+  include_directories(
+    ${GTEST_INCLUDES}
+    ${CMAKE_SOURCE_DIR}/dylocxx/include
+    ${CMAKE_SOURCE_DIR}/common/include
+    ${DART_INCLUDE_DIRS}
+    ${ADDITIONAL_INCLUDES}
   )
-
+  add_executable(
+    ${DYLOCXX_TEST}
+    ${DYLOCXX_TEST_SOURCES}
+  )
   target_link_libraries(
-    ${DYLOCXX_TARGET_NAME}
+    ${DYLOCXX_TEST}
+    GTest
+    ${DYLOCXX_LIBRARY}
     ${DART_LIBRARIES}
-    ${Boost_LIBRARIES}
     ${ADDITIONAL_LIBRARIES}
   )
 
+  if (${dart_variant} STREQUAL "mpi")
+    include_directories(
+      ${MPI_INCLUDE_PATH})
+    target_link_libraries(
+      ${DYLOCXX_TEST}
+      ${MPI_C_LIBRARIES}
+      ${MPI_CXX_LIBRARIES})
+  endif()
+
   set_target_properties(
-    ${DYLOCXX_TARGET_NAME} PROPERTIES
-    COMPILE_FLAGS ${ADDITIONAL_COMPILE_FLAGS}
+    ${DYLOCXX_TEST} PROPERTIES
+    COMPILE_FLAGS
+    "${VARIANT_ADDITIONAL_COMPILE_FLAGS} -Wno-unused -Wno-sign-compare"
+  )
+  set_target_properties(
+    ${DYLOCXX_TEST} PROPERTIES
+    CXX_STANDARD 11
   )
 
   set_target_properties(
-    ${DYLOCXX_TARGET_NAME} PROPERTIES
-    CXX_STANDARD 11
-  )
-  set_target_properties(
-    ${DYLOCXX_TARGET_NAME} PROPERTIES
+    ${DYLOCXX_TEST} PROPERTIES
     CXX_STANDARD_REQUIRED 11
   )
 
+  DeployBinary(${DYLOCXX_TEST})
+  install(
+    TARGETS ${DYLOCXX_TEST}
+    DESTINATION bin/dylocxx/test
+  )
+
 endforeach() # dart_variant
-
-# ---------------------------------------------------------------------------
-# Test Build Target
-
-add_subdirectory(test)
-
-# ---------------------------------------------------------------------------
-## Installation
-
-# Library
-install(TARGETS ${DYLOCXX_TARGET_NAME}
-        DESTINATION lib)
-
-# Headers
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/dylocxx
-        DESTINATION include FILES_MATCHING PATTERN "*.h")
-
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/dylocxx.h
-        DESTINATION include)
-
-
