@@ -8,13 +8,11 @@
 #include <dylocxx/hwinfo.h>
 #include <dylocxx/exception.h>
 
-#include <dylocxx/internal/papi.h>
-#include <dylocxx/internal/hwloc.h>
+#include <dyloc/common/types.h>
+#include <dyloc/common/internal/hwloc.h>
+#include <dyloc/common/internal/papi.h>
 
 #include <dylocxx/internal/logging.h>
-#include <dylocxx/internal/macro.h>
-
-#include <dyloc/common/types.h>
 
 
 #ifdef DYLOC_ENABLE_LIKWID
@@ -39,38 +37,38 @@
 namespace dyloc {
 
 hwinfo::hwinfo() {
-  _hw->num_numa            = -1;
-  _hw->numa_id             = -1;
-  _hw->num_cores           = -1;
-  _hw->core_id             = -1;
-  _hw->cpu_id              = -1;
-  _hw->min_cpu_mhz         = -1;
-  _hw->max_cpu_mhz         = -1;
-  _hw->min_threads         = -1;
-  _hw->max_threads         = -1;
-  _hw->cache_ids[0]        = -1;
-  _hw->cache_ids[1]        = -1;
-  _hw->cache_ids[2]        = -1;
-  _hw->cache_sizes[0]      = -1;
-  _hw->cache_sizes[1]      = -1;
-  _hw->cache_sizes[2]      = -1;
-  _hw->cache_line_sizes[0] = -1;
-  _hw->cache_line_sizes[1] = -1;
-  _hw->cache_line_sizes[2] = -1;
-  _hw->max_shmem_mbps      = -1;
-  _hw->system_memory_bytes = -1;
-  _hw->numa_memory_bytes   = -1;
-  _hw->num_scopes          = -1;
+  _hw.num_numa            = -1;
+  _hw.numa_id             = -1;
+  _hw.num_cores           = -1;
+  _hw.core_id             = -1;
+  _hw.cpu_id              = -1;
+  _hw.min_cpu_mhz         = -1;
+  _hw.max_cpu_mhz         = -1;
+  _hw.min_threads         = -1;
+  _hw.max_threads         = -1;
+  _hw.cache_ids[0]        = -1;
+  _hw.cache_ids[1]        = -1;
+  _hw.cache_ids[2]        = -1;
+  _hw.cache_sizes[0]      = -1;
+  _hw.cache_sizes[1]      = -1;
+  _hw.cache_sizes[2]      = -1;
+  _hw.cache_line_sizes[0] = -1;
+  _hw.cache_line_sizes[1] = -1;
+  _hw.cache_line_sizes[2] = -1;
+  _hw.max_shmem_mbps      = -1;
+  _hw.system_memory_bytes = -1;
+  _hw.numa_memory_bytes   = -1;
+  _hw.num_scopes          = -1;
 
   dyloc_locality_scope_pos_t undef_scope;
   undef_scope.scope = DYLOC_LOCALITY_SCOPE_UNDEFINED;
   undef_scope.index = -1;
   for (int s = 0; s < DYLOC_LOCALITY_MAX_DOMAIN_SCOPES; s++) {
-    _hw->scopes[s] = undef_scope;
+    _hw.scopes[s] = undef_scope;
   }
 }
 
-hwinfo::collect() {
+void hwinfo::collect() {
   gethostname(_hw.host, DYLOC_LOCALITY_HOST_MAX_SIZE);
 
 #ifdef DYLOC_ENABLE_HWLOC
@@ -143,7 +141,7 @@ hwinfo::collect() {
 
       if (obj->type == HWLOC_OBJ_MACHINE) { break; }
       _hw.scopes[_hw.num_scopes].scope =
-        dart__base__hwloc__obj_type_to_dart_scope(obj->type);
+        dyloc__hwloc_obj_type_to_scope(obj->type);
       _hw.scopes[_hw.num_scopes].index = obj->logical_index;
       DYLOC_LOG_TRACE("dylocxx::hwinfo: hwloc: parent[%d](scope:%d index:%d)",
                       _hw.num_scopes,
@@ -251,7 +249,7 @@ hwinfo::collect() {
   DYLOC_LOG_TRACE("dylocxx::hwinfo: using PAPI");
 
   const PAPI_hw_info_t * papi_hwinfo = NULL;
-  if (dart__base__locality__papi_init(&papi_hwinfo) == DYLOC_OK) {
+  if (dyloc__papi_init(&papi_hwinfo) == DYLOC_OK) {
     if (_hw.num_numa < 0) {
       _hw.num_numa    = papi_hwinfo->nnodes;
     }
@@ -275,7 +273,7 @@ hwinfo::collect() {
   }
 #else
   DYLOC_THROW(
-    dylocxx::exception::runtime_error,
+    dyloc::exception::runtime_config_error,
     "dylocxx::hwinfo: hwloc or PAPI required if not running on Linux");
 #endif
 
