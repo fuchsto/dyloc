@@ -19,9 +19,9 @@ include(${CMAKE_SOURCE_DIR}/CMakeExt/hwloc.cmake)
 include(${CMAKE_SOURCE_DIR}/CMakeExt/PAPI.cmake)
 include(${CMAKE_SOURCE_DIR}/CMakeExt/NUMA.cmake)
 
-set(Boost_USE_STATIC_LIBS    ON)
-set(Boost_USE_MULTITHREADED  ON)
-set(Boost_USE_STATIC_RUNTIME ON)
+set(Boost_USE_STATIC_LIBS     ON)
+set(Boost_USE_MULTITHREADED  OFF)
+set(Boost_USE_STATIC_RUNTIME  ON)
 
 find_package(Boost 1.58.0 REQUIRED
              COMPONENTS filesystem)

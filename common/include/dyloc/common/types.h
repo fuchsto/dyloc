@@ -7,6 +7,13 @@
 #include <dash/dart/if/dart.h>
 
 
+typedef enum
+{
+  DYLOC_OK = 0,
+  DYLOC_ERR_INVALID,
+  DYLOC_ERR_OTHER
+} dyloc_ret_t;
+
 /**
  * Scopes of locality domains.
  *

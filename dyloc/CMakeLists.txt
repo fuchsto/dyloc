@@ -1,4 +1,4 @@
-project(project_libdyloc C)
+project(project_libdyloc CXX)
 
 set(ENABLE_HWLOC ${ENABLE_HWLOC}
     PARENT_SCOPE)
