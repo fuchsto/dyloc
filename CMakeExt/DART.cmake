@@ -29,13 +29,13 @@ message(STATUS "Searching for DART library in DART_BASE: " ${DART_PREFIX})
 
 find_library(
   DART_BASE_LIBRARY
-  NAMES libdart-base.a
+  NAMES dart-base
   HINTS ${DART_PREFIX}/lib
 )
 
 find_library(
   DART_MPI_LIBRARY
-  NAMES libdart-mpi.a
+  NAMES dart-mpi
   HINTS ${DART_PREFIX}/lib
 )
 

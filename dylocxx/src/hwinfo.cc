@@ -1,5 +1,5 @@
 
-#include <dyloc/hwinfo.h>
+#include <dylocxx/hwinfo.h>
 
 
 #ifdef DYLOC_ENABLE_LIKWID

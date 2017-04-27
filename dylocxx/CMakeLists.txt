@@ -1,5 +1,15 @@
 project(project_libdylocxx CXX)
 
+set(ENABLE_HWLOC ${ENABLE_HWLOC}
+    PARENT_SCOPE)
+set(ENABLE_LIBNUMA ${ENABLE_LIBNUMA}
+    PARENT_SCOPE)
+set(ENABLE_PAPI ${ENABLE_PAPI}
+    PARENT_SCOPE)
+
+set(ENABLE_LOGGING ${ENABLE_LOGGING}
+    PARENT_SCOPE)
+
 # ---------------------------------------------------------------------------
 # Dependencies
 
@@ -14,7 +24,7 @@ set(Boost_USE_MULTITHREADED  ON)
 set(Boost_USE_STATIC_RUNTIME ON)
 
 find_package(Boost 1.58.0 REQUIRED
-             COMPONENTS filesystem regex)
+             COMPONENTS filesystem)
 
 message(STATUS "Boost include directories: "
         ${Boost_INCLUDE_DIRS})
@@ -35,6 +45,19 @@ file(GLOB_RECURSE DYLOCXX_HEADERS
 
 # ---------------------------------------------------------------------------
 # Linker- and Compiler Flags
+
+set (ADDITIONAL_COMPILE_FLAGS
+     ${ADDITIONAL_COMPILE_FLAGS} -DDYLOCXX)
+
+# Logging compile flags
+
+if (ENABLE_LOGGING)
+  set (ADDITIONAL_COMPILE_FLAGS
+       ${ADDITIONAL_COMPILE_FLAGS} -DDYLOCXX_ENABLE_LOGGING)
+  set (ADDITIONAL_COMPILE_FLAGS
+       ${ADDITIONAL_COMPILE_FLAGS} -DDYLOCXX_ENABLE_LOGGING)
+endif()
+
 
 set (ADDITIONAL_LIBRARIES ${ADDITIONAL_LIBRARIES} rt)
 
@@ -68,6 +91,18 @@ if (NUMA_FOUND AND ENABLE_LIBNUMA)
 endif()
 
 
+message (STATUS "libdylocxx additional compile flags:")
+set(ADDITIONAL_COMPILE_FLAGS_STR "")
+foreach (ADDITIONAL_FLAG ${ADDITIONAL_COMPILE_FLAGS})
+  message (STATUS "    " ${ADDITIONAL_FLAG})
+  set(ADDITIONAL_COMPILE_FLAGS_STR
+      "${ADDITIONAL_COMPILE_FLAGS_STR} ${ADDITIONAL_FLAG}")
+endforeach()
+message (STATUS "libdylocxx additional libraries:")
+foreach (ADDITIONAL_LIB ${ADDITIONAL_LIBRARIES})
+  message (STATUS "    " ${ADDITIONAL_LIB})
+endforeach()
+
 # ---------------------------------------------------------------------------
 
 set(DYLOCXX_INCLUDE_DIRS
@@ -75,8 +110,14 @@ set(DYLOCXX_INCLUDE_DIRS
 set(DYLOCXX_SOURCE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+set(DYLOC_COMMON_INCLUDE_DIRS
+    ${CMAKE_SOURCE_DIR}/common/include)
+
 include_directories(
   ${DYLOCXX_INCLUDE_DIRS}
+  ${DYLOC_COMMON_INCLUDE_DIRS}
+  ${DART_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
 )
 
 add_library(
@@ -88,6 +129,8 @@ add_library(
 target_link_libraries(
   ${DYLOCXX_TARGET_NAME}
   ${ADDITIONAL_LIBRARIES}
+  ${DART_LIBRARIES}
+  ${Boost_LIBRARIES}
 )
 
 # Compile flags
