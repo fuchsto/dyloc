@@ -44,6 +44,17 @@ option(ENABLE_HWLOC_PCI
 option(ENABLE_PAPI
        "Specify whether PAPI features are enabled" on)
 
+include(${CMAKE_SOURCE_DIR}/CMakeExt/MessageColor.cmake)
+include(${CMAKE_SOURCE_DIR}/CMakeExt/InstallHelpers.cmake)
+
+include(${CMAKE_SOURCE_DIR}/CMakeExt/hwloc.cmake)
+include(${CMAKE_SOURCE_DIR}/CMakeExt/DART.cmake)
+include(${CMAKE_SOURCE_DIR}/CMakeExt/PAPI.cmake)
+include(${CMAKE_SOURCE_DIR}/CMakeExt/NUMA.cmake)
+
+# ------------------------------------------------------------------------
+# Version
+
 set(DYLOC_VERSION_MAJOR 0 CACHE STRING "DYLOC major version number.")
 set(DYLOC_VERSION_MINOR 3 CACHE STRING "DYLOC minor version number.")
 set(DYLOC_VERSION_PATCH 0 CACHE STRING "DYLOC patch version number.")
@@ -59,6 +70,8 @@ set(DYLOC_VERSION
 set(DYLOC_VERSIONED_PROJECT_NAME
     "dyloc-${DYLOC_VERSION_MAJOR}.${DYLOC_VERSION_MINOR}.${DYLOC_VERSION_PATCH}"
     CACHE STRING INTERNAL FORCE)
+
+
 
 set(CMAKE_RULE_MESSAGES    ON)
 set(CMAKE_COLOR_MAKEFILE   ON)
@@ -92,6 +105,11 @@ add_subdirectory(dyloc)
 # ------------------------------------------------------------------------
 # Build Configuration Banner
 
+message(EMPH "DyLoc library version ${DYLOC_VERSION}")
+message(EMPH "-----------------------------------------------------------")
+
+message(EMPH "Install prefix:           (INSTALL_PREFIX)                 "
+        ${CMAKE_INSTALL_PREFIX})
 message(EMPH "Build type:               (CMAKE_BUILD_TYPE)               "
         ${CMAKE_BUILD_TYPE})
 

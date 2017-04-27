@@ -19,7 +19,11 @@ if (NOT DART_PREFIX AND NOT $ENV{DART_BASE} STREQUAL "")
   set(DART_PREFIX $ENV{DART_BASE})
 endif()
 
-message(STATUS "Searching for DART library in path " ${DART_PREFIX})
+if (NOT DART_PREFIX AND NOT $ENV{DASH_BASE} STREQUAL "")
+  set(DART_PREFIX $ENV{DASH_BASE})
+endif()
+
+message(STATUS "Searching for DART library in DART_BASE: " ${DART_PREFIX})
 
 find_library(
   DART_LIBRARIES

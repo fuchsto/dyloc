@@ -22,7 +22,7 @@ message(STATUS "Boost libraries: "
         ${Boost_LIBRARIES})
 
 
-set(DYLOCXX_TARGET_NAME dnants)
+set(DYLOCXX_TARGET_NAME libdylocxx)
 
 # ---------------------------------------------------------------------------
 # Source Files
@@ -31,8 +31,6 @@ file(GLOB_RECURSE DYLOCXX_SOURCES
      "src/*.c" "src/*.h" "src/*.cc" "src/*.cpp" )
 file(GLOB_RECURSE DYLOCXX_HEADERS
      "include/*.h")
-file(GLOB_RECURSE DYLOCXX_RESOURCES
-     "res/*.")
 
 
 # ---------------------------------------------------------------------------
@@ -81,7 +79,7 @@ include_directories(
   ${DYLOCXX_INCLUDE_DIRS}
 )
 
-add_executable(
+add_library(
   ${DYLOCXX_TARGET_NAME}
   ${DYLOCXX_HEADERS}
   ${DYLOCXX_SOURCES}
@@ -109,5 +107,5 @@ set_target_properties(
 
 install(
   TARGETS ${DYLOCXX_TARGET_NAME}
-  DESTINATION bin)
+  DESTINATION lib)
 
