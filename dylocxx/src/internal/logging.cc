@@ -20,8 +20,6 @@ namespace dyloc {
 namespace internal {
 namespace logging {
 
-bool _log_enabled = true;
-
 void Log_Recursive(
   const char* level,
   const char* file,

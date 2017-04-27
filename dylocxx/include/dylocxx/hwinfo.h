@@ -9,6 +9,9 @@ namespace dyloc {
 class hwinfo {
 
  private:
+  static constexpr int MBYTES = 1024 * 1024;
+
+ private:
   dyloc_hwinfo_t _hw;
 
  public:

@@ -1,6 +1,8 @@
 #ifndef DYLOC__INTERNAL__LOGGING_H__INCLUDED
 #define DYLOC__INTERNAL__LOGGING_H__INCLUDED
 
+#include <dyloc/common/internal/macro.h>
+
 #include <sstream>
 #include <iostream>
 #include <iomanip>
@@ -81,31 +83,6 @@ namespace dyloc {
 namespace internal {
 namespace logging {
 
-extern bool _log_enabled;
-
-
-static inline bool log_enabled()
-{
-  return _log_enabled;
-}
-
-static inline void enable_log()
-{
-  _log_enabled = true;
-
-  dart_config_t * dart_cfg;
-  dart_config(&dart_cfg);
-  dart_cfg->log_enabled = 1;
-}
-
-static inline void disable_log()
-{
-  _log_enabled = false;
-
-  dart_config_t * dart_cfg;
-  dart_config(&dart_cfg);
-  dart_cfg->log_enabled = 0;
-}
 
 // Terminator
 void Log_Recursive(
@@ -123,12 +100,9 @@ inline void Log_Line(
   const std::string & msg)
 {
   pid_t pid = getpid();
-  int uid   = -1;
   std::stringstream buf;
 
-  buf << "[ "
-      << std::setw(4) << uid
-      << " "
+  buf << "[dyloc "
       << level
       << " ] [ "
       << std::right << std::setw(5) << pid
@@ -170,10 +144,6 @@ inline void LogWrapper(
   const char *     context_tag,
   const Args & ... args)
 {
-  if (!dyloc::internal::logging::log_enabled()) {
-    return;
-  }
-
   std::ostringstream msg;
   // Extract file name from path
   const char * filebase = strrchr(filepath, '/');
@@ -197,10 +167,6 @@ inline void LogVarWrapper(
   const T &   var_value,
   const Args & ... args)
 {
-  if (!dyloc::internal::logging::log_enabled()) {
-    return;
-  }
-
   std::ostringstream msg;
   msg << "|- " << var_name << ": " << var_value;
   // Extract file name from path

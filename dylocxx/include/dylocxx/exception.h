@@ -13,7 +13,7 @@
 #define DYLOC_THROW(excep_type, msg_stream) do { \
     ::std::ostringstream os; \
     os << msg_stream; \
-    DYLOC_LOG_ERROR(dash__toxstr(excep_type), os.str()); \
+    DYLOC_LOG_ERROR(dyloc__toxstr(excep_type), os.str()); \
     throw(excep_type(os.str())); \
   } while(0)
 

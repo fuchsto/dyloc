@@ -224,13 +224,13 @@ void hwinfo::collect() {
   if (_hw.system_memory_bytes < 0) {
     hwloc_obj_t obj;
     obj = hwloc_get_obj_by_type(topology, HWLOC_OBJ_MACHINE, 0);
-    _hw.system_memory_bytes = obj->memory.total_memory / BYTES_PER_MB;
+    _hw.system_memory_bytes = obj->memory.total_memory / MBYTES;
   }
   if (_hw.numa_memory_bytes < 0) {
     hwloc_obj_t obj;
     obj = hwloc_get_obj_by_type(topology, DYLOC__HWLOC_OBJ_NUMANODE, 0);
     if(obj != NULL) {
-      _hw.numa_memory_bytes = obj->memory.total_memory / BYTES_PER_MB;
+      _hw.numa_memory_bytes = obj->memory.total_memory / MBYTES;
     } else {
       /* No NUMA domain: */
       _hw.numa_memory_bytes = _hw.system_memory_bytes;
@@ -315,7 +315,7 @@ void hwinfo::collect() {
 	  long pages     = sysconf(_SC_AVPHYS_PAGES);
 	  long page_size = sysconf(_SC_PAGE_SIZE);
     if (pages > 0 && page_size > 0) {
-      _hw.system_memory_bytes = (int) ((pages * page_size) / BYTES_PER_MB);
+      _hw.system_memory_bytes = (int) ((pages * page_size) / MBYTES);
     }
   }
 #endif
