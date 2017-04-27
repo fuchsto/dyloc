@@ -119,15 +119,6 @@ foreach (dart_variant ${DART_IMPLEMENTATIONS_LIST})
     ${ADDITIONAL_LIBRARIES}
   )
 
-  if (${dart_variant} STREQUAL "mpi")
-    include_directories(
-      ${MPI_INCLUDE_PATH})
-    target_link_libraries(
-      ${DYLOCXX_TEST}
-      ${MPI_C_LIBRARIES}
-      ${MPI_CXX_LIBRARIES})
-  endif()
-
   set_target_properties(
     ${DYLOCXX_TEST} PROPERTIES
     COMPILE_FLAGS
