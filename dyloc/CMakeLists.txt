@@ -16,7 +16,7 @@ set(ENABLE_LOGGING ${ENABLE_LOGGING}
 include(${CMAKE_SOURCE_DIR}/CMakeExt/InstallHelpers.cmake)
 include(${CMAKE_SOURCE_DIR}/CMakeExt/DART.cmake)
 
-set(DYLOC_TARGET_NAME libdyloc)
+set(DYLOC_TARGET_NAME dyloc)
 
 
 # ---------------------------------------------------------------------------
@@ -71,6 +71,7 @@ include_directories(
   ${DYLOC_INCLUDE_DIRS}
   ${DYLOCXX_INCLUDE_DIRS}
   ${DYLOC_COMMON_INCLUDE_DIRS}
+  ${DART_INCLUDE_DIRS}
 )
 
 add_library(
@@ -82,6 +83,7 @@ add_library(
 target_link_libraries(
   ${DYLOC_TARGET_NAME}
   ${ADDITIONAL_LIBRARIES}
+  ${DART_LIBRARIES}
   dylocxx
 )
 

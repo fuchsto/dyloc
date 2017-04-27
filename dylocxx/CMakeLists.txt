@@ -32,7 +32,7 @@ message(STATUS "Boost libraries: "
         ${Boost_LIBRARIES})
 
 
-set(DYLOCXX_TARGET_NAME libdylocxx)
+set(DYLOCXX_TARGET_NAME dylocxx)
 
 # ---------------------------------------------------------------------------
 # Source Files

@@ -6,6 +6,11 @@
 
 #include <dash/dart/if/dart.h>
 
+#include <boost/graph/connected_components.h>
+#include <boost/graph/edge_list.h>
+#include <boost/graph/adjacency_list.h>
+#include <boost/graph/vector_as_graph.h>
+#include <boost/graph/topological_sort.h>
 
 
 namespace dyloc {
