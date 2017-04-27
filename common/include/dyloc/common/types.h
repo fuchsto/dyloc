@@ -83,7 +83,7 @@ dyloc_locality_scope_t;
 
 typedef struct {
     /** The domain's scope identifier. */
-    dyloc_locality_scope_t           scope;
+    dyloc_locality_scope_t          scope;
     /** The domain's relative index among its siblings in the scope. */
     int                             index;
 }
@@ -92,7 +92,7 @@ dyloc_locality_scope_pos_t;
 /**
  * Hardware locality information for a single locality domain.
  *
- * Note that \c dyloc_domain_locality_t must have static size as it is
+ * Note that \c dyloc_locality_domain_t must have static size as it is
  * used for an all-to-all exchange of locality data across all units
  * using \c dyloc_allgather.
  *
@@ -175,7 +175,7 @@ dyloc_module_location_t;
  * grouping from user-defined team specifications.
  *
  */
-struct dyloc_domain_locality_s
+struct dyloc_locality_domain_s
 {
     /** Hostname of the domain's node or 0 if unspecified. */
     char host[DYLOC_LOCALITY_HOST_MAX_SIZE];
@@ -186,7 +186,7 @@ struct dyloc_domain_locality_s
      */
     char domain_tag[DYLOC_LOCALITY_DOMAIN_TAG_MAX_SIZE];
 
-    struct dyloc_domain_locality_s ** aliases;
+    struct dyloc_locality_domain_s ** aliases;
 
     int                              num_aliases;
 
@@ -202,13 +202,13 @@ struct dyloc_domain_locality_s
 
     /** Pointer to descriptor of parent domain or 0 if no parent domain
      *  is specified. */
-    struct dyloc_domain_locality_s  * parent;
+    struct dyloc_locality_domain_s  * parent;
 
     /** Number of subordinate domains. */
     int                              num_domains;
     /** Array of subordinate domains of size \c num_domains or 0 if no
      *  subdomains are specified. */
-    struct dyloc_domain_locality_s ** children;
+    struct dyloc_locality_domain_s ** children;
 
     /** Whether sub-domains have identical hardware configuration. */
     int                              is_symmetric;
@@ -235,9 +235,9 @@ struct dyloc_domain_locality_s
      */
     int                              shared_mem_bytes;
 };
-struct dyloc_domain_locality_s;
-typedef struct dyloc_domain_locality_s
-    dyloc_domain_locality_t;
+struct dyloc_locality_domain_s;
+typedef struct dyloc_locality_domain_s
+    dyloc_locality_domain_t;
 
 /**
  * Locality and topology information of a single unit.
