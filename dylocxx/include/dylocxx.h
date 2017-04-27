@@ -1,10 +1,10 @@
-#ifndef DYLOC__DYLOC_H__INCLUDED
-#define DYLOC__DYLOC_H__INCLUDED
+#ifndef DYLOCXX__DYLOCXX_H__INCLUDED
+#define DYLOCXX__DYLOCXX_H__INCLUDED
 
-#include <dyloc/types.h>
-#include <dyloc/distance.h>
-#include <dyloc/topology.h>
-#include <dyloc/domain_graph.h>
-#include <dyloc/algorithm.h>
+#include <dylocxx/types.h>
+#include <dylocxx/distance.h>
+#include <dylocxx/topology.h>
+#include <dylocxx/domain_graph.h>
+#include <dylocxx/algorithm.h>
 
-#endif // DYLOC__DYLOC_H__INCLUDED
+#endif // DYLOCXX__DYLOCXX_H__INCLUDED
