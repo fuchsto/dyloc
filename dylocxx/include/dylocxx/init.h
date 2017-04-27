@@ -6,7 +6,7 @@
 
 namespace dyloc {
 
-void init();
+void init(int * argc, char *** argv);
 void finalize();
 bool is_initialized();
 

@@ -3,8 +3,6 @@
 
 #include <dyloc/common/types.h>
 
-#include <dylocxx/init.h>
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -14,6 +12,8 @@ extern "C" {
 dyloc_ret_t dyloc_init();
 
 dyloc_ret_t dyloc_finalize();
+
+int         dyloc_is_initialized();
 
 
 #ifdef __cplusplus
