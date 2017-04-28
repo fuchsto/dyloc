@@ -68,12 +68,13 @@
 #  endif // DYLOC_ENABLE_TRACE_LOGGING
 #else  // DYLOC_ENABLE_LOGGING
 
-#  define DYLOC_LOG_TRACE(...) do {  } while(0)
-#  define DYLOC_LOG_TRACE_VAR(context, var) do { \
-            dyloc__unused(var); \
-          } while(0)
 #  define DYLOC_LOG_DEBUG(...) do {  } while(0)
 #  define DYLOC_LOG_DEBUG_VAR(context, var) do { \
+            dyloc__unused(var); \
+          } while(0)
+
+#  define DYLOC_LOG_TRACE(...) do {  } while(0)
+#  define DYLOC_LOG_TRACE_VAR(context, var) do { \
             dyloc__unused(var); \
           } while(0)
 
