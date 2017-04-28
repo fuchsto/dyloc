@@ -1,8 +1,8 @@
-#ifndef DYLOCXX__TOPOLOGY_GRAPH_H__INCLUDED
-#define DYLOCXX__TOPOLOGY_GRAPH_H__INCLUDED
+#ifndef DYLOCXX__DOMAIN_GRAPH_H__INCLUDED
+#define DYLOCXX__DOMAIN_GRAPH_H__INCLUDED
 
 
-#include <dyloc/types.h>
+#include <dyloc/common/types.h>
 
 #include <dash/dart/if/dart.h>
 
@@ -20,8 +20,8 @@ namespace dyloc {
  *
  * \todo Consider specializing hwloc topology type via sub-classing.
  */
-class topology_graph {
-  typedef topology_graph self_t;
+class domain_graph {
+  typedef domain_graph self_t;
 
  private:
   
@@ -30,4 +30,4 @@ class topology_graph {
 
 } // namespace dyloc
 
-#endif // DYLOCXX__TOPOLOGY_GRAPH_H__INCLUDED
+#endif // DYLOCXX__DOMAIN_GRAPH_H__INCLUDED

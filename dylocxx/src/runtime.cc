@@ -32,7 +32,16 @@ void runtime::initialize_locality(dart_team_t team) {
     team_global_dom.unit_ids.push_back(guid);
   }
 
-  _locality_domains.insert(std::make_pair(team, team_global_dom));
+  _locality_domains.insert(
+      std::make_pair(team, team_global_dom));
+
+  _unit_mappings.insert(
+      std::make_pair(team, unit_mapping(team)));
+
+  _host_topologies.insert(
+      std::make_pair(
+        team,
+        host_topology(_unit_mappings[team])));
 }
 
 void runtime::finalize_locality(dart_team_t team) {
