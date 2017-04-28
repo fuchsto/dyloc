@@ -1,5 +1,7 @@
 my.*
 *.log
+tags
+.ycm*
 
 # Build directory
 build

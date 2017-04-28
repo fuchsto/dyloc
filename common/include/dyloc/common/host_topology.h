@@ -1,6 +1,11 @@
 #ifndef DYLOC__COMMON__HOST_TOPOLOGY_H__INCLUDED
 #define DYLOC__COMMON__HOST_TOPOLOGY_H__INCLUDED
 
+#include <dyloc/common/types.h>
+
+#include <dash/dart/if/dart_types.h>
+
+
 typedef struct
 {
   char                       host[DART_LOCALITY_HOST_MAX_SIZE];
@@ -14,7 +19,7 @@ dyloc_host_domain_t;
 
 typedef struct
 {
-  dyloc_global_unit_t      * units;
+  dart_global_unit_t       * units;
   int                        num_units;
 }
 dyloc_host_units_t;
