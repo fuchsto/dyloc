@@ -1,4 +1,6 @@
 
+#include <dyloc/common/config.h>
+
 #ifdef DYLOC__PLATFORM__LINUX
 /* _GNU_SOURCE required for sched_getcpu() */
 #  define _GNU_SOURCE
