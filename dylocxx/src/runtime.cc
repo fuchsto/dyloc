@@ -1,6 +1,10 @@
 
 #include <dylocxx/runtime.h>
 
+#include <dylocxx/host_topology.h>
+#include <dylocxx/unit_mapping.h>
+#include <dylocxx/locality_domain.h>
+
 #include <dylocxx/internal/logging.h>
 #include <dylocxx/internal/assert.h>
 

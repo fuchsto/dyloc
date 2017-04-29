@@ -20,7 +20,7 @@ class hwinfo {
 
   void collect();
 
-  const dyloc_hwinfo_t * data() const noexcept {
+  inline const dyloc_hwinfo_t * data() const noexcept {
     return &_hw;
   }
 };

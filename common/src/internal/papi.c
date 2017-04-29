@@ -1,5 +1,6 @@
 
 #include <dyloc/common/types.h>
+#include <dash/dart/if/dart_types.h>
 
 #ifdef DYLOC_ENABLE_PAPI
 #include <dyloc/common/internal/papi.h>

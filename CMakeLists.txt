@@ -113,6 +113,7 @@ string(
 # ------------------------------------------------------------------------
 # Build Targets
 
+add_subdirectory(common)
 add_subdirectory(dylocxx)
 add_subdirectory(dyloc)
 

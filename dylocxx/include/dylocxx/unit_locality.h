@@ -1,8 +1,8 @@
 #ifndef DYLOCXX__UNIT_LOCALITY_H__INCLUDED
 #define DYLOCXX__UNIT_LOCALITY_H__INCLUDED
 
+#include <dylocxx/hwinfo.h>
 #include <dyloc/common/types.h>
-
 #include <dash/dart/if/dart_types.h>
 
 #include <vector>

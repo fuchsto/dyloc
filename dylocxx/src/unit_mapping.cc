@@ -14,7 +14,6 @@ namespace dyloc {
 
 unit_mapping::unit_mapping(dart_team_t t)
 : team(t) {
-  dart_ret_t       ret;
   dart_team_unit_t myid   = DART_UNDEFINED_TEAM_UNIT_ID;
   size_t           nunits = 0;
   DYLOC_ASSERT_RETURNS(dart_team_myid(team, &myid),   DART_OK);
@@ -28,14 +27,14 @@ unit_mapping::unit_mapping(dart_team_t t)
   /* all-to-all exchange of locality data across all units:
    * (send, recv, nbytes, team) */
   DYLOC_LOG_DEBUG("dylocxx::unit_mapping: dart_allgather");
-  ret = dart_allgather(uloc.data(),
-                       unit_localities.data(),
-                       sizeof(dyloc_unit_locality_t),
-                       DART_TYPE_BYTE,
-                       team);
-
+  DYLOC_ASSERT_RETURNS(
+    dart_allgather(uloc.data(),
+                   unit_localities.data(),
+                   sizeof(dyloc_unit_locality_t),
+                   DART_TYPE_BYTE,
+                   team),
+    DART_OK);
   dart_barrier(team);
-
 }
 
 } // namespace dyloc

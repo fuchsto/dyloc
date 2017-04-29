@@ -3,8 +3,15 @@
 
 #ifdef DYLOC_ENABLE_HWLOC
 
+#include <dyloc/common/types.h>
+
 #include <hwloc.h>
 #include <hwloc/helper.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #if HWLOC_API_VERSION < 0x00011100
 #  define DYLOC__HWLOC_OBJ_NUMANODE HWLOC_OBJ_NODE
@@ -36,6 +43,10 @@ static inline dyloc_locality_scope_t dyloc__hwloc_obj_type_to_scope(
     default : return DYLOC_LOCALITY_SCOPE_UNDEFINED;
   }
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* DYLOC_ENABLE_HWLOC */
 
