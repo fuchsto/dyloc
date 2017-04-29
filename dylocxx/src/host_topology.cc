@@ -103,4 +103,8 @@ host_topology::host_topology(const unit_mapping & unit_map)
   update_module_locations(unit_map);
 }
 
+void host_topology::update_module_locations(
+  const unit_mapping & unit_map) {
+}
+
 } // namespace dyloc

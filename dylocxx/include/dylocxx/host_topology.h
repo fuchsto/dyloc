@@ -26,7 +26,8 @@ class host_domain {
   dyloc_locality_scope_pos_t  scope_pos;
 
  public:
-  host_domain();
+  // TODO
+  host_domain() { }
 
   inline const dyloc_host_domain_t * data() const noexcept {
     return &_host_dom;

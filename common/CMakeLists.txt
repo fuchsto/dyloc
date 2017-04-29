@@ -1,5 +1,8 @@
 project(project_libdyloccommon C)
 
+set(DART_IMPLEMENTATIONS_LIST ${DART_IMPLEMENTATIONS_LIST}
+    PARENT_SCOPE)
+
 set(ENABLE_HWLOC      ${ENABLE_HWLOC}
     PARENT_SCOPE)
 set(ENABLE_LIBNUMA    ${ENABLE_LIBNUMA}
@@ -87,33 +90,37 @@ include_directories(
   ${DART_INCLUDE_DIRS}
 )
 
-set(DYLOC_COMMON_LIBRARY "dyloc-common")
 
-add_library(
-  ${DYLOC_COMMON_LIBRARY}
-  ${DYLOC_COMMON_HEADERS}
-  ${DYLOC_COMMON_SOURCES}
-)
+foreach (dart_variant ${DART_IMPLEMENTATIONS_LIST})
+  set(DYLOC_COMMON_LIBRARY "dyloc-common-${dart_variant}")
 
-target_link_libraries(
-  ${DYLOC_COMMON_LIBRARY}
-  ${ADDITIONAL_LIBRARIES}
-  ${DART_LIBRARIES}
-)
+  add_library(
+    ${DYLOC_COMMON_LIBRARY}
+    ${DYLOC_COMMON_HEADERS}
+    ${DYLOC_COMMON_SOURCES}
+  )
 
-set_target_properties(
-  ${DYLOC_COMMON_LIBRARY} PROPERTIES
-  COMPILE_FLAGS ${ADDITIONAL_COMPILE_FLAGS}
-)
+  target_link_libraries(
+    ${DYLOC_COMMON_LIBRARY}
+    ${ADDITIONAL_LIBRARIES}
+    ${DART_LIBRARIES}
+  )
 
-set_target_properties(
-  ${DYLOC_COMMON_LIBRARY} PROPERTIES
-  CXX_STANDARD 11
-)
-set_target_properties(
-  ${DYLOC_COMMON_LIBRARY} PROPERTIES
-  CXX_STANDARD_REQUIRED 11
-)
+  set_target_properties(
+    ${DYLOC_COMMON_LIBRARY} PROPERTIES
+    COMPILE_FLAGS ${ADDITIONAL_COMPILE_FLAGS}
+  )
+
+  set_target_properties(
+    ${DYLOC_COMMON_LIBRARY} PROPERTIES
+    CXX_STANDARD 11
+  )
+  set_target_properties(
+    ${DYLOC_COMMON_LIBRARY} PROPERTIES
+    CXX_STANDARD_REQUIRED 11
+  )
+
+endforeach() # dart_variant
 
 # ---------------------------------------------------------------------------
 ## Installation

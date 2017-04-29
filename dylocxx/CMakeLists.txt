@@ -120,7 +120,8 @@ include_directories(
 
 foreach (dart_variant ${DART_IMPLEMENTATIONS_LIST})
 
-  set(DYLOCXX_LIBRARY "dylocxx-${dart_variant}")
+  set(DYLOCXX_LIBRARY      "dylocxx-${dart_variant}")
+  set(DYLOC_COMMON_LIBRARY "dyloc-common-${dart_variant}")
 
   add_library(
     ${DYLOCXX_LIBRARY}

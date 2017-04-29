@@ -1,7 +1,7 @@
 #ifndef DYLOCXX__EXCEPTION_H__INCLUDED
 #define DYLOCXX__EXCEPTION_H__INCLUDED
 
-#include <dyloc/common/logging.h>
+#include <dylocxx/internal/logging.h>
 
 #include <dyloc/common/internal/macro.h>
 

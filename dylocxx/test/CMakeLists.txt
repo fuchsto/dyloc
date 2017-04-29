@@ -63,8 +63,9 @@ set(DYLOCXX_INCLUDE_DIRS
 # ---------------------------------------------------------------------------
 
 foreach (dart_variant ${DART_IMPLEMENTATIONS_LIST})
-  set(DYLOCXX_TEST    "dylocxx-test-${dart_variant}")
-  set(DYLOCXX_LIBRARY "dylocxx-${dart_variant}")
+  set(DYLOCXX_TEST         "dylocxx-test-${dart_variant}")
+  set(DYLOCXX_LIBRARY      "dylocxx-${dart_variant}")
+  set(DYLOC_COMMON_LIBRARY "dyloc-common-${dart_variant}")
 
   include_directories(
     ${GTEST_INCLUDES}
