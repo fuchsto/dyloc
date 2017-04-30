@@ -63,9 +63,6 @@ host_topology::host_topology(const unit_mapping & unit_map)
     // host_dom.num_units = host_unit_gids.size();
 
     // host domain data:
-    // host_dom.host[0]   = '\0';
-    // host_dom.parent[0] = '\0';
-    // host_dom.num_numa  = 0;
     host_dom.level           = 0;
     host_dom.scope_pos.scope = DYLOC_LOCALITY_SCOPE_NODE;
     host_dom.scope_pos.index = 0;
@@ -83,8 +80,13 @@ host_topology::host_topology(const unit_mapping & unit_map)
       DYLOC_ASSERT_RETURNS(
         dart_team_unit_g2l(team, host_unit_gid, &luid),
         DART_OK);
-      const auto & ul  = unit_map[luid];
-      int unit_numa_id = ul.hwinfo.numa_id;
+      const auto & ul   = unit_map[luid];
+      int unit_numa_id  = ul.hwinfo.numa_id;
+      int unit_num_numa = ul.hwinfo.num_numa;
+
+      if (unit_num_numa == 0) {
+        unit_numa_id = 0;
+      }
 
       DYLOC_LOG_TRACE("dylocxx::host_topology.()",
                       "mapping unit", luid.id,
@@ -94,7 +96,7 @@ host_topology::host_topology(const unit_mapping & unit_map)
         host_numa_ids.insert(unit_numa_id);
       }
     }
-    // host_dom.num_numa = host_numa_ids.size();
+    host_dom.numa_ids.resize(host_numa_ids.size());
     std::copy(host_numa_ids.begin(),
               host_numa_ids.end(),
               host_dom.numa_ids.begin());
@@ -106,10 +108,13 @@ host_topology::host_topology(const unit_mapping & unit_map)
   this->_host_topo.num_units       = num_units;
 
   update_module_locations(unit_map);
+
+  DYLOC_LOG_DEBUG("dylocxx::host_topology.()", ">");
 }
 
 void host_topology::update_module_locations(
   const unit_mapping & unit_map) {
+  dyloc__unused(unit_map);
 }
 
 } // namespace dyloc
