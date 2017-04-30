@@ -58,7 +58,7 @@ host_topology::host_topology(const unit_mapping & unit_map)
   for (const auto & host_units_mapping : _host_units) {
     const auto  & host_name       = host_units_mapping.first;
     const auto  & host_unit_gids  = host_units_mapping.second;
-    host_domain & host_dom        = _host_domains[host_name];
+    dyloc_host_domain_t host_dom;
 
     // host_dom.num_units = host_unit_gids.size();
 
@@ -68,7 +68,7 @@ host_topology::host_topology(const unit_mapping & unit_map)
     host_dom.scope_pos.index = 0;
 
     // write host name to host domain data:
-    host_dom.host = host_name;
+    host_name.copy(host_dom.host, host_name.size());
 
     DYLOC_LOG_TRACE("dylocxx::host_topology.()",
                     "mapping units to", host_name);
@@ -96,10 +96,12 @@ host_topology::host_topology(const unit_mapping & unit_map)
         host_numa_ids.insert(unit_numa_id);
       }
     }
-    host_dom.numa_ids.resize(host_numa_ids.size());
+    host_dom.num_numa = host_numa_ids.size();
     std::copy(host_numa_ids.begin(),
               host_numa_ids.end(),
-              host_dom.numa_ids.begin());
+              host_dom.numa_ids);
+
+    _host_domains.push_back(host_dom);
   }
 
   this->_host_topo.num_host_levels = 0;
@@ -156,13 +158,12 @@ void host_topology::collect_topology(
   const auto & my_uloc        = unit_map[my_id];
   const auto & local_hostname = my_uloc.hwinfo.host;
 
-  DYLOC_LOG_TRACE("dylocxx::host_topology.update_module_locations",
+  DYLOC_LOG_TRACE("dylocxx::host_topology.collect_topology",
                   "local host:", local_hostname);
 
-  for (const auto & host_units_mapping : _host_units) {
-    const auto  & host_name       = host_units_mapping.first;
-    const auto  & host_unit_gids  = host_units_mapping.second;
-    host_domain & host_dom        = _host_domains[host_name];
+  for (const auto & host_dom : _host_domains) {
+    std::string host_name(host_dom.host);
+    const auto  & host_unit_gids  = _host_units[host_name];
 
     dart_global_unit_t leader_unit_gid = host_unit_gids[0];
     DYLOC_ASSERT_RETURNS(
@@ -177,7 +178,7 @@ void host_topology::collect_topology(
         DART_OK);
       /* collect units in local group: */
       for (dart_global_unit_t host_unit_gid : host_unit_gids) {
-        DYLOC_LOG_TRACE("dylocxx::host_topology.update_module_locations",
+        DYLOC_LOG_TRACE("dylocxx::host_topology.collect_topology",
                         "add unit", host_unit_gid.id,
                         "to local group");
         DYLOC_ASSERT_RETURNS(
@@ -192,12 +193,12 @@ void host_topology::collect_topology(
     DART_OK);
 
   if (num_leaders > 1) {
-    DYLOC_LOG_TRACE("dylocxx::host_topology.update_module_locations",
+    DYLOC_LOG_TRACE("dylocxx::host_topology.collect_topology",
                     "create leader team");
     DYLOC_ASSERT_RETURNS(
       dart_team_create(team, leader_group, &leader_team),
       DART_OK);
-    DYLOC_LOG_TRACE("dylocxx::host_topology.update_module_locations",
+    DYLOC_LOG_TRACE("dylocxx::host_topology.collect_topology",
                     "leader team:", leader_team);
   } else {
     leader_team = team;
@@ -246,7 +247,7 @@ void host_topology::collect_topology(
 
       displs[0] = 0;
       for (size_t lu = 1; lu < num_leaders; lu++) {
-        DYLOC_LOG_TRACE("dylocxx::host_topology.update_module_locations",
+        DYLOC_LOG_TRACE("dylocxx::host_topology.collect_topology",
                         "allgather:",
                         "leader unit", lu,
                         "sent:", recvcounts[lu]);
@@ -275,12 +276,10 @@ void host_topology::collect_topology(
         int m_displ = displs[lu] / sizeof(dart_module_location_t);
         const dyloc_module_location_t & module_loc =
                 module_locations[m_displ + m];
-        for (const auto & host_units_mapping : _host_units) {
-          const auto & host_name = host_units_mapping.first;
-          host_domain & host_dom = _host_domains[host_name];
+        for (auto & host_dom : _host_domains) {
           if (host_dom.host == module_loc.module) {
             /* Classify host as module: */
-            host_dom.parent    = module_loc.host;
+            std::strcpy(host_dom.parent, module_loc.host);
             host_dom.scope_pos = module_loc.pos;
             host_dom.level     = 1;
             if (_host_topo.num_host_levels < host_dom.level) {
@@ -294,7 +293,7 @@ void host_topology::collect_topology(
     // Wait for exchange of module locations between all leaders and
     // finalize leader team:
     if (num_leaders > 1) {
-      DYLOC_LOG_TRACE("dylocxx::host_topology.update_module_locations",
+      DYLOC_LOG_TRACE("dylocxx::host_topology.collect_topology",
                       "finalize leader team");
       dart_barrier(leader_team);
       DYLOC_ASSERT_RETURNS(
@@ -312,7 +311,8 @@ void host_topology::collect_topology(
     dart_team_unit_t host_topo_bcast_root = local_leader_unit_lid;
     dart_team_t      host_topo_bcast_team = team;
     if (num_hosts > 1) {
-      DYLOC_LOG_TRACE("dart__base__host_topology__init: create local team");
+      DYLOC_LOG_TRACE("dylocxx::host_topology.collect_topology",
+                      "create local team");
       DYLOC_ASSERT_RETURNS(
         dart_team_create(team, local_group, &local_team),
         DART_OK);
@@ -323,27 +323,26 @@ void host_topology::collect_topology(
 
     DYLOC_ASSERT_RETURNS(
       dart_bcast(
-        _host_topo.host_domains,
-        sizeof(dyloc_host_domain_t) * num_hosts,
+        _host_domains.data(),
+        sizeof(dyloc_host_domain_t) * _host_domains.size(),
         DART_TYPE_BYTE,
         host_topo_bcast_root,
         host_topo_bcast_team),
       DART_OK);
 
     if (num_hosts > 1) {
-      DYLOC_LOG_TRACE("dart__base__host_topology__init: finalize local team");
+      DYLOC_LOG_TRACE("dylocxx::host_topology.collect_topology",
+                      "finalize local team");
       DYLOC_ASSERT_RETURNS(
         dart_team_destroy(&local_team),
         DART_OK);
     }
 
-    auto num_nodes = num_hosts;
-    for (const auto & host_units_mapping : _host_units) {
-      const auto & host_name = host_units_mapping.first;
+    _host_topo.num_nodes = num_hosts;
+    for (const auto & host_dom : _host_domains) {
       /* Get unit ids at local unit's host */
-      host_domain & hdom = _host_domains[host_name];
-      if (hdom.level > 0) {
-        num_nodes--;
+      if (host_dom.level > 0) {
+        _host_topo.num_nodes--;
       }
     }
   }
