@@ -31,14 +31,20 @@ host_topology::host_topology(const unit_mapping & unit_map)
 
   // Map unit ids to their host name:
   //
-  DYLOC_LOG_TRACE("dylocxx::host_topology.()", "copying host names");
+  DYLOC_LOG_TRACE("dylocxx::host_topology.()",
+                  "copying host names from", num_units, "units");
   for (size_t luid = 0; luid < num_units; ++luid) {
     dart_global_unit_t guid;
     DYLOC_ASSERT_RETURNS(
       dart_team_unit_l2g(team, luid, &guid),
       DART_OK);
     // Add global unit id to list of units of its host:
-    std::string unit_hostname(_unit_map[luid].hwinfo.host);
+    std::string unit_hostname(unit_map[guid.id].hwinfo.host);
+    DYLOC_LOG_TRACE("dylocxx::host_topology.()",
+                    "team unit id:",   luid,
+                    "global unit id:", guid.id,
+                    "host:",           unit_hostname);
+
     _host_units.insert(
         std::make_pair(unit_hostname,
                        std::vector<dart_global_unit_t>()));
@@ -60,7 +66,7 @@ host_topology::host_topology(const unit_mapping & unit_map)
     // host_dom.host[0]   = '\0';
     // host_dom.parent[0] = '\0';
     // host_dom.num_numa  = 0;
-    host_dom.level     = 0;
+    host_dom.level           = 0;
     host_dom.scope_pos.scope = DYLOC_LOCALITY_SCOPE_NODE;
     host_dom.scope_pos.index = 0;
 
@@ -75,13 +81,13 @@ host_topology::host_topology(const unit_mapping & unit_map)
     for (dart_global_unit_t host_unit_gid : host_unit_gids) {
       dart_team_unit_t luid;
       DYLOC_ASSERT_RETURNS(
-        dart_team_unit_l2g(team, luid, &host_unit_gid),
+        dart_team_unit_g2l(team, host_unit_gid, &luid),
         DART_OK);
-      const auto & ul  = _unit_map[luid];
+      const auto & ul  = unit_map[luid];
       int unit_numa_id = ul.hwinfo.numa_id;
 
       DYLOC_LOG_TRACE("dylocxx::host_topology.()",
-                      "mapping unit", host_unit_gid.id,
+                      "mapping unit", luid.id,
                       "to host",      host_name,
                       "NUMA id:",     unit_numa_id);
       if (unit_numa_id >= 0) {

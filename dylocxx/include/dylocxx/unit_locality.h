@@ -21,7 +21,7 @@ class unit_locality {
   /**
    * Obtain local hardware locality in unit scope.
    */
-  unit_locality(dart_team_t team);
+  unit_locality(dart_team_unit_t u, dart_team_t team);
 
   inline const dyloc_unit_locality_t * data() const noexcept {
     return &_uloc;

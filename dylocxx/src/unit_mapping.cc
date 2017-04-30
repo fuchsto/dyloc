@@ -20,13 +20,13 @@ unit_mapping::unit_mapping(dart_team_t t)
   DYLOC_ASSERT_RETURNS(dart_team_size(team, &nunits), DART_OK);
 
   unit_localities.resize(nunits);
-  unit_locality uloc(team);
+  unit_locality uloc(myid, team);
 
   dart_barrier(team);
 
   /* all-to-all exchange of locality data across all units:
    * (send, recv, nbytes, team) */
-  DYLOC_LOG_DEBUG("dylocxx::unit_mapping: dart_allgather");
+  DYLOC_LOG_DEBUG("dylocxx::unit_mapping.()", "dart_allgather");
   DYLOC_ASSERT_RETURNS(
     dart_allgather(uloc.data(),
                    unit_localities.data(),
