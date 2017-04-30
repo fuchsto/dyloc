@@ -10,6 +10,10 @@
 
 namespace dyloc {
 
+/**
+ * Collects hardware information of a single unit locality.
+ *
+ */
 class unit_locality {
 
  private:

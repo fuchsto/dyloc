@@ -24,8 +24,8 @@ unit_mapping::unit_mapping(dart_team_t t)
 
   dart_barrier(team);
 
-  /* all-to-all exchange of locality data across all units:
-   * (send, recv, nbytes, team) */
+  // all-to-all exchange of locality data across all units:
+  // (send, recv, nbytes, team)
   DYLOC_LOG_DEBUG("dylocxx::unit_mapping.()", "dart_allgather");
   DYLOC_ASSERT_RETURNS(
     dart_allgather(uloc.data(),

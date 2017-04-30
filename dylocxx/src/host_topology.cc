@@ -114,7 +114,97 @@ host_topology::host_topology(const unit_mapping & unit_map)
 
 void host_topology::update_module_locations(
   const unit_mapping & unit_map) {
-  dyloc__unused(unit_map);
+  dart_team_t team = unit_map.team;
+
+  /*
+   * Initiate all-to-all exchange of module locations like Xeon Phi
+   * hostnames and their assiocated NUMA domain in their parent node.
+   *
+   * Select one leader unit per node for communication:
+   */
+  dart_team_unit_t       local_leader_unit_lid = DART_UNDEFINED_TEAM_UNIT_ID;
+  dart_team_unit_t       my_id;
+  dart_group_t           leader_group;
+  dart_group_t           local_group; // group of all units on local host
+  dart_team_t            leader_team; // team of all node leaders
+
+  DYLOC_ASSERT_RETURNS(
+    dart_team_myid(team, &my_id),
+    DART_OK);
+
+  DYLOC_ASSERT_RETURNS(
+    dart_group_create(&leader_group),
+    DART_OK);
+  DYLOC_ASSERT_RETURNS(
+    dart_group_create(&local_group),
+    DART_OK);
+
+  /*
+   * unit ID of leader unit (relative to the team specified in unit_mapping)
+   * of the active unit's local compute node.
+   * Example:
+   *
+   *  node 0:                     node 1:
+   *    unit ids: { 0, 1, 2 }       unit ids: { 3, 4, 5 }
+   *
+   * leader unit at units 0,1,2: 0
+   * leader unit at units 3,4,5: 3
+   */
+
+  const auto & my_uloc        = unit_map[my_id];
+  const auto & local_hostname = my_uloc.hwinfo.host;
+
+  DYLOC_LOG_TRACE("dylocxx::host_topology.update_module_locations",
+                  "local host:", local_hostname);
+
+  for (const auto & host_units_mapping : _host_units) {
+    const auto  & host_name       = host_units_mapping.first;
+    const auto  & host_unit_gids  = host_units_mapping.second;
+    host_domain & host_dom        = _host_domains[host_name];
+
+    dart_global_unit_t leader_unit_gid = host_unit_gids[0];
+    DYLOC_ASSERT_RETURNS(
+      dart_group_addmember(leader_group, leader_unit_gid),
+      DART_OK);
+
+    if (host_name == local_hostname) {
+      /* set local leader: */
+      DYLOC_ASSERT_RETURNS(
+        dart_team_unit_g2l(team, leader_unit_gid,
+                           &local_leader_unit_lid),
+        DART_OK);
+      /* collect units in local group: */
+      for (dart_global_unit_t host_unit_gid : host_unit_gids) {
+        DYLOC_LOG_TRACE("dylocxx::host_topology.update_module_locations",
+                        "add unit", host_unit_gid.id,
+                        "to local group");
+        DYLOC_ASSERT_RETURNS(
+          dart_group_addmember(local_group, host_unit_gid),
+          DART_OK);
+      }
+    }
+  }
+  size_t num_leaders;
+  DYLOC_ASSERT_RETURNS(
+    dart_group_size(leader_group, &num_leaders),
+    DART_OK);
+
+  if (num_leaders > 1) {
+    DYLOC_LOG_TRACE("dylocxx::host_topology.update_module_locations",
+                    "create leader team");
+    DYLOC_ASSERT_RETURNS(
+      dart_team_create(team, leader_group, &leader_team),
+      DART_OK);
+    DYLOC_LOG_TRACE("dylocxx::host_topology.update_module_locations",
+                    "leader team:", leader_team);
+  } else {
+    leader_team = team;
+  }
+  DYLOC_ASSERT_RETURNS(
+    dart_group_destroy(&leader_group),
+    DART_OK);
+
+
 }
 
 } // namespace dyloc

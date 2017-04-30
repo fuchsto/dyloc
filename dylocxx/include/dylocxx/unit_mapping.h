@@ -12,6 +12,11 @@
 
 namespace dyloc {
 
+/**
+ * Collectively gathers hardware information of unit localities in a
+ * specified team.
+ *
+ */
 struct unit_mapping {
   std::vector<dyloc_unit_locality_t>  unit_localities;
   dart_team_t                         team;
