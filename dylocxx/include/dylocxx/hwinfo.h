@@ -16,7 +16,6 @@ class hwinfo {
 
  public:
   hwinfo();
-  ~hwinfo();
 
   void collect();
 

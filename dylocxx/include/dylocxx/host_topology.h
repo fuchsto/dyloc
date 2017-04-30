@@ -60,7 +60,11 @@ class host_topology {
   }
 
  private:
-  void update_module_locations(const unit_mapping & unit_map);
+  void collect_topology(
+         const unit_mapping & unit_map);
+  void local_topology(
+         const unit_mapping                   & unit_map,
+         std::vector<dyloc_module_location_t> & module_locations);
 };
 
 } // namespace dyloc

@@ -107,12 +107,12 @@ host_topology::host_topology(const unit_mapping & unit_map)
   this->_host_topo.num_hosts       = num_hosts;
   this->_host_topo.num_units       = num_units;
 
-  update_module_locations(unit_map);
+  collect_topology(unit_map);
 
   DYLOC_LOG_DEBUG("dylocxx::host_topology.()", ">");
 }
 
-void host_topology::update_module_locations(
+void host_topology::collect_topology(
   const unit_mapping & unit_map) {
   dart_team_t team = unit_map.team;
 
@@ -204,7 +204,93 @@ void host_topology::update_module_locations(
     dart_group_destroy(&leader_group),
     DART_OK);
 
+  int max_node_modules = 2;
 
+  if (my_id.id == local_leader_unit_lid.id) {
+    // Translate ID of active unit in parent team to unit ID
+    // in leader team:
+    dart_team_unit_t my_leader_id;
+    DYLOC_ASSERT_RETURNS(
+      dart_team_myid(leader_team, &my_leader_id),
+      DART_OK);
+
+    std::vector<dyloc_module_location_t> local_modules;
+    local_topology(unit_map, local_modules);
+
+    // Number of bytes to receive from each leader unit in allgatherv:
+    std::vector<size_t> recvcounts(num_leaders);
+    // Displacement at which to place data received from each leader:
+    std::vector<size_t> displs(num_leaders);
+    // Number of bytes to be sent by this leader unit:
+    recvcounts[my_leader_id.id] = local_modules.size() *
+                                    sizeof(dyloc_module_location_t);
+
+    // Collect all local module locations into global module locations
+    // from leaders.
+    // Only required if there is more than one leader unit.
+    std::vector<dyloc_module_location_t> module_locations;
+    if (num_leaders > 1) {
+      // All module locations to receive:
+      module_locations.resize(max_node_modules * num_leaders);
+      // Exchange number of bytes to be sent by every leader:
+      DYLOC_ASSERT_RETURNS(
+        dart_allgather(
+          NULL,
+          recvcounts.data(),
+          1,
+          DART_TYPE_SIZET,
+          leader_team),
+        DART_OK);
+
+      displs[0] = 0;
+      for (size_t lu = 1; lu < num_leaders; lu++) {
+        DYLOC_LOG_TRACE("dylocxx::host_topology.update_module_locations",
+                       "allgather:",
+                       "leader unit", lu,
+                       "sent:", recvcounts[lu]);
+        displs[lu] = displs[lu-1] + recvcounts[lu];
+      }
+      // Finally, exchange local module locations between all leaders:
+      DYLOC_ASSERT_RETURNS(
+        dart_allgatherv(
+          local_modules.data(),
+          recvcounts[my_leader_id.id],
+          DART_TYPE_BYTE,
+          module_locations.data(),
+          recvcounts.data(),
+          displs.data(),
+          leader_team),
+        DART_OK);
+    } else {
+      module_locations = local_modules;
+    }
+
+    // Wait for exchange of module locations between all leaders:
+    if (num_leaders > 1) {
+      dart_barrier(leader_team);
+    }
+
+
+    if (num_leaders > 1) {
+      DYLOC_LOG_TRACE("dylocxx::host_topology.update_module_locations",
+                      "finalize leader team");
+      DYLOC_ASSERT_RETURNS(
+        dart_team_destroy(&leader_team),
+        DART_OK);
+    }
+  }
+  dart_barrier(team);
+  /*
+   * Broadcast updated host topology data from leader to all units at
+   * local node:
+   */
+}
+
+void host_topology::local_topology(
+  const unit_mapping                   & unit_map,
+  std::vector<dyloc_module_location_t> & module_locations) {
+  dyloc__unused(unit_map);
+  dyloc__unused(module_locations);
 }
 
 } // namespace dyloc

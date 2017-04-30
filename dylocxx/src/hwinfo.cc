@@ -346,7 +346,7 @@ void hwinfo::collect() {
     _hw.scopes[0].index = (_hw.core_id >= 0) ? _hw.core_id : _hw.cpu_id;
   }
 
-  DYLOC_LOG_TRACE("dylocxx::hwinfo.collect", "finished:",
+  DYLOC_LOG_DEBUG("dylocxx::hwinfo.collect", "finished:",
                   "hostname:",    _hw.host,
                   "num_numa:",    _hw.num_numa,
                   "numa_id:",     _hw.numa_id,
@@ -354,9 +354,7 @@ void hwinfo::collect() {
                   "num_cores:",   _hw.num_cores,
                   "min_threads:", _hw.min_threads,
                   "max_threads:", _hw.max_threads);
-}
-
-hwinfo::~hwinfo() {
+  DYLOC_LOG_TRACE("dylocxx::hwinfo.collect", ">");
 }
 
 } // namespace dyloc
