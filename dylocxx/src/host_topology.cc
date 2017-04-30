@@ -139,6 +139,8 @@ void host_topology::collect_topology(
     dart_group_create(&local_group),
     DART_OK);
 
+  auto num_hosts = _host_units.size();
+
   /*
    * unit ID of leader unit (relative to the team specified in unit_mapping)
    * of the active unit's local compute node.
@@ -245,9 +247,9 @@ void host_topology::collect_topology(
       displs[0] = 0;
       for (size_t lu = 1; lu < num_leaders; lu++) {
         DYLOC_LOG_TRACE("dylocxx::host_topology.update_module_locations",
-                       "allgather:",
-                       "leader unit", lu,
-                       "sent:", recvcounts[lu]);
+                        "allgather:",
+                        "leader unit", lu,
+                        "sent:", recvcounts[lu]);
         displs[lu] = displs[lu-1] + recvcounts[lu];
       }
       // Finally, exchange local module locations between all leaders:
@@ -265,15 +267,36 @@ void host_topology::collect_topology(
       module_locations = local_modules;
     }
 
-    // Wait for exchange of module locations between all leaders:
-    if (num_leaders > 1) {
-      dart_barrier(leader_team);
+    for (size_t lu = 0; lu < num_leaders; lu++) {
+      /* Number of modules received from leader unit lu: */
+      size_t lu_num_modules = recvcounts[lu] /
+                              sizeof(dart_module_location_t);
+      for (size_t m = 0; m < lu_num_modules; m++) {
+        int m_displ = displs[lu] / sizeof(dart_module_location_t);
+        const dyloc_module_location_t & module_loc =
+                module_locations[m_displ + m];
+        for (const auto & host_units_mapping : _host_units) {
+          const auto & host_name = host_units_mapping.first;
+          host_domain & host_dom = _host_domains[host_name];
+          if (host_dom.host == module_loc.module) {
+            /* Classify host as module: */
+            host_dom.parent    = module_loc.host;
+            host_dom.scope_pos = module_loc.pos;
+            host_dom.level     = 1;
+            if (_host_topo.num_host_levels < host_dom.level) {
+              _host_topo.num_host_levels = host_dom.level;
+            }
+            break;
+          }
+        }
+      }
     }
-
-
+    // Wait for exchange of module locations between all leaders and
+    // finalize leader team:
     if (num_leaders > 1) {
       DYLOC_LOG_TRACE("dylocxx::host_topology.update_module_locations",
                       "finalize leader team");
+      dart_barrier(leader_team);
       DYLOC_ASSERT_RETURNS(
         dart_team_destroy(&leader_team),
         DART_OK);
@@ -284,6 +307,49 @@ void host_topology::collect_topology(
    * Broadcast updated host topology data from leader to all units at
    * local node:
    */
+  if (DART_UNDEFINED_UNIT_ID != local_leader_unit_lid.id) {
+    dart_team_t      local_team; 
+    dart_team_unit_t host_topo_bcast_root = local_leader_unit_lid;
+    dart_team_t      host_topo_bcast_team = team;
+    if (num_hosts > 1) {
+      DYLOC_LOG_TRACE("dart__base__host_topology__init: create local team");
+      DYLOC_ASSERT_RETURNS(
+        dart_team_create(team, local_group, &local_team),
+        DART_OK);
+      /* Leader unit ID local team is always 0: */
+      host_topo_bcast_team    = local_team;
+      host_topo_bcast_root.id = 0;
+    }
+
+    DYLOC_ASSERT_RETURNS(
+      dart_bcast(
+        _host_topo.host_domains,
+        sizeof(dyloc_host_domain_t) * num_hosts,
+        DART_TYPE_BYTE,
+        host_topo_bcast_root,
+        host_topo_bcast_team),
+      DART_OK);
+
+    if (num_hosts > 1) {
+      DYLOC_LOG_TRACE("dart__base__host_topology__init: finalize local team");
+      DYLOC_ASSERT_RETURNS(
+        dart_team_destroy(&local_team),
+        DART_OK);
+    }
+
+    auto num_nodes = num_hosts;
+    for (const auto & host_units_mapping : _host_units) {
+      const auto & host_name = host_units_mapping.first;
+      /* Get unit ids at local unit's host */
+      host_domain & hdom = _host_domains[host_name];
+      if (hdom.level > 0) {
+        num_nodes--;
+      }
+    }
+  }
+  DYLOC_ASSERT_RETURNS(
+    dart_group_destroy(&local_group),
+    DART_OK);
 }
 
 void host_topology::local_topology(
