@@ -71,10 +71,13 @@ hwinfo::hwinfo() {
 }
 
 void hwinfo::collect() {
+  DYLOC_LOG_TRACE("dylocxx::hwinfo.collect", "()");
+
   gethostname(_hw.host, DYLOC_LOCALITY_HOST_MAX_SIZE);
+  DYLOC_LOG_TRACE("dylocxx::hwinfo.collect", "hostname:", _hw.host);
 
 #ifdef DYLOC_ENABLE_HWLOC
-  DYLOC_LOG_TRACE("dylocxx::hwinfo: using hwloc");
+  DYLOC_LOG_TRACE("dylocxx::hwinfo.collect", "using hwloc");
 
   hwloc_topology_t topology;
   hwloc_topology_init(&topology);
@@ -117,8 +120,9 @@ void hwinfo::collect() {
     }
   }
 
-  DYLOC_LOG_TRACE("dylocxx::hwinfo: hwloc : cpu_id phys:%d logical:%d",
-                  cpu_os_id, _hw.cpu_id);
+  DYLOC_LOG_TRACE("dylocxx::hwinfo.collect", "hwloc: CPU id",
+                  "physical:", cpu_os_id,
+                  "logical:",  _hw.cpu_id);
 
   /* PU (cpu_id) to CORE (core_id) object: */
   hwloc_obj_t core_obj;
@@ -130,8 +134,8 @@ void hwinfo::collect() {
   if (core_obj) {
     _hw.core_id = core_obj->logical_index;
 
-    DYLOC_LOG_TRACE("dylocxx::hwinfo: hwloc : core logical index: %d",
-                    _hw.core_id);
+    DYLOC_LOG_TRACE("dylocxx::hwinfo.collect",
+                    "hwloc: core logical index:", _hw.core_id);
 
     _hw.num_scopes  = 0;
     int cache_level = 0;
@@ -145,10 +149,11 @@ void hwinfo::collect() {
       _hw.scopes[_hw.num_scopes].scope =
         dyloc__hwloc_obj_type_to_scope(obj->type);
       _hw.scopes[_hw.num_scopes].index = obj->logical_index;
-      DYLOC_LOG_TRACE("dylocxx::hwinfo: hwloc: parent[%d](scope:%d index:%d)",
-                      _hw.num_scopes,
-                      _hw.scopes[_hw.num_scopes].scope,
-                      _hw.scopes[_hw.num_scopes].index);
+      DYLOC_LOG_TRACE("dylocxx::hwinfo.collect",
+                      "hwloc: parent[", _hw.num_scopes, "](",
+                      "scope:", _hw.scopes[_hw.num_scopes].scope,
+                      "index:", _hw.scopes[_hw.num_scopes].index,
+                      ")");
       _hw.num_scopes++;
 
 #if HWLOC_API_VERSION < 0x00020000
@@ -240,11 +245,12 @@ void hwinfo::collect() {
   }
 
   hwloc_topology_destroy(topology);
-  DYLOC_LOG_TRACE("dylocxx::hwinfo: hwloc: "
-                  "num_numa:%d numa_id:%d "
-                  "num_cores:%d core_id:%d cpu_id:%d",
-                  _hw.num_numa, _hw.numa_id,
-                  _hw.num_cores, _hw.core_id, _hw.cpu_id);
+  DYLOC_LOG_TRACE("dylocxx::hwinfo.collect", "hwloc:",
+                  "num_numa:",  _hw.num_numa,
+                  "numa_id:",   _hw.numa_id,
+                  "num_cores:", _hw.num_cores,
+                  "core_id:",   _hw.core_id,
+                  "cpu_id:",    _hw.cpu_id);
 #endif /* DYLOC_ENABLE_HWLOC */
 
 #ifdef DYLOC_ENABLE_PAPI
@@ -264,8 +270,9 @@ void hwinfo::collect() {
       _hw.min_cpu_mhz = papi_hwinfo->cpu_min_mhz;
       _hw.max_cpu_mhz = papi_hwinfo->cpu_max_mhz;
     }
-    DYLOC_LOG_TRACE("dylocxx::hwinfo: PAPI: num_numa:%d num_cores:%d",
-                    _hw.num_numa, _hw.num_cores);
+    DYLOC_LOG_TRACE("dylocxx::hwinfo.collect", "PAPI:",
+                    "num_numa:",  _hw.num_numa,
+                    "num_cores:", _hw.num_cores);
   }
 #endif /* DYLOC_ENABLE_PAPI */
 
@@ -309,8 +316,7 @@ void hwinfo::collect() {
     int posix_ret = sysconf(_SC_NPROCESSORS_ONLN);
     _hw.num_cores = (posix_ret > 0) ? posix_ret : _hw.num_cores;
 		DYLOC_LOG_TRACE(
-      "dylocxx::hwinfo: POSIX: _hw.num_cores = %d",
-      _hw.num_cores);
+      "dylocxx::hwinfo.collect", "POSIX: _hw.num_cores:", _hw.num_cores);
   }
 
 	if (_hw.system_memory_bytes < 0) {
@@ -340,11 +346,14 @@ void hwinfo::collect() {
     _hw.scopes[0].index = (_hw.core_id >= 0) ? _hw.core_id : _hw.cpu_id;
   }
 
-  DYLOC_LOG_TRACE("dylocxx::hwinfo: finished: "
-                  "num_numa:%d numa_id:%d cpu_id:%d, num_cores:%d "
-                  "min_threads:%d max_threads:%d",
-                  _hw.num_numa, _hw.numa_id, _hw.cpu_id, _hw.num_cores,
-                  _hw.min_threads, _hw.max_threads);
+  DYLOC_LOG_TRACE("dylocxx::hwinfo.collect", "finished:",
+                  "hostname:",    _hw.host,
+                  "num_numa:",    _hw.num_numa,
+                  "numa_id:",     _hw.numa_id,
+                  "cpu_id:",      _hw.cpu_id,
+                  "num_cores:",   _hw.num_cores,
+                  "min_threads:", _hw.min_threads,
+                  "max_threads:", _hw.max_threads);
 }
 
 hwinfo::~hwinfo() {
