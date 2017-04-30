@@ -19,19 +19,19 @@ namespace dyloc {
 
 host_topology::host_topology(const unit_mapping & unit_map)
 : _unit_map(unit_map) {
+  DYLOC_LOG_DEBUG("dylocxx::host_topology.()", "()");
 
   dart_team_t team = unit_map.team;
+  DYLOC_LOG_TRACE("dylocxx::host_topology.()", "team:", team);
+
   size_t num_units;
-
-  DYLOC_LOG_TRACE("dylocxx::host_topology(): team:" << team);
-
   DYLOC_ASSERT_RETURNS(dart_team_size(team, &num_units), DART_OK);
   DYLOC_ASSERT_MSG(num_units == unit_mapping.num_units,
-                  "Number of units in mapping differs from team size");
+                   "Number of units in mapping differs from team size");
 
   // Map unit ids to their host name:
   //
-  DYLOC_LOG_TRACE("dylocxx::host_topology: copying host names");
+  DYLOC_LOG_TRACE("dylocxx::host_topology.()", "copying host names");
   for (size_t luid = 0; luid < num_units; ++luid) {
     dart_global_unit_t guid;
     DYLOC_ASSERT_RETURNS(
@@ -57,8 +57,8 @@ host_topology::host_topology(const unit_mapping & unit_map)
     // host_dom.num_units = host_unit_gids.size();
 
     // host domain data:
-    host_dom.host[0]   = '\0';
-    host_dom.parent[0] = '\0';
+    // host_dom.host[0]   = '\0';
+    // host_dom.parent[0] = '\0';
     // host_dom.num_numa  = 0;
     host_dom.level     = 0;
     host_dom.scope_pos.scope = DYLOC_LOCALITY_SCOPE_NODE;
@@ -67,8 +67,8 @@ host_topology::host_topology(const unit_mapping & unit_map)
     // write host name to host domain data:
     host_dom.host = host_name;
 
-    DYLOC_LOG_TRACE("dylocxx::host_topology(): mapping units to " <<
-                    host_name);
+    DYLOC_LOG_TRACE("dylocxx::host_topology.()",
+                    "mapping units to", host_name);
 
     // NUMA ids occupied by units on the host:
     std::set<int> host_numa_ids;
@@ -77,14 +77,13 @@ host_topology::host_topology(const unit_mapping & unit_map)
       DYLOC_ASSERT_RETURNS(
         dart_team_unit_l2g(team, luid, &host_unit_gid),
         DART_OK);
-      const auto &     ul   = _unit_map[luid];
+      const auto & ul  = _unit_map[luid];
+      int unit_numa_id = ul.hwinfo.numa_id;
 
-      int unit_numa_id      = ul.hwinfo.numa_id;
-
-      DYLOC_LOG_TRACE("dylocxx::host_topology(): "
-                     "mapping unit " << host_unit_id << " " <<
-                     "to host '"     << _host_name << "', " <<
-                     "NUMA id: "     << unit_numa_id);
+      DYLOC_LOG_TRACE("dylocxx::host_topology.()",
+                      "mapping unit", host_unit_gid.id,
+                      "to host",      host_name,
+                      "NUMA id:",     unit_numa_id);
       if (unit_numa_id >= 0) {
         host_numa_ids.insert(unit_numa_id);
       }

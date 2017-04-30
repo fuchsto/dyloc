@@ -16,6 +16,9 @@
 namespace dyloc {
 
 void runtime::initialize_locality(dart_team_t team) {
+  DYLOC_LOG_DEBUG("dylocxx::runtime.initialize_locality", "()");
+  DYLOC_LOG_DEBUG("dylocxx::runtime.initialize_locality", "team:", team);
+
   locality_domain team_global_dom;
 
   team_global_dom.scope      = DYLOC_LOCALITY_SCOPE_GLOBAL;
@@ -27,6 +30,8 @@ void runtime::initialize_locality(dart_team_t team) {
   size_t num_units = 0;
   DYLOC_ASSERT_RETURNS(dart_team_size(team, &num_units), DART_OK);
 
+  DYLOC_LOG_DEBUG("dylocxx::runtime.initialize_locality",
+                  "units:", num_units);
   for (int u = 0; u < static_cast<int>(num_units); ++u) {
     dart_team_unit_t   luid = { u };
     dart_global_unit_t guid;
@@ -36,16 +41,21 @@ void runtime::initialize_locality(dart_team_t team) {
     team_global_dom.unit_ids.push_back(guid);
   }
 
+  DYLOC_LOG_DEBUG("dylocxx::runtime.initialize_locality", "locality domains");
   _locality_domains.insert(
       std::make_pair(team, team_global_dom));
 
+  DYLOC_LOG_DEBUG("dylocxx::runtime.initialize_locality", "unit mappings");
   _unit_mappings.insert(
       std::make_pair(team, unit_mapping(team)));
 
+  DYLOC_LOG_DEBUG("dylocxx::runtime.initialize_locality", "host topologies");
   _host_topologies.insert(
       std::make_pair(
         team,
         host_topology(_unit_mappings[team])));
+
+  DYLOC_LOG_DEBUG("dylocxx::runtime.initialize_locality", ">");
 }
 
 void runtime::finalize_locality(dart_team_t team) {

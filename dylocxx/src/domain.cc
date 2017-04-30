@@ -21,7 +21,6 @@ void domain::update_locality_domain_data() const noexcept {
 
   _dom.num_units  = _units.size();
   _dom.arity      = _children.size();
-
   // _dom.children   = _children.data();
 }
 
