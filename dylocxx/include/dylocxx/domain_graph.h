@@ -9,10 +9,14 @@
 
 #include <dash/dart/if/dart.h>
 
+#include <boost/graph/undirected_graph.hpp>
+#include <boost/graph/connected_components.hpp>
+
 #include <unordered_map>
 
 
 namespace dyloc {
+
 
 /**
  * Extension to the hwloc topology data structure.
@@ -23,11 +27,35 @@ class domain_graph {
   typedef domain_graph self_t;
 
  private:
+  /*
+   * Using boost graph with domain data as external properties, see:
+   *   http://programmingexamples.net/wiki/CPP/Boost/BGL/GridGraphProperties
+   */
+  typedef boost::adjacency_list<
+            boost::listS,          // out-edges stored in a std::list
+            boost::vecS,           // vertex set stored here
+            boost::undirectedS,    // bidirectional graph.
+            boost::no_property,    // vertex properties
+            boost::edge_weight_t,  // edge properties
+            boost::no_property,    // graph properties
+            boost::listS           // edge storage
+          >
+    graph_t;
+
+  typedef boost::property_map<
+            graph_t,
+            boost::vertex_index_t
+          >::const_type
+    index_map_t;
+
+ private:
   const host_topology    & _host_topology;
   const unit_mapping     & _unit_mapping;
   locality_domain        & _root_domain;
 
   std::unordered_map<std::string, locality_domain *> _domains;
+
+  graph_t _graph;
   
  public:
   domain_graph(

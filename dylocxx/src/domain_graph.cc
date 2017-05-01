@@ -25,6 +25,8 @@ void domain_graph::build_hierarchy() {
 
   _domains.insert(std::make_pair(".", &_root_domain));
 
+  auto root_domain_vertex = boost::add_vertex(_graph);
+
   int node_index = 0;
   for (auto & node_host_domain : _host_topology.nodes()) {
     DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_hierarchy",
@@ -41,6 +43,9 @@ void domain_graph::build_hierarchy() {
         std::make_pair(
           _root_domain.children.back().domain_tag,
           &_root_domain.children.back()));
+
+    auto node_domain_vertex = boost::add_vertex(_graph);
+    boost::add_edge(root_domain_vertex, node_domain_vertex, _graph);
 
     build_node_level_hierarchy(_root_domain.children.back());
 
