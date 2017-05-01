@@ -1,4 +1,5 @@
 
+#include <dylocxx/utility.h>
 #include <dylocxx/internal/logging.h>
 
 #include <string>

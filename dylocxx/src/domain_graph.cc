@@ -1,5 +1,6 @@
 
 #include <dylocxx/domain_graph.h>
+#include <dylocxx/utility.h>
 
 #include <dylocxx/internal/logging.h>
 #include <dylocxx/internal/assert.h>
@@ -11,6 +12,8 @@
 #include <boost/graph/topological_sort.hpp>
 
 #include <unordered_map>
+#include <algorithm>
+#include <vector>
 
 
 namespace dyloc {
@@ -85,17 +88,20 @@ void domain_graph::build_node_level_hierarchy(
 
   build_module_level_hierarchy(
     node_domain,
-    node_domain_vertex);
+    node_domain_vertex,
+    0);
 
   int module_index = 0;
   for (auto & node_module : node_modules) {
+    const auto & module_hostname = node_module.get().host;
     DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_node_level_hierarchy",
-                    "module host name:", node_module.get().host);
+                    "module host name:", module_hostname);
     locality_domain module_domain(
         node_domain,
         DYLOC_LOCALITY_SCOPE_MODULE,
         module_index);
-    module_domain.host = node_domain.host;
+    module_domain.unit_ids = _host_topology.unit_ids(module_hostname);
+    module_domain.host     = module_hostname;
 
     DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_node_level_hierarchy",
                     "module domain:", module_domain);
@@ -115,8 +121,9 @@ void domain_graph::build_node_level_hierarchy(
                     _graph);
 
     build_module_level_hierarchy(
-      module_domain,
-      module_domain_vertex);
+      node_domain.children.back(),
+      module_domain_vertex,
+      0);
 
     ++module_index;
   }
@@ -124,7 +131,8 @@ void domain_graph::build_node_level_hierarchy(
 
 void domain_graph::build_module_level_hierarchy(
   locality_domain & module_domain,
-  graph_vertex_t  & module_domain_vertex) {
+  graph_vertex_t  & module_domain_vertex,
+  int               module_scope_level) {
   dyloc__unused(module_domain_vertex);
   // units located at node:
   module_domain.unit_ids = _host_topology.unit_ids(module_domain.host);
@@ -181,6 +189,45 @@ void domain_graph::build_module_level_hierarchy(
     module_scopes.push_back(
       module_leader_hwinfo.scopes[s].scope);
   }
+
+  int subdomain_gid_idx = num_scopes - (module_scope_level + 1);
+
+  /* Array of the global indices of the current module subdomains.
+   * Maximum number of global indices, including duplicates, is number
+   * of units:
+   */
+  std::vector<int> module_subdomain_gids;
+  module_subdomain_gids.reserve(module_domain.unit_ids.size());
+
+  for (auto module_unit_id : module_domain.unit_ids) {
+    const auto & module_unit_loc    = _unit_mapping[module_unit_id.id];
+    const auto & module_unit_hwinfo = module_unit_loc.hwinfo;
+    
+    int unit_level_gid = module_unit_hwinfo.scopes[subdomain_gid_idx+1].index;
+    int unit_sub_gid   = -1;
+    if (subdomain_gid_idx >= 0) {
+      unit_sub_gid = module_unit_hwinfo.scopes[subdomain_gid_idx].index;
+    }
+    /* Ignore units that are not contained in current module domain: */
+    if (module_scope_level == 0 ||
+        unit_level_gid == module_domain.g_index) {
+      module_subdomain_gids.push_back(unit_sub_gid);
+    }
+  }
+  auto num_module_units          = module_subdomain_gids.size();
+  auto module_subdomain_gids_end = std::unique(
+                                     module_subdomain_gids.begin(),
+                                     module_subdomain_gids.end());
+  auto num_subdomains            = std::distance(
+                                     module_subdomain_gids.begin(),
+                                     module_subdomain_gids_end);
+
+  DYLOC_LOG_DEBUG_VAR(
+    "dylocxx::domain_graph.build_module_level_hierarchy",
+    dyloc::make_range(
+      module_subdomain_gids.begin(),
+      module_subdomain_gids_end));
+
 }
 
 } // namespace dyloc
