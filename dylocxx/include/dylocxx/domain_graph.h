@@ -44,6 +44,8 @@ class domain_graph {
   void build_hierarchy();
   void build_node_level_hierarchy(
          locality_domain & node_domain);
+  void build_module_level_hierarchy(
+         locality_domain & module_domain);
 };
 
 

@@ -49,7 +49,69 @@ void domain_graph::build_hierarchy() {
 }
 
 void domain_graph::build_node_level_hierarchy(
-       locality_domain & node_domain) {
+  locality_domain & node_domain) {
+  // units located at node:
+  node_domain.unit_ids = _host_topology.unit_ids(node_domain.host);
+
+}
+
+void domain_graph::build_module_level_hierarchy(
+  locality_domain & module_domain) {
+  // units located at node:
+  module_domain.unit_ids = _host_topology.unit_ids(module_domain.host);
+  /*
+   * NOTE: Locality scopes may be heterogeneous but are expected
+   *       to be homogeneous within a module domain.
+   *       For example, this would be a valid use case:
+   *
+   *       module[0] { unit[0]: [CORE,CACHE,PACKAGE,NUMA],
+   *                   unit[1]: [CORE,CACHE,PACKAGE,NUMA] }
+   *       module[1] { unit[2]: [CORE,CACHE,CACHE,CACHE,NUMA],
+   *                   unit[2]: [CORE,CACHE,CACHE,CACHE,NUMA] }
+   */
+
+  /* Collect scope lists of all units at the given module, converting:
+   *
+   *    u[0].scopes: [CORE:0, CACHE:4, CACHE:0, NUMA:0]
+   *    u[1].scopes: [CORE:1, CACHE:5, CACHE:0, NUMA:0]
+   *    u[2].scopes: [CORE:2, CACHE:6, CACHE:1, NUMA:0]
+   *    u[3].scopes: [CORE:3, CACHE:7, CACHE:1, NUMA:0]
+   *
+   * to transposed structure:
+   *
+   *    level[0]: { scope:NUMA,  gids:    [       0       ],
+   *                             sub_gids:[[  0   ,   1  ]]   }
+   *
+   *    level[1]: { scope:CACHE, gids:    [   0,      1   ],
+   *                             sub_gids:[[4 , 5],[6 , 7]]   }
+   *
+   *    level[2]: { scope:CACHE, gids:    [ 4,  5,  6,  7 ],
+   *                             sub_gids:[[0],[1],[2],[3]]   }
+   *
+   * such that subdomains of a domain with global index G are referenced
+   * in sub_gids[G].
+   */
+
+  int num_scopes = 0;
+  dart_team_unit_t module_leader_unit_id;
+  DYLOC_ASSERT_RETURNS(
+    dart_team_unit_g2l(module_domain.team, module_domain.unit_ids[0],
+                       &module_leader_unit_id),
+    DART_OK);
+
+  const auto & module_host_topology   = _host_topology.modules().at(
+                                          module_domain.host).get();
+  const auto & module_numa_ids        = module_host_topology.numa_ids;
+
+  const auto & module_leader_unit_loc = _unit_mapping[module_leader_unit_id];
+  const auto & module_leader_hwinfo   = module_leader_unit_loc.hwinfo;
+
+  std::vector<dyloc_locality_scope_t> module_scopes;
+  module_scopes.reserve(num_scopes);
+  for (int s = 0; s < num_scopes; s++) {
+    module_scopes.push_back(
+      module_leader_hwinfo.scopes[s].scope);
+  }
 }
 
 } // namespace dyloc

@@ -50,7 +50,7 @@ class host_topology {
   int _num_host_levels = 0;
 
  public:
-  host_topology() = default;
+  host_topology() = delete;
   host_topology(const unit_mapping & unit_map);
 
   inline const node_domain_map_t & nodes() const noexcept {
@@ -59,6 +59,15 @@ class host_topology {
 
   inline const module_domain_map_t & modules() const noexcept {
     return _module_domains;
+  }
+
+  inline module_domain_map_t & modules() noexcept {
+    return _module_domains;
+  }
+
+  inline const std::vector<dart_global_unit_t> & unit_ids(
+      const std::string & hostname) const noexcept {
+    return _host_units.at(hostname);
   }
 
  private:

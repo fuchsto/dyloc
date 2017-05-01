@@ -32,12 +32,18 @@ class runtime {
   const dyloc_unit_locality_t & unit_locality(
           dart_team_t t,
           dart_team_unit_t u) {
-    return _unit_mappings[t][u];
+    return _unit_mappings.at(t)[u];
   }
 
   const dyloc_unit_locality_t & unit_locality(
           dart_global_unit_t u) {
-    return _unit_mappings[DART_TEAM_ALL][u.id];
+    // Unit id in team ALL is identical to global unit id:
+    return _unit_mappings.at(DART_TEAM_ALL)[u.id];
+  }
+
+  domain_graph & locality_graph(
+    dart_team_t t) {
+    return _domain_graphs.at(t);
   }
 };
 

@@ -22,6 +22,7 @@ namespace dyloc {
 
 void runtime::initialize() {
   // TODO: initialize global host (hardware) topology here
+  initialize_locality(DART_TEAM_ALL);
 }
 
 void runtime::finalize() {
@@ -41,7 +42,7 @@ void runtime::initialize_locality(dart_team_t team) {
   _host_topologies.insert(
       std::make_pair(
         team,
-        host_topology(_unit_mappings[team])));
+        host_topology(_unit_mappings.at(team))));
 
   DYLOC_LOG_DEBUG("dylocxx::runtime.initialize_locality", "team domain");
   _locality_domains.insert(
@@ -52,9 +53,9 @@ void runtime::initialize_locality(dart_team_t team) {
       std::make_pair(
         team,
         domain_graph(
-          _host_topologies[team],
-          _unit_mappings[team],
-          _locality_domains[team])));
+          _host_topologies.at(team),
+          _unit_mappings.at(team),
+          _locality_domains.at(team))));
 
   DYLOC_LOG_DEBUG("dylocxx::runtime.initialize_locality", ">");
 }
