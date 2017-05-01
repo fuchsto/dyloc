@@ -25,7 +25,8 @@ void domain_graph::build_hierarchy() {
 
   _domains.insert(std::make_pair(".", &_root_domain));
 
-  auto root_domain_vertex = boost::add_vertex(_graph);
+  auto root_domain_vertex           = boost::add_vertex(_graph);
+  _graph[root_domain_vertex].domain = &_root_domain;
 
   int node_index = 0;
   for (auto & node_host_domain : _host_topology.nodes()) {
@@ -44,7 +45,9 @@ void domain_graph::build_hierarchy() {
           _root_domain.children.back().domain_tag,
           &_root_domain.children.back()));
 
-    auto node_domain_vertex = boost::add_vertex(_graph);
+    auto node_domain_vertex           = boost::add_vertex(_graph);
+    _graph[node_domain_vertex].domain = &_root_domain.children.back();
+
     boost::add_edge(root_domain_vertex, node_domain_vertex, _graph);
 
     build_node_level_hierarchy(_root_domain.children.back());

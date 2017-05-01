@@ -27,6 +27,10 @@ class domain_graph {
   typedef domain_graph self_t;
 
  private:
+  struct vertex_property_t {
+    locality_domain * domain;
+  };
+
   /*
    * Using boost graph with domain data as external properties, see:
    *   http://programmingexamples.net/wiki/CPP/Boost/BGL/GridGraphProperties
@@ -35,7 +39,7 @@ class domain_graph {
             boost::listS,          // out-edges stored in a std::list
             boost::vecS,           // vertex set stored here
             boost::undirectedS,    // bidirectional graph.
-            boost::no_property,    // vertex properties
+            vertex_property_t,     // vertex properties
             boost::edge_weight_t,  // edge properties
             boost::no_property,    // graph properties
             boost::listS           // edge storage
