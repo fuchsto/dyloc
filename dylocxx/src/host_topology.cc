@@ -21,8 +21,7 @@
 
 namespace dyloc {
 
-host_topology::host_topology(const unit_mapping & unit_map)
-: _unit_map(unit_map) {
+host_topology::host_topology(const unit_mapping & unit_map) {
   DYLOC_LOG_DEBUG("dylocxx::host_topology.()", "()");
 
   dart_team_t team = unit_map.team;

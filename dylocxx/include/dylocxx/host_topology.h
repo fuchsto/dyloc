@@ -37,10 +37,8 @@ class host_topology {
   int _num_hosts       = 0;
   int _num_host_levels = 0;
 
- private:
-  const unit_mapping & _unit_map;
-
  public:
+  host_topology() = default;
   host_topology(const unit_mapping & unit_map);
 
   inline int num_nodes() const noexcept {
@@ -49,6 +47,10 @@ class host_topology {
 
   inline int num_hosts() const noexcept {
     return _num_hosts;
+  }
+
+  inline const std::vector<dyloc_host_domain_t> & nodes() const noexcept {
+    return _host_domains;
   }
 
  private:

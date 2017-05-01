@@ -23,10 +23,11 @@ class runtime {
   std::unordered_map<dart_team_t, domain_graph>    _domain_graphs;
 
  public:
+  void initialize();
+  void finalize();
+
   void initialize_locality(dart_team_t team);
   void finalize_locality(dart_team_t team);
-
-  void finalize();
 
   const dyloc_unit_locality_t & unit_locality(
           dart_team_t t,
