@@ -29,23 +29,38 @@ class host_topology {
           = std::unordered_map<
               std::string,
               std::vector<dart_global_unit_t> >;
+
+  using module_domain_list_t
+          = std::vector<
+                std::reference_wrapper<dyloc_host_domain_t> >;
+
+
+  // mapping <node host name> -> <node domain>
   using node_domain_map_t
           = std::unordered_map<
               std::string,
               std::reference_wrapper<dyloc_host_domain_t> >;
+  // mapping <module host name> -> <module domain>
   using module_domain_map_t
           = std::unordered_map<
               std::string,
               std::reference_wrapper<dyloc_host_domain_t> >;
+  // mapping <node host name> -> [ <module domain>, ... ]
+  using node_modules_domain_map_t
+          = std::unordered_map<
+              std::string,
+              module_domain_list_t >;
 
  private:
   // Mapping host name to unit ids located at hosts.
-  host_units_map_t    _host_units;
+  host_units_map_t          _host_units;
   // Mapping host name to basic host domain data.
-  host_domain_map_t   _host_domains;
+  host_domain_map_t         _host_domains;
 
-  node_domain_map_t   _node_domains;
-  module_domain_map_t _module_domains;
+  node_domain_map_t         _node_domains;
+  module_domain_map_t       _module_domains;
+
+  node_modules_domain_map_t _node_module_domains;
 
   int _num_host_levels = 0;
 
@@ -61,8 +76,9 @@ class host_topology {
     return _module_domains;
   }
 
-  inline module_domain_map_t & modules() noexcept {
-    return _module_domains;
+  inline const module_domain_list_t & node_modules(
+      const std::string & node_hostname) const noexcept {
+    return _node_module_domains.at(node_hostname);
   }
 
   inline const std::vector<dart_global_unit_t> & unit_ids(

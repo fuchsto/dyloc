@@ -17,8 +17,8 @@ namespace dyloc {
 
 /* Outline of the domain graph construction procedure:
  *
- * 1. Build bidirectional graph
- *
+ * 1. Build graph as domain containment hierarchy
+ * 2. Use DFS visitor to collect domain capabilities
  *
  */
 
@@ -56,24 +56,67 @@ void domain_graph::build_hierarchy() {
     _graph[node_domain_vertex].domain = &_root_domain.children.back();
 
     boost::add_edge(root_domain_vertex, node_domain_vertex,
-                    { edge_type::contains, 0 },
+                    { edge_type::contains, 1 },
                     _graph);
 
-    build_node_level_hierarchy(_root_domain.children.back());
+    build_node_level_hierarchy(
+      _root_domain.children.back(),
+      node_domain_vertex);
 
     ++node_index;
   }
 }
 
 void domain_graph::build_node_level_hierarchy(
-  locality_domain & node_domain) {
+  locality_domain & node_domain,
+  graph_vertex_t  & node_domain_vertex) {
+  DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_node_level_hierarchy",
+                  "node:", node_domain.host);
   // units located at node:
   node_domain.unit_ids = _host_topology.unit_ids(node_domain.host);
+  // modules located at node:
+  auto & node_modules  = _host_topology.node_modules(node_domain.host);
 
+  build_module_level_hierarchy(
+    node_domain,
+    node_domain_vertex);
+
+  int module_index = 0;
+  for (auto & node_module : node_modules) {
+    DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_node_level_hierarchy",
+                    "module host name:", node_module.get().host);
+    locality_domain module_domain(
+        node_domain,
+        DYLOC_LOCALITY_SCOPE_MODULE,
+        module_index);
+    module_domain.host = node_domain.host;
+
+    node_domain.children.push_back(module_domain);
+
+    _domains.insert(
+        std::make_pair(
+          node_domain.children.back().domain_tag,
+          &node_domain.children.back()));
+
+    auto module_domain_vertex           = boost::add_vertex(_graph);
+    _graph[module_domain_vertex].domain = &node_domain.children.back();
+
+    boost::add_edge(node_domain_vertex, module_domain_vertex,
+                    { edge_type::contains, 1 },
+                    _graph);
+
+    build_module_level_hierarchy(
+      module_domain,
+      module_domain_vertex);
+
+    ++module_index;
+  }
 }
 
 void domain_graph::build_module_level_hierarchy(
-  locality_domain & module_domain) {
+  locality_domain & module_domain,
+  graph_vertex_t  & module_domain_vertex) {
+  dyloc__unused(module_domain_vertex);
   // units located at node:
   module_domain.unit_ids = _host_topology.unit_ids(module_domain.host);
   /*
@@ -116,9 +159,9 @@ void domain_graph::build_module_level_hierarchy(
                        &module_leader_unit_id),
     DART_OK);
 
-  const auto & module_host_topology   = _host_topology.modules().at(
-                                          module_domain.host).get();
-  const auto & module_numa_ids        = module_host_topology.numa_ids;
+  // const auto & module_host_topology   = _host_topology.modules().at(
+  //                                         module_domain.host).get();
+  // const auto & module_numa_ids        = module_host_topology.numa_ids;
 
   const auto & module_leader_unit_loc = _unit_mapping[module_leader_unit_id];
   const auto & module_leader_hwinfo   = module_leader_unit_loc.hwinfo;

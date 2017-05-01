@@ -373,6 +373,7 @@ void host_topology::collect_topology(
   if (hostname_min_len != hostname_max_len) {
     // Match short hostnames as prefix of every other hostname:
     for (auto & host_dom_top : _host_domains) {
+      _node_module_domains[host_dom_top.host] = module_domain_list_t();
       if (strlen(host_dom_top.host) == (size_t)hostname_min_len) {
         // Host name is node:
         _node_domains.insert(
@@ -391,6 +392,8 @@ void host_topology::collect_topology(
                 std::make_pair(
                   std::string(host_dom_sub.host),
                   std::ref(host_dom_sub)));
+            _node_module_domains[host_dom_top.host].push_back(
+                std::ref(host_dom_sub));
             /* Increment topology level of other host: */
             int node_level = host_dom_top.level + 1;
             if (node_level > _num_host_levels) {
@@ -406,6 +409,7 @@ void host_topology::collect_topology(
     }
   } else {
     for (auto & host_dom_top : _host_domains) {
+      _node_module_domains[host_dom_top.host] = module_domain_list_t();
       _node_domains.insert(
           std::make_pair(
             std::string(host_dom_top.host),

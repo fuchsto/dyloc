@@ -62,7 +62,7 @@ const dyloc_unit_locality_t & query_unit_locality(
 }
 
 domain_graph & query_locality_graph(
-  dart_team_t t = DART_TEAM_ALL) {
+  dart_team_t t) {
   return rt.locality_graph(t);
 }
 

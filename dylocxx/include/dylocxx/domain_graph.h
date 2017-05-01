@@ -11,6 +11,7 @@
 
 #include <boost/graph/undirected_graph.hpp>
 #include <boost/graph/connected_components.hpp>
+#include <boost/graph/graph_traits.hpp>
 
 #include <unordered_map>
 
@@ -20,8 +21,6 @@ namespace dyloc {
 
 /**
  * Extension to the hwloc topology data structure.
- *
- * \todo Consider specializing hwloc topology type via sub-classing.
  */
 class domain_graph {
   typedef domain_graph self_t;
@@ -30,7 +29,8 @@ class domain_graph {
   enum class edge_type : int {
     unspecified  = 0,
     contains     = 100,
-    sibling
+    sibling,
+    alias
   };
 
   struct vertex_property_t {
@@ -63,6 +63,9 @@ class domain_graph {
           >::const_type
     index_map_t;
 
+  typedef boost::graph_traits<graph_t>::vertex_descriptor
+    graph_vertex_t;
+
  private:
   const host_topology    & _host_topology;
   const unit_mapping     & _unit_mapping;
@@ -83,14 +86,22 @@ class domain_graph {
     build_hierarchy();
   }
 
+  inline const graph_t & graph() const noexcept {
+    return _graph;
+  }
+
  private:
   void build_hierarchy();
-  void build_node_level_hierarchy(
-         locality_domain & node_domain);
-  void build_module_level_hierarchy(
-         locality_domain & module_domain);
-};
 
+  void build_node_level_hierarchy(
+         locality_domain & node_domain,
+         graph_vertex_t  & node_domain_vertex);
+
+  void build_module_level_hierarchy(
+         locality_domain & module_domain,
+         graph_vertex_t  & node_domain_vertex);
+
+};
 
 } // namespace dyloc
 
