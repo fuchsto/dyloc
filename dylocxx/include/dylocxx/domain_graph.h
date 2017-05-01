@@ -27,8 +27,19 @@ class domain_graph {
   typedef domain_graph self_t;
 
  private:
+  enum class edge_type : int {
+    unspecified  = 0,
+    contains     = 100,
+    sibling
+  };
+
   struct vertex_property_t {
     locality_domain * domain;
+  };
+
+  struct edge_property_t {
+    edge_type type;
+    int       distance;
   };
 
   /*
@@ -38,9 +49,9 @@ class domain_graph {
   typedef boost::adjacency_list<
             boost::listS,          // out-edges stored in a std::list
             boost::vecS,           // vertex set stored here
-            boost::undirectedS,    // bidirectional graph.
+            boost::directedS,      // directed graph (parent -> sub)
             vertex_property_t,     // vertex properties
-            boost::edge_weight_t,  // edge properties
+            edge_property_t,       // edge properties
             boost::no_property,    // graph properties
             boost::listS           // edge storage
           >

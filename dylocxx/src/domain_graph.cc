@@ -15,6 +15,13 @@
 
 namespace dyloc {
 
+/* Outline of the domain graph construction procedure:
+ *
+ * 1. Build bidirectional graph
+ *
+ *
+ */
+
 void domain_graph::build_hierarchy() {
   DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_hierarchy", "()");
 
@@ -48,7 +55,9 @@ void domain_graph::build_hierarchy() {
     auto node_domain_vertex           = boost::add_vertex(_graph);
     _graph[node_domain_vertex].domain = &_root_domain.children.back();
 
-    boost::add_edge(root_domain_vertex, node_domain_vertex, _graph);
+    boost::add_edge(root_domain_vertex, node_domain_vertex,
+                    { edge_type::contains, 0 },
+                    _graph);
 
     build_node_level_hierarchy(_root_domain.children.back());
 
