@@ -5,8 +5,6 @@
 #include <dylocxx/internal/logging.h>
 #include <dylocxx/internal/assert.h>
 
-#include <dyloc/common/host_topology.h>
-
 #include <dash/dart/if/dart_types.h>
 
 #include <vector>
@@ -109,10 +107,9 @@ host_topology::host_topology(const unit_mapping & unit_map)
     _host_domains.push_back(std::move(host_dom));
   }
 
-  this->_host_topo.num_host_levels = 0;
-  this->_host_topo.num_nodes       = num_hosts;
-  this->_host_topo.num_hosts       = num_hosts;
-  this->_host_topo.num_units       = num_units;
+  _num_host_levels = 0;
+  _num_nodes       = num_hosts;
+  _num_hosts       = num_hosts;
 
   collect_topology(unit_map);
 
@@ -287,8 +284,8 @@ void host_topology::collect_topology(
             std::strcpy(host_dom.parent, module_loc.host);
             host_dom.scope_pos = module_loc.pos;
             host_dom.level     = 1;
-            if (_host_topo.num_host_levels < host_dom.level) {
-              _host_topo.num_host_levels = host_dom.level;
+            if (_num_host_levels < host_dom.level) {
+              _num_host_levels = host_dom.level;
             }
             break;
           }
@@ -343,10 +340,10 @@ void host_topology::collect_topology(
         DART_OK);
     }
 
-    _host_topo.num_nodes = num_hosts;
+    _num_nodes = num_hosts;
     for (const auto & host_dom : _host_domains) {
       if (host_dom.level > 0) {
-        _host_topo.num_nodes--;
+        _num_nodes--;
       }
     }
   }
@@ -379,15 +376,15 @@ void host_topology::collect_topology(
     }
   }
 
-  _host_topo.num_host_levels = 0;
-  _host_topo.num_nodes       = num_hosts;
+  _num_host_levels = 0;
+  _num_nodes       = num_hosts;
   if (hostname_min_len != hostname_max_len) {
-    _host_topo.num_nodes = 0;
+    _num_nodes = 0;
     int num_modules = 0;
     /* Match short hostnames as prefix of every other hostname: */
     for (auto & host_dom_top : _host_domains) {
       if (strlen(host_dom_top.host) == (size_t)hostname_min_len) {
-        ++_host_topo.num_nodes;
+        ++_num_nodes;
         /* Host name is node, find its modules in all other hostnames: */
         char * short_name = host_dom_top.host;
         for (auto & host_dom_sub : _host_domains) {
@@ -398,8 +395,8 @@ void host_topology::collect_topology(
             num_modules++;
             /* Increment topology level of other host: */
             int node_level = host_dom_top.level + 1;
-            if (node_level > _host_topo.num_host_levels) {
-              _host_topo.num_host_levels = node_level;
+            if (node_level > _num_host_levels) {
+              _num_host_levels = node_level;
             }
             host_dom_sub.level = node_level;
             /* Set short hostname as parent: */
@@ -409,13 +406,11 @@ void host_topology::collect_topology(
         }
       }
     }
-    if (num_hosts > _host_topo.num_nodes + num_modules) {
+    if (num_hosts > _num_nodes + num_modules) {
       /* some hosts are modules of node that is not in host names: */
-      _host_topo.num_nodes += num_hosts -
-                              (_host_topo.num_nodes + num_modules);
+      _num_nodes += num_hosts - (_num_nodes + num_modules);
     }
   }
-  _host_topo.host_domains = _host_domains.data();
 }
 
 void host_topology::local_topology(
