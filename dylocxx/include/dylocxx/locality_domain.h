@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <iostream>
 
 
 namespace dyloc {
@@ -44,6 +45,10 @@ class locality_domain {
     int                      child_index);
 
 };
+
+std::ostream & operator<<(
+  std::ostream          & os,
+  const locality_domain & ld);
 
 } // namespace dyloc
 

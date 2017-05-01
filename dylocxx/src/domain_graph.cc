@@ -37,13 +37,19 @@ void domain_graph::build_hierarchy() {
 
   int node_index = 0;
   for (auto & node_host_domain : _host_topology.nodes()) {
+    const auto & node_hostname = node_host_domain.first;
     DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_hierarchy",
-                    "node host:", node_host_domain.first);
+                    "node host:", node_hostname);
+
     locality_domain node_domain(
         _root_domain,
         DYLOC_LOCALITY_SCOPE_NODE,
         node_index);
-    node_domain.host = node_host_domain.first;
+    node_domain.unit_ids = _host_topology.unit_ids(node_hostname);
+    node_domain.host     = node_hostname;
+
+    DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_node_level_hierarchy",
+                    "node domain:", node_domain);
 
     _root_domain.children.push_back(node_domain);
 
@@ -90,6 +96,9 @@ void domain_graph::build_node_level_hierarchy(
         DYLOC_LOCALITY_SCOPE_MODULE,
         module_index);
     module_domain.host = node_domain.host;
+
+    DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_node_level_hierarchy",
+                    "module domain:", module_domain);
 
     node_domain.children.push_back(module_domain);
 

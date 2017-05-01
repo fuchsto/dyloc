@@ -1,5 +1,6 @@
 
 #include <dylocxx/locality_domain.h>
+#include <dylocxx/hwinfo.h>
 
 #include <dylocxx/internal/logging.h>
 #include <dylocxx/internal/assert.h>
@@ -8,10 +9,29 @@
 
 #include <dash/dart/if/dart.h>
 
+#include <iostream>
 #include <sstream>
 
 
 namespace dyloc {
+
+std::ostream & operator<<(
+  std::ostream          & os,
+  const locality_domain & ld) {
+  std::ostringstream ss;
+  ss << "locality_domain { "
+     << "tag:"    << ld.domain_tag << " "
+     << "level:"  << ld.level      << " "
+     << "scope:"  << ld.scope      << " "
+     << "rindex:" << ld.r_index    << " "
+     << "units:"  << "[ ";
+  for (auto uid : ld.unit_ids) {
+    ss << uid.id << " ";
+  }
+  ss << "]";
+  ss << " }";
+  return operator<<(os, ss.str());
+}
 
 locality_domain::locality_domain(
   const locality_domain  & parent,
