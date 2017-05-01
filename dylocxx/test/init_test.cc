@@ -22,10 +22,12 @@ TEST_F(InitTest, ImmediateFinalize) {
 TEST_F(InitTest, UnitLocality) {
   dyloc::init(&TESTENV.argc, &TESTENV.argv);
 
-  const auto & uloc = dyloc::query_unit_locality(
-                        dyloc::dart_myid());
-
-  DYLOC_LOG_DEBUG("InitTest.UnitLocality", "unit locality:", uloc);
+  if (dyloc::myid().id == 0) {
+    for (int u = 0; u < dyloc::num_units(); ++u) {
+      const auto & uloc = dyloc::query_unit_locality(u);
+      DYLOC_LOG_DEBUG("InitTest.UnitLocality", "unit locality:", uloc);
+    }
+  }
 
   dyloc::finalize();
 }
