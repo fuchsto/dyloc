@@ -71,6 +71,7 @@ foreach (dart_variant ${DART_IMPLEMENTATIONS_LIST})
     ${CMAKE_SOURCE_DIR}/dylocxx/include
     ${CMAKE_SOURCE_DIR}/common/include
     ${DART_INCLUDE_DIRS}
+    ${Boost_INCLUDE_DIRS}
     ${ADDITIONAL_INCLUDES}
   )
   add_executable(
@@ -81,6 +82,7 @@ foreach (dart_variant ${DART_IMPLEMENTATIONS_LIST})
     ${DYLOCXX_TEST}
     GTest
     ${DYLOCXX_LIBRARY}
+    ${Boost_LIBRARIES}
     ${DART_LIBRARIES}
     ${ADDITIONAL_LIBRARIES}
   )

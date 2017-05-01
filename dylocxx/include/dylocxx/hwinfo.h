@@ -3,6 +3,8 @@
 
 #include <dyloc/common/types.h>
 
+#include <iostream>
+
 
 namespace dyloc {
 
@@ -23,6 +25,14 @@ class hwinfo {
     return &_hw;
   }
 };
+
+std::ostream & operator<<(
+  std::ostream                 & os,
+  const dyloc_locality_scope_t & scope);
+
+std::ostream & operator<<(
+  std::ostream         & os,
+  const dyloc_hwinfo_t & hwinfo);
 
 } // namespace dyloc
 

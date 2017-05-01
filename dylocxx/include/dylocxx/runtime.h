@@ -4,6 +4,7 @@
 #include <dylocxx/host_topology.h>
 #include <dylocxx/unit_mapping.h>
 #include <dylocxx/locality_domain.h>
+#include <dylocxx/domain_graph.h>
 
 #include <dyloc/common/types.h>
 
@@ -19,9 +20,24 @@ class runtime {
   std::unordered_map<dart_team_t, unit_mapping>    _unit_mappings;
   std::unordered_map<dart_team_t, locality_domain> _locality_domains;
 
+  std::unordered_map<dart_team_t, domain_graph>    _domain_graphs;
+
  public:
   void initialize_locality(dart_team_t team);
   void finalize_locality(dart_team_t team);
+
+  void finalize();
+
+  const dyloc_unit_locality_t & unit_locality(
+          dart_team_t t,
+          dart_team_unit_t u) {
+    return _unit_mappings[t][u];
+  }
+
+  const dyloc_unit_locality_t & unit_locality(
+          dart_global_unit_t u) {
+    return _unit_mappings[DART_TEAM_ALL][u.id];
+  }
 };
 
 } // namespace dyloc

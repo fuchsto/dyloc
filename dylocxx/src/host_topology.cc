@@ -6,6 +6,7 @@
 #include <dylocxx/internal/assert.h>
 
 #include <dash/dart/if/dart_types.h>
+#include <dash/dart/if/dart_team_group.h>
 
 #include <vector>
 #include <string>

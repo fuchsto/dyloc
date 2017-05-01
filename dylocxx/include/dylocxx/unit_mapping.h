@@ -22,7 +22,11 @@ struct unit_mapping {
   dart_team_t                         team;
 
  public:
-  unit_mapping() = default;
+  unit_mapping()                                 = default;
+  unit_mapping(const unit_mapping &)             = default;
+  unit_mapping(unit_mapping &&)                  = default;
+  unit_mapping & operator=(const unit_mapping &) = default;
+  unit_mapping & operator=(unit_mapping &&)      = default;
 
   /**
    * Obtain global mapping of team units to hosts.

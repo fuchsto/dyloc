@@ -5,6 +5,8 @@
 #include <dylocxx/unit_mapping.h>
 #include <dylocxx/locality_domain.h>
 
+#include <dylocxx/domain_graph.h>
+
 #include <dylocxx/internal/logging.h>
 #include <dylocxx/internal/assert.h>
 
@@ -41,10 +43,6 @@ void runtime::initialize_locality(dart_team_t team) {
     team_global_dom.unit_ids.push_back(guid);
   }
 
-  DYLOC_LOG_DEBUG("dylocxx::runtime.initialize_locality", "locality domains");
-  _locality_domains.insert(
-      std::make_pair(team, team_global_dom));
-
   DYLOC_LOG_DEBUG("dylocxx::runtime.initialize_locality", "unit mappings");
   _unit_mappings.insert(
       std::make_pair(team, unit_mapping(team)));
@@ -55,11 +53,35 @@ void runtime::initialize_locality(dart_team_t team) {
         team,
         host_topology(_unit_mappings[team])));
 
+  DYLOC_LOG_DEBUG("dylocxx::runtime.initialize_locality", "locality domains");
+  _locality_domains.insert(
+      std::make_pair(team, team_global_dom));
+
+  // DYLOC_LOG_DEBUG("dylocxx::runtime.initialize_locality", "domain graph");
+  // _domain_graphs.insert(
+  //     std::make_pair(
+  //       team,
+  //       domain_graph(
+  //         _host_topologies[team],
+  //         _unit_mappings[team],
+  //         _locality_domains[team])));
+
   DYLOC_LOG_DEBUG("dylocxx::runtime.initialize_locality", ">");
 }
 
 void runtime::finalize_locality(dart_team_t team) {
-  _locality_domains.erase(_locality_domains.find(team));
+  _locality_domains.erase(
+      _locality_domains.find(team));
+  _unit_mappings.erase(
+      _unit_mappings.find(team));
+  _host_topologies.erase(
+      _host_topologies.find(team));
+}
+
+void runtime::finalize() {
+  _locality_domains.clear();
+  _unit_mappings.clear();
+  _host_topologies.clear();
 }
 
 } // namespace dyloc

@@ -33,15 +33,23 @@ class host_topology {
   // Mapping host name to basic host domain data.
   host_domain_map_t  _host_domains;
 
-  int _num_nodes;
-  int _num_hosts;
-  int _num_host_levels;
+  int _num_nodes       = 0;
+  int _num_hosts       = 0;
+  int _num_host_levels = 0;
 
  private:
   const unit_mapping & _unit_map;
 
  public:
   host_topology(const unit_mapping & unit_map);
+
+  inline int num_nodes() const noexcept {
+    return _num_nodes;
+  }
+
+  inline int num_hosts() const noexcept {
+    return _num_hosts;
+  }
 
  private:
   void collect_topology(

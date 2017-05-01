@@ -3,7 +3,9 @@
 
 #ifdef DYLOC__PLATFORM__LINUX
 /* _GNU_SOURCE required for sched_getcpu() */
-#  define _GNU_SOURCE
+#  ifndef _GNU_SOURCE
+#    define _GNU_SOURCE
+#  endif
 #  include <sched.h>
 #endif
 
@@ -35,8 +37,58 @@
 #  include <numa.h>
 #endif
 
+#include <iostream>
+#include <sstream>
+
 
 namespace dyloc {
+
+std::ostream & operator<<(
+  std::ostream                 & os,
+  const dyloc_locality_scope_t & scope) {
+  std::ostringstream ss;
+  switch (scope) {
+    case DYLOC_LOCALITY_SCOPE_GLOBAL:  ss << "GLOBAL"; break;
+    case DYLOC_LOCALITY_SCOPE_GROUP:   ss << "GROUP"; break;
+    case DYLOC_LOCALITY_SCOPE_UNIT:    ss << "UNIT"; break;
+    case DYLOC_LOCALITY_SCOPE_MODULE:  ss << "MODULE"; break;
+    case DYLOC_LOCALITY_SCOPE_NETWORK: ss << "NETWORK"; break;
+    case DYLOC_LOCALITY_SCOPE_NODE:    ss << "NODE"; break;
+    case DYLOC_LOCALITY_SCOPE_PACKAGE: ss << "PACKAGE"; break;
+    case DYLOC_LOCALITY_SCOPE_NUMA:    ss << "NUMA"; break;
+    case DYLOC_LOCALITY_SCOPE_UNCORE:  ss << "UNCORE"; break;
+    case DYLOC_LOCALITY_SCOPE_CORE:    ss << "CORE"; break;
+    case DYLOC_LOCALITY_SCOPE_CPU:     ss << "CPU"; break;
+    case DYLOC_LOCALITY_SCOPE_CACHE:   ss << "CACHE"; break;
+    default:                           ss << "UNDEFINED"; break;
+  }
+  return operator<<(os, ss.str());
+}
+
+std::ostream & operator<<(
+  std::ostream                     & os,
+  const dyloc_locality_scope_pos_t & scope) {
+  std::ostringstream ss;
+  ss << scope.scope << ":" << scope.index;
+  return operator<<(os, ss.str());
+}
+
+std::ostream & operator<<(
+  std::ostream & os,
+  const dyloc_hwinfo_t & hwinfo) {
+  std::ostringstream ss;
+  ss << "dyloc_hwinfo_t { "
+     << "host:"  << hwinfo.host    << " "
+     << "cpu:"   << hwinfo.cpu_id  << " "
+     << "core:"  << hwinfo.core_id << " "
+     << "numa:"  << hwinfo.numa_id << " "
+     << "scope:" << "( ";
+  for (int s = 0; s < hwinfo.num_scopes; ++s) {
+    ss << hwinfo.scopes[s] << " ";
+  }
+  ss << ") }";
+  return operator<<(os, ss.str());
+}
 
 hwinfo::hwinfo() {
   _hw.num_numa            = -1;

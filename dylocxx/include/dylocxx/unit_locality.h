@@ -6,6 +6,7 @@
 #include <dash/dart/if/dart_types.h>
 
 #include <vector>
+#include <iostream>
 
 
 namespace dyloc {
@@ -21,6 +22,7 @@ class unit_locality {
 
  public:
   unit_locality() = default;
+  unit_locality(const dyloc_unit_locality_t & uloc) : _uloc(uloc) { }
 
   /**
    * Obtain local hardware locality in unit scope.
@@ -31,6 +33,10 @@ class unit_locality {
     return &_uloc;
   }
 };
+
+std::ostream & operator<<(
+  std::ostream                & os,
+  const dyloc_unit_locality_t & uloc);
 
 } // namespace dyloc
 

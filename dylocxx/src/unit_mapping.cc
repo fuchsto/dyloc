@@ -27,6 +27,7 @@ unit_mapping::unit_mapping(dart_team_t t)
   // all-to-all exchange of locality data across all units:
   // (send, recv, nbytes, team)
   DYLOC_LOG_DEBUG("dylocxx::unit_mapping.()", "dart_allgather");
+  DYLOC_LOG_TRACE("dylocxx::unit_mapping.()", "send:", *uloc.data());
   DYLOC_ASSERT_RETURNS(
     dart_allgather(uloc.data(),
                    unit_localities.data(),
@@ -35,6 +36,12 @@ unit_mapping::unit_mapping(dart_team_t t)
                    team),
     DART_OK);
   dart_barrier(team);
+
+  if (myid.id == 0) {
+    for (const auto & ul : unit_localities) {
+      DYLOC_LOG_TRACE("dylocxx::unit_mapping.()", "received:", ul);
+    }
+  }
 }
 
 } // namespace dyloc
