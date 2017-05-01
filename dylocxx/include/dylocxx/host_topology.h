@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <vector>
 #include <string>
+#include <functional>
 
 
 namespace dyloc {
@@ -25,32 +26,39 @@ class host_topology {
   using host_domain_map_t
           = std::vector<dyloc_host_domain_t>;
   using host_units_map_t
-          = std::unordered_map<std::string, std::vector<dart_global_unit_t>>;
+          = std::unordered_map<
+              std::string,
+              std::vector<dart_global_unit_t> >;
+  using node_domain_map_t
+          = std::unordered_map<
+              std::string,
+              std::reference_wrapper<dyloc_host_domain_t> >;
+  using module_domain_map_t
+          = std::unordered_map<
+              std::string,
+              std::reference_wrapper<dyloc_host_domain_t> >;
 
  private:
   // Mapping host name to unit ids located at hosts.
-  host_units_map_t   _host_units;
+  host_units_map_t    _host_units;
   // Mapping host name to basic host domain data.
-  host_domain_map_t  _host_domains;
+  host_domain_map_t   _host_domains;
 
-  int _num_nodes       = 0;
-  int _num_hosts       = 0;
+  node_domain_map_t   _node_domains;
+  module_domain_map_t _module_domains;
+
   int _num_host_levels = 0;
 
  public:
   host_topology() = default;
   host_topology(const unit_mapping & unit_map);
 
-  inline int num_nodes() const noexcept {
-    return _num_nodes;
+  inline const node_domain_map_t & nodes() const noexcept {
+    return _node_domains;
   }
 
-  inline int num_hosts() const noexcept {
-    return _num_hosts;
-  }
-
-  inline const std::vector<dyloc_host_domain_t> & nodes() const noexcept {
-    return _host_domains;
+  inline const module_domain_map_t & modules() const noexcept {
+    return _module_domains;
   }
 
  private:

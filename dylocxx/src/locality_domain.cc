@@ -32,10 +32,17 @@ locality_domain::locality_domain(
 }
 
 locality_domain::locality_domain(dart_team_t t) {
+  scope      = DYLOC_LOCALITY_SCOPE_GLOBAL;
+  level      = 0;
+  r_index    = 0;
+  g_index    = 0;
+  team       = t;
+  domain_tag = ".";
+
   size_t num_units = 0;
-  DYLOC_ASSERT_RETURNS(dart_team_size(t, &num_units), DART_OK);
+  DYLOC_ASSERT_RETURNS(dart_team_size(team, &num_units), DART_OK);
   DYLOC_LOG_DEBUG("dylocxx::locality_domain.()",
-                  "team:",  t,
+                  "team:",  team,
                   "units:", num_units);
   for (int u = 0; u < static_cast<int>(num_units); ++u) {
     dart_team_unit_t   luid = { u };
@@ -45,12 +52,6 @@ locality_domain::locality_domain(dart_team_t t) {
       DART_OK);
     unit_ids.push_back(guid);
   }
-  scope      = DYLOC_LOCALITY_SCOPE_GLOBAL;
-  level      = 0;
-  r_index    = 0;
-  g_index    = 0;
-  team       = t;
-  domain_tag = ".";
 }
 
 } // namespace dyloc

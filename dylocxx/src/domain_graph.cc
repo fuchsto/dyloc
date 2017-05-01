@@ -1,6 +1,9 @@
 
 #include <dylocxx/domain_graph.h>
 
+#include <dylocxx/internal/logging.h>
+#include <dylocxx/internal/assert.h>
+
 #include <boost/graph/connected_components.hpp>
 #include <boost/graph/edge_list.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -13,7 +16,7 @@
 namespace dyloc {
 
 void domain_graph::build_hierarchy() {
-  int num_nodes = _host_topology.num_nodes();
+  DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_hierarchy", "()");
 
   _root_domain.scope   = DYLOC_LOCALITY_SCOPE_GLOBAL;
   _root_domain.level   = 0;
@@ -22,12 +25,15 @@ void domain_graph::build_hierarchy() {
 
   _domains.insert(std::make_pair(".", &_root_domain));
 
-  for (int n = 0; n < num_nodes; n++) {
+  int node_index = 0;
+  for (auto & node_host_domain : _host_topology.nodes()) {
+    DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_hierarchy",
+                    "node host:", node_host_domain.first);
     locality_domain node_domain(
         _root_domain,
         DYLOC_LOCALITY_SCOPE_NODE,
-        n);
-    node_domain.host = _host_topology.nodes()[n].host;
+        node_index);
+    node_domain.host = node_host_domain.first;
 
     _root_domain.children.push_back(node_domain);
 
@@ -37,6 +43,8 @@ void domain_graph::build_hierarchy() {
           &_root_domain.children.back()));
 
     build_node_level_hierarchy(_root_domain.children.back());
+
+    ++node_index;
   }
 }
 

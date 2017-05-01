@@ -31,8 +31,7 @@ void runtime::finalize() {
 }
 
 void runtime::initialize_locality(dart_team_t team) {
-  DYLOC_LOG_DEBUG("dylocxx::runtime.initialize_locality", "()");
-  DYLOC_LOG_DEBUG("dylocxx::runtime.initialize_locality", "team:", team);
+  DYLOC_LOG_DEBUG("dylocxx::runtime.initialize_locality", "() team:", team);
 
   DYLOC_LOG_DEBUG("dylocxx::runtime.initialize_locality", "unit mappings");
   _unit_mappings.insert(

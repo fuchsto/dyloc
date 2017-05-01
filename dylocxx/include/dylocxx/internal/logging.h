@@ -3,6 +3,8 @@
 
 #include <dyloc/common/internal/macro.h>
 
+#include <dylocxx/adapter/dart.h>
+
 #include <sstream>
 #include <iostream>
 #include <iomanip>
@@ -92,9 +94,12 @@ inline void Log_Line(
   const std::string & msg)
 {
   pid_t pid = getpid();
+  dart_global_unit_t uid = dyloc::myid();
   std::stringstream buf;
 
-  buf << "[dyloc "
+  buf << "[ "
+      << std::setw(4) << uid.id
+      << " "
       << level
       << " ] [ "
       << std::right << std::setw(5) << pid

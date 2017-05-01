@@ -12,6 +12,7 @@
 #include <string>
 #include <set>
 #include <algorithm>
+#include <functional>
 
 #ifdef DART_ENABLE_HWLOC
 #  include <hwloc.h>
@@ -53,8 +54,6 @@ host_topology::host_topology(const unit_mapping & unit_map) {
                        std::vector<dart_global_unit_t>()));
     _host_units[unit_hostname].push_back(guid);
   }
-
-  int num_hosts = _host_units.size();
 
   // Iterate hosts:
   //
@@ -108,8 +107,6 @@ host_topology::host_topology(const unit_mapping & unit_map) {
   }
 
   _num_host_levels = 0;
-  _num_nodes       = num_hosts;
-  _num_hosts       = num_hosts;
 
   collect_topology(unit_map);
 
@@ -339,13 +336,6 @@ void host_topology::collect_topology(
         dart_team_destroy(&local_team),
         DART_OK);
     }
-
-    _num_nodes = num_hosts;
-    for (const auto & host_dom : _host_domains) {
-      if (host_dom.level > 0) {
-        _num_nodes--;
-      }
-    }
   }
   DYLOC_ASSERT_RETURNS(
     dart_group_destroy(&local_group),
@@ -377,22 +367,30 @@ void host_topology::collect_topology(
   }
 
   _num_host_levels = 0;
-  _num_nodes       = num_hosts;
+
+  // TODO: Intermediate, only works if node host names have identical
+  //       length:
   if (hostname_min_len != hostname_max_len) {
-    _num_nodes = 0;
-    int num_modules = 0;
-    /* Match short hostnames as prefix of every other hostname: */
+    // Match short hostnames as prefix of every other hostname:
     for (auto & host_dom_top : _host_domains) {
       if (strlen(host_dom_top.host) == (size_t)hostname_min_len) {
-        ++_num_nodes;
-        /* Host name is node, find its modules in all other hostnames: */
+        // Host name is node:
+        _node_domains.insert(
+            std::make_pair(
+              std::string(host_dom_top.host),
+              std::ref(host_dom_top)));
+        // Find node modules in all other hostnames:
         char * short_name = host_dom_top.host;
         for (auto & host_dom_sub : _host_domains) {
           char * other_name = host_dom_sub.host;
           /* Other hostname is longer and has short host name in prefix: */
           if (strlen(other_name) > (size_t)hostname_min_len &&
               strncmp(short_name, other_name, hostname_min_len) == 0) {
-            num_modules++;
+            // Found module of node host:
+            _module_domains.insert(
+                std::make_pair(
+                  std::string(host_dom_sub.host),
+                  std::ref(host_dom_sub)));
             /* Increment topology level of other host: */
             int node_level = host_dom_top.level + 1;
             if (node_level > _num_host_levels) {
@@ -406,9 +404,12 @@ void host_topology::collect_topology(
         }
       }
     }
-    if (num_hosts > _num_nodes + num_modules) {
-      /* some hosts are modules of node that is not in host names: */
-      _num_nodes += num_hosts - (_num_nodes + num_modules);
+  } else {
+    for (auto & host_dom_top : _host_domains) {
+      _node_domains.insert(
+          std::make_pair(
+            std::string(host_dom_top.host),
+            std::ref(host_dom_top)));
     }
   }
 }
