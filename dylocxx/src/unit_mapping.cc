@@ -36,12 +36,6 @@ unit_mapping::unit_mapping(dart_team_t t)
                    team),
     DART_OK);
   dart_barrier(team);
-
-  if (myid.id == 0) {
-    for (const auto & ul : unit_localities) {
-      DYLOC_LOG_TRACE("dylocxx::unit_mapping.()", "received:", ul);
-    }
-  }
 }
 
 } // namespace dyloc

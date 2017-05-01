@@ -144,7 +144,7 @@ void host_topology::collect_topology(
     dart_group_create(&local_group),
     DART_OK);
 
-  auto num_hosts = _host_units.size();
+  int num_hosts = _host_units.size();
 
   /*
    * unit ID of leader unit (relative to the team specified in unit_mapping)
@@ -418,6 +418,8 @@ void host_topology::local_topology(
   const unit_mapping                   & unit_map,
   std::vector<dyloc_module_location_t> & module_locations) {
 #if defined(DART_ENABLE_HWLOC) && defined(DART_ENABLE_HWLOC_PCI)
+  dyloc__unused(unit_map);
+
   hwloc_topology_t topology;
   hwloc_topology_init(&topology);
   hwloc_topology_set_flags(topology,

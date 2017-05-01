@@ -37,13 +37,13 @@ bool is_initialized() {
 
 const dyloc_unit_locality_t & query_unit_locality(
         dart_global_unit_t u) {
-  rt.unit_locality(u);
+  return rt.unit_locality(u);
 }
 
 const dyloc_unit_locality_t & query_unit_locality(
         dart_team_t t,
         dart_team_unit_t u) {
-  rt.unit_locality(t, u);
+  return rt.unit_locality(t, u);
 }
 
 } // namespace dyloc

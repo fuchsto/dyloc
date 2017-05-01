@@ -3,9 +3,12 @@
 
 #include <dylocxx/host_topology.h>
 #include <dylocxx/unit_mapping.h>
+#include <dylocxx/unit_locality.h>
 #include <dylocxx/locality_domain.h>
 
 #include <dylocxx/domain_graph.h>
+
+#include <dylocxx/adapter/dart.h>
 
 #include <dylocxx/internal/logging.h>
 #include <dylocxx/internal/assert.h>
