@@ -14,6 +14,11 @@
 #include <set>
 #include <algorithm>
 
+#ifdef DART_ENABLE_HWLOC
+#  include <hwloc.h>
+#  include <hwloc/helper.h>
+#  include <dyloc/common/internal/hwloc.h>
+#endif
 
 namespace dyloc {
 
@@ -271,9 +276,9 @@ void host_topology::collect_topology(
     for (size_t lu = 0; lu < num_leaders; lu++) {
       /* Number of modules received from leader unit lu: */
       size_t lu_num_modules = recvcounts[lu] /
-                              sizeof(dart_module_location_t);
+                              sizeof(dyloc_module_location_t);
       for (size_t m = 0; m < lu_num_modules; m++) {
-        int m_displ = displs[lu] / sizeof(dart_module_location_t);
+        int m_displ = displs[lu] / sizeof(dyloc_module_location_t);
         const dyloc_module_location_t & module_loc =
                 module_locations[m_displ + m];
         for (auto & host_dom : _host_domains) {
@@ -340,7 +345,6 @@ void host_topology::collect_topology(
 
     _host_topo.num_nodes = num_hosts;
     for (const auto & host_dom : _host_domains) {
-      /* Get unit ids at local unit's host */
       if (host_dom.level > 0) {
         _host_topo.num_nodes--;
       }
@@ -417,8 +421,95 @@ void host_topology::collect_topology(
 void host_topology::local_topology(
   const unit_mapping                   & unit_map,
   std::vector<dyloc_module_location_t> & module_locations) {
+#if defined(DART_ENABLE_HWLOC) && defined(DART_ENABLE_HWLOC_PCI)
+  hwloc_topology_t topology;
+  hwloc_topology_init(&topology);
+  hwloc_topology_set_flags(topology,
+#if HWLOC_API_VERSION < 0x00020000
+                             HWLOC_TOPOLOGY_FLAG_IO_DEVICES
+                           | HWLOC_TOPOLOGY_FLAG_IO_BRIDGES
+#else
+                             HWLOC_TOPOLOGY_FLAG_WHOLE_SYSTEM
+#endif
+                          );
+  hwloc_topology_load(topology);
+  DYLOC_LOG_TRACE("dylocxx::host_topology.local_topology",
+                  "hwloc: indexing PCI devices");
+  /* Alternative: HWLOC_TYPE_DEPTH_PCI_DEVICE */
+  int n_pcidev = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_PCI_DEVICE);
+
+  DYLOC_LOG_TRACE("dylocxx::host_topology.local_topology",
+                  "hwloc:", n_pcidev, "PCI devices found");
+  for (int pcidev_idx = 0; pcidev_idx < n_pcidev; pcidev_idx++) {
+    hwloc_obj_t coproc_obj =
+      hwloc_get_obj_by_type(topology, HWLOC_OBJ_PCI_DEVICE, pcidev_idx);
+    if (NULL != coproc_obj) {
+      DYLOC_LOG_TRACE("dylocxx::host_topology.local_topology",
+                      "hwloc: PCI device: (",
+                      "name:",  coproc_obj->name,
+                      "arity:", coproc_obj->arity,
+                      ")");
+      if (NULL != coproc_obj->name &&
+          NULL != strstr(coproc_obj->name, "Xeon Phi")) {
+        DYLOC_LOG_TRACE("dylocxx::host_topology.local_topology",
+                        "hwloc: Xeon Phi device");
+        if (coproc_obj->arity > 0) {
+          for (int pd_i = 0; pd_i < (int)coproc_obj->arity; pd_i++) {
+            hwloc_obj_t coproc_child_obj = coproc_obj->children[pd_i];
+            DYLOC_LOG_TRACE("dylocxx::host_topology.local_topology",
+                            "hwloc: Xeon Phi child node: (",
+                            "name:",  coproc_child_obj->name,
+                            "arity:", coproc_child_obj->arity,
+                            ")");
+
+            dyloc_module_location_t module_loc;
+            char * hostname     = module_loc.host;
+            char * mic_hostname = module_loc.module;
+            char * mic_dev_name = coproc_child_obj->name;
+
+            gethostname(hostname, DART_LOCALITY_HOST_MAX_SIZE);
+
+            int n_chars_written = snprintf(
+                                    mic_hostname, DART_LOCALITY_HOST_MAX_SIZE,
+                                    "%s-%s", hostname, mic_dev_name);
+            if (n_chars_written < 0 ||
+                n_chars_written >= DART_LOCALITY_HOST_MAX_SIZE) {
+              DYLOC_LOG_TRACE("dylocxx::host_topology.local_topology",
+                              "MIC host name '", hostname, "-", mic_dev_name,
+                              "' could not be assigned");
+            }
+
+            DYLOC_LOG_TRACE("dylocxx::host_topology.local_topology",
+                            "hwloc:",
+                            "Xeon Phi module hostname:", module_loc.module,
+                            "node hostname:", module_loc.host);
+
+            /* Get host of MIC device: */
+            hwloc_obj_t mic_host_obj =
+              hwloc_get_non_io_ancestor_obj(topology, coproc_obj);
+            if (mic_host_obj != NULL) {
+              module_loc.pos.scope =
+                dyloc__hwloc_obj_type_to_scope(mic_host_obj->type);
+              module_loc.pos.index = mic_host_obj->logical_index;
+              DYLOC_LOG_TRACE("dylocxx::host_topology.local_topology",
+                              "hwloc: Xeon Phi scope pos: ("
+                              "type:", mic_host_obj->type,
+                              "->",
+                              "scope:", module_loc.pos.scope,
+                              "idx:",   module_loc.pos.index,
+                              ")");
+            }
+            module_locations.push_back(std::move(module_loc));
+          }
+        }
+      }
+    }
+  }
+  hwloc_topology_destroy(topology);
+#else // ifdef DART_ENABLE_HWLOC
   dyloc__unused(unit_map);
   dyloc__unused(module_locations);
+#endif // ifdef DART_ENABLE_HWLOC
 }
 
 } // namespace dyloc
