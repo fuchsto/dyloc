@@ -101,7 +101,7 @@ host_topology::host_topology(const unit_mapping & unit_map)
               host_numa_ids.end(),
               host_dom.numa_ids);
 
-    _host_domains.push_back(host_dom);
+    _host_domains.push_back(std::move(host_dom));
   }
 
   this->_host_topo.num_host_levels = 0;
@@ -349,6 +349,69 @@ void host_topology::collect_topology(
   DYLOC_ASSERT_RETURNS(
     dart_group_destroy(&local_group),
     DART_OK);
+
+  /* Classify hostnames into categories 'node' and 'module'.
+   * Typically, modules have the hostname of their nodes as prefix in their
+   * hostname, e.g.:
+   *
+   *   computer-node-124           <-- node, heterogenous
+   *   |- compute_node-124-sys     <-- module, homogenous
+   *   |- compute-node-124-mic0    <-- module, homogenous
+   *   '- compute-node-124-mic1    <-- module, homogenous
+   *
+   * Find shortest strings in array of distinct host names:
+   */
+  int hostname_min_len = std::numeric_limits<int>::max();
+  int hostname_max_len = 0;
+  for (auto & host_dom : _host_domains) {
+    host_dom.level     = 0;
+    host_dom.parent[0] = '\0';
+    int hostname_len = strlen(host_dom.host);
+    if (hostname_len < hostname_min_len) {
+      hostname_min_len = hostname_len;
+    }
+    if (hostname_len > hostname_max_len) {
+      hostname_max_len = hostname_len;
+    }
+  }
+
+  _host_topo.num_host_levels = 0;
+  _host_topo.num_nodes       = num_hosts;
+  if (hostname_min_len != hostname_max_len) {
+    _host_topo.num_nodes = 0;
+    int num_modules = 0;
+    /* Match short hostnames as prefix of every other hostname: */
+    for (auto & host_dom_top : _host_domains) {
+      if (strlen(host_dom_top.host) == (size_t)hostname_min_len) {
+        ++_host_topo.num_nodes;
+        /* Host name is node, find its modules in all other hostnames: */
+        char * short_name = host_dom_top.host;
+        for (auto & host_dom_sub : _host_domains) {
+          char * other_name = host_dom_sub.host;
+          /* Other hostname is longer and has short host name in prefix: */
+          if (strlen(other_name) > (size_t)hostname_min_len &&
+              strncmp(short_name, other_name, hostname_min_len) == 0) {
+            num_modules++;
+            /* Increment topology level of other host: */
+            int node_level = host_dom_top.level + 1;
+            if (node_level > _host_topo.num_host_levels) {
+              _host_topo.num_host_levels = node_level;
+            }
+            host_dom_sub.level = node_level;
+            /* Set short hostname as parent: */
+            strncpy(host_dom_sub.parent, short_name,
+                    DART_LOCALITY_HOST_MAX_SIZE);
+          }
+        }
+      }
+    }
+    if (num_hosts > _host_topo.num_nodes + num_modules) {
+      /* some hosts are modules of node that is not in host names: */
+      _host_topo.num_nodes += num_hosts -
+                              (_host_topo.num_nodes + num_modules);
+    }
+  }
+  _host_topo.host_domains = _host_domains.data();
 }
 
 void host_topology::local_topology(
