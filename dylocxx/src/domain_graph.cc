@@ -247,7 +247,8 @@ void domain_graph::build_module_level(
         module_domain,
         module_scopes[subdomain_gid_idx],
         sd);
-    module_subdomain.host = module_domain.host;
+    module_subdomain.host    = module_domain.host;
+    module_subdomain.g_index = module_subdomain_gids[subdomain_gid_idx];
 
     for (auto module_unit_gid : module_domain.unit_ids) {
       dart_team_unit_t module_unit_lid
