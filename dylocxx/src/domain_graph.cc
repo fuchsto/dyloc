@@ -197,15 +197,12 @@ void domain_graph::build_module_level(
 
   DYLOC_LOG_TRACE(
     "dylocxx::domain_graph.build_module_level", "--",
-    "module scopes:",
+    "current scope:", module_scopes[subdomain_gid_idx],
+    "level", subdomain_gid_idx,
+    "in module scopes:",
     dyloc::make_range(
       module_scopes.begin(),
       module_scopes.end()));
-  DYLOC_LOG_TRACE(
-    "dylocxx::domain_graph.build_module_level", "--",
-    "current scope:",
-    "level:", subdomain_gid_idx,
-    "->", module_scopes[subdomain_gid_idx]);
   DYLOC_LOG_TRACE(
     "dylocxx::domain_graph.build_module_level", "--",
     "module units:",
