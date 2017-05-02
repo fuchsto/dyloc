@@ -19,6 +19,22 @@ static inline dart_team_unit_t myid(dart_team_t t) {
   return myid;
 }
 
+static inline dart_global_unit_t l2g(dart_team_t t, dart_team_unit_t lid) {
+  dart_global_unit_t gid;
+  if (dart_team_unit_l2g(t, lid, &gid)) {
+    return gid;
+  }
+  return DART_UNDEFINED_UNIT_ID;
+}
+
+static inline dart_team_unit_t g2l(dart_team_t t, dart_global_unit_t gid) {
+  dart_team_unit_t lid;
+  if (dart_team_unit_g2l(t, gid, &lid) == DART_OK) {
+    return lid;
+  }
+  return DART_UNDEFINED_UNIT_ID;
+}
+
 static inline size_t num_units() {
   size_t nunits;
   ::dart_size(&nunits);

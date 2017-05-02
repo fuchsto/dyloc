@@ -93,11 +93,11 @@ class domain_graph {
  private:
   void build_hierarchy();
 
-  void build_node_level_hierarchy(
+  void build_node_level(
          locality_domain & node_domain,
          graph_vertex_t  & node_domain_vertex);
 
-  void build_module_level_hierarchy(
+  void build_module_level(
          locality_domain & module_domain,
          graph_vertex_t  & node_domain_vertex,
          int               module_scope_level);

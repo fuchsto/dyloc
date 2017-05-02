@@ -47,9 +47,8 @@ std::ostream & operator<<(
     value_t;
 
   std::ostringstream ss;
-  int pos = 0;
   ss << " { ";
-  for (auto it = std::begin(range); it != std::end(range); ++it, ++pos) {
+  for (auto it = std::begin(range); it != std::end(range); ++it) {
     ss << static_cast<const value_t>(*it) << " ";
   }
   ss << "}";
@@ -69,9 +68,8 @@ std::ostream & operator<<(
   auto && rng = std::forward<range_t>(range);
 
   std::ostringstream ss;
-  int pos = 0;
   ss << " { ";
-  for (auto it = std::begin(rng); it != std::end(rng); ++it, ++pos) {
+  for (auto it = std::begin(rng); it != std::end(rng); ++it) {
     ss << static_cast<const value_t>(*it) << " ";
   }
   ss << "}";

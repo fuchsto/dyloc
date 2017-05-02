@@ -38,10 +38,11 @@ locality_domain::locality_domain(
   dyloc_locality_scope_t   lscope,
   int                      child_index) {
   std::ostringstream ss;
+  ss << parent.domain_tag;
   if (*parent.domain_tag.rbegin() != '.') {
     ss << '.';
   }
-  ss << parent.domain_tag << child_index;
+  ss << child_index;
 
   scope      = lscope;
   level      = parent.level + 1;
