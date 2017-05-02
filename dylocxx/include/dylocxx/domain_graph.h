@@ -25,7 +25,7 @@ namespace dyloc {
 class domain_graph {
   typedef domain_graph self_t;
 
- private:
+ public:
   enum class edge_type : int {
     unspecified  = 0,
     contains     = 100,
@@ -33,11 +33,11 @@ class domain_graph {
     alias
   };
 
-  struct vertex_property_t {
+  struct vertex_properties {
     locality_domain * domain;
   };
 
-  struct edge_property_t {
+  struct edge_properties {
     edge_type type;
     int       distance;
   };
@@ -50,8 +50,8 @@ class domain_graph {
             boost::listS,          // out-edges stored in a std::list
             boost::vecS,           // vertex set stored here
             boost::directedS,      // directed graph (parent -> sub)
-            vertex_property_t,     // vertex properties
-            edge_property_t,       // edge properties
+            vertex_properties,     // vertex properties
+            edge_properties,       // edge properties
             boost::no_property,    // graph properties
             boost::listS           // edge storage
           >

@@ -38,8 +38,12 @@ TEST_F(InitTest, DomainGraph) {
   dyloc::init(&TESTENV.argc, &TESTENV.argv);
 
   if (dyloc::myid().id == 0) {
-    const auto & domain_graph = dyloc::query_locality_graph();
-    boost::print_graph(domain_graph.graph());
+    const auto & graph = dyloc::query_locality_graph().graph();
+    boost::print_graph(
+      graph,
+      boost::get(
+        &domain_graph::vertex_properties::domain,
+        graph));
   }
 
   dyloc::finalize();

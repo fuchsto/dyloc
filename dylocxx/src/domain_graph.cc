@@ -35,8 +35,10 @@ void domain_graph::build_hierarchy() {
 
   _domains.insert(std::make_pair(".", &_root_domain));
 
-  auto root_domain_vertex           = boost::add_vertex(_graph);
-  _graph[root_domain_vertex].domain = &_root_domain;
+  auto root_domain_vertex
+         = boost::add_vertex(
+             { &_root_domain },
+             _graph);
 
   int node_index = 0;
   for (auto & node_host_domain : _host_topology.nodes()) {
@@ -52,7 +54,7 @@ void domain_graph::build_hierarchy() {
     node_domain.host     = node_hostname;
 
     DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_node_level",
-                    "node domain:", node_domain);
+                    "add domain:", node_domain);
 
     _root_domain.children.push_back(node_domain);
 
@@ -61,8 +63,10 @@ void domain_graph::build_hierarchy() {
           _root_domain.children.back().domain_tag,
           &_root_domain.children.back()));
 
-    auto node_domain_vertex           = boost::add_vertex(_graph);
-    _graph[node_domain_vertex].domain = &_root_domain.children.back();
+    auto node_domain_vertex
+           = boost::add_vertex(
+               { &_root_domain.children.back() },
+               _graph);
 
     boost::add_edge(root_domain_vertex, node_domain_vertex,
                     { edge_type::contains, 1 },
@@ -104,7 +108,7 @@ void domain_graph::build_node_level(
     module_domain.host     = module_hostname;
 
     DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_node_level",
-                    "module domain:", module_domain);
+                    "add domain:", module_domain);
 
     node_domain.children.push_back(module_domain);
 
@@ -113,8 +117,10 @@ void domain_graph::build_node_level(
           node_domain.children.back().domain_tag,
           &node_domain.children.back()));
 
-    auto module_domain_vertex           = boost::add_vertex(_graph);
-    _graph[module_domain_vertex].domain = &node_domain.children.back();
+    auto module_domain_vertex 
+           = boost::add_vertex(
+               { &node_domain.children.back() },
+               _graph);
 
     boost::add_edge(node_domain_vertex, module_domain_vertex,
                     { edge_type::contains, 1 },
@@ -270,8 +276,8 @@ void domain_graph::build_module_level(
       }
     }
 
-    DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_node_level", "----",
-                    "module subdomain:", module_subdomain);
+    DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_node_level", "--",
+                    "add domain:", module_subdomain);
 
     module_domain.children.push_back(module_subdomain);
 
@@ -280,8 +286,10 @@ void domain_graph::build_module_level(
           module_domain.children.back().domain_tag,
           &module_domain.children.back()));
 
-    auto module_subdomain_vertex           = boost::add_vertex(_graph);
-    _graph[module_subdomain_vertex].domain = &module_domain.children.back();
+    auto module_subdomain_vertex 
+           = boost::add_vertex(
+               { &module_domain.children.back() },
+               _graph);
 
     boost::add_edge(module_domain_vertex, module_subdomain_vertex,
                     { edge_type::contains, 1 },
