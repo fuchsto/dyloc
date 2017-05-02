@@ -35,6 +35,7 @@ class domain_graph {
 
   struct vertex_properties {
     locality_domain * domain;
+    std::string       domain_tag;
   };
 
   struct edge_properties {

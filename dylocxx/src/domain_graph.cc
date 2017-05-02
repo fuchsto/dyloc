@@ -37,8 +37,10 @@ void domain_graph::build_hierarchy() {
 
   auto root_domain_vertex
          = boost::add_vertex(
-             { &_root_domain },
+             { &_root_domain, "." },
              _graph);
+
+  _root_domain.children.reserve(_host_topology.nodes().size());
 
   int node_index = 0;
   for (auto & node_host_domain : _host_topology.nodes()) {
@@ -65,7 +67,8 @@ void domain_graph::build_hierarchy() {
 
     auto node_domain_vertex
            = boost::add_vertex(
-               { &_root_domain.children.back() },
+               { &_root_domain.children.back(),
+                 _root_domain.children.back().domain_tag },
                _graph);
 
     boost::add_edge(root_domain_vertex, node_domain_vertex,
@@ -95,6 +98,8 @@ void domain_graph::build_node_level(
     node_domain_vertex,
     0);
 
+  node_domain.children.reserve(node_modules.size());
+
   int module_index = 0;
   for (auto & node_module : node_modules) {
     const auto & module_hostname = node_module.get().host;
@@ -119,7 +124,8 @@ void domain_graph::build_node_level(
 
     auto module_domain_vertex 
            = boost::add_vertex(
-               { &node_domain.children.back() },
+               { &node_domain.children.back(),
+                 node_domain.children.back().domain_tag },
                _graph);
 
     boost::add_edge(node_domain_vertex, module_domain_vertex,
@@ -255,6 +261,8 @@ void domain_graph::build_module_level(
     dyloc::make_range(
       module_subdomain_gids.begin(),
       module_subdomain_gids_end));
+
+  module_domain.children.reserve(num_subdomains);
   
   for (int sd = 0; sd < num_subdomains; ++sd) {
     locality_domain module_subdomain(
@@ -288,7 +296,8 @@ void domain_graph::build_module_level(
 
     auto module_subdomain_vertex 
            = boost::add_vertex(
-               { &module_domain.children.back() },
+               { &module_domain.children.back(),
+                 module_domain.children.back().domain_tag },
                _graph);
 
     boost::add_edge(module_domain_vertex, module_subdomain_vertex,
