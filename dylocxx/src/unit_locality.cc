@@ -23,6 +23,22 @@ std::ostream & operator<<(
   return operator<<(os, ss.str());
 }
 
+std::ostream & operator<<(
+  std::ostream             & os,
+  const dart_team_unit_t   & tuid) {
+  std::ostringstream ss;
+  ss << tuid.id;
+  return operator<<(os, ss.str());
+}
+
+std::ostream & operator<<(
+  std::ostream             & os,
+  const dart_global_unit_t & guid) {
+  std::ostringstream ss;
+  ss << guid.id;
+  return operator<<(os, ss.str());
+}
+
 unit_locality::unit_locality(dart_team_unit_t u, dart_team_t t) {
   hwinfo unit_hwinfo;
   unit_hwinfo.collect();

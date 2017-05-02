@@ -133,7 +133,9 @@ void domain_graph::build_module_level(
   locality_domain & module_domain,
   graph_vertex_t  & module_domain_vertex,
   int               module_scope_level) {
-  dyloc__unused(module_domain_vertex);
+  DYLOC_LOG_TRACE(
+    "dylocxx::domain_graph.build_module_level",
+    "module domain:", module_domain);
   // units located at node:
   module_domain.unit_ids = _host_topology.unit_ids(module_domain.host);
   /*
@@ -194,15 +196,22 @@ void domain_graph::build_module_level(
   int subdomain_gid_idx = num_scopes - (module_scope_level + 1);
 
   DYLOC_LOG_TRACE(
-    "dylocxx::domain_graph.build_module_level",
+    "dylocxx::domain_graph.build_module_level", "--",
     "module scopes:",
     dyloc::make_range(
       module_scopes.begin(),
       module_scopes.end()));
   DYLOC_LOG_TRACE(
-    "dylocxx::domain_graph.build_module_level",
-    "current module scope:",
-    module_scopes[subdomain_gid_idx]);
+    "dylocxx::domain_graph.build_module_level", "--",
+    "current scope:",
+    "level:", subdomain_gid_idx,
+    "->", module_scopes[subdomain_gid_idx]);
+  DYLOC_LOG_TRACE(
+    "dylocxx::domain_graph.build_module_level", "--",
+    "module units:",
+    dyloc::make_range(
+      module_domain.unit_ids.begin(),
+      module_domain.unit_ids.end()));
 
   /* Array of the global indices of the current module subdomains.
    * Maximum number of global indices, including duplicates, is number
@@ -229,6 +238,8 @@ void domain_graph::build_module_level(
       module_subdomain_gids.push_back(unit_sub_gid);
     }
   }
+  std::sort(module_subdomain_gids.begin(),
+            module_subdomain_gids.end());
   auto module_subdomain_gids_end = std::unique(
                                      module_subdomain_gids.begin(),
                                      module_subdomain_gids.end());
@@ -236,7 +247,7 @@ void domain_graph::build_module_level(
                                      module_subdomain_gids.begin(),
                                      module_subdomain_gids_end);
   DYLOC_LOG_TRACE(
-    "dylocxx::domain_graph.build_module_level",
+    "dylocxx::domain_graph.build_module_level", "--",
     "module subdomain gids:",
     dyloc::make_range(
       module_subdomain_gids.begin(),
@@ -248,7 +259,7 @@ void domain_graph::build_module_level(
         module_scopes[subdomain_gid_idx],
         sd);
     module_subdomain.host    = module_domain.host;
-    module_subdomain.g_index = module_subdomain_gids[subdomain_gid_idx];
+    module_subdomain.g_index = module_subdomain_gids[sd];
 
     for (auto module_unit_gid : module_domain.unit_ids) {
       dart_team_unit_t module_unit_lid
@@ -262,7 +273,7 @@ void domain_graph::build_module_level(
       }
     }
 
-    DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_node_level",
+    DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_node_level", "----",
                     "module subdomain:", module_subdomain);
 
     module_domain.children.push_back(module_subdomain);
@@ -279,7 +290,10 @@ void domain_graph::build_module_level(
                     { edge_type::contains, 1 },
                     _graph);
 
-    if (subdomain_gid_idx > 0) {
+    if (subdomain_gid_idx <= 0) {
+      // At CORE scope:
+    } else {
+      // Recurse down:
       build_module_level(
         module_domain.children.back(),
         module_subdomain_vertex,

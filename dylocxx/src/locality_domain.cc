@@ -24,6 +24,7 @@ std::ostream & operator<<(
      << "level:"  << ld.level      << " "
      << "scope:"  << ld.scope      << " "
      << "rindex:" << ld.r_index    << " "
+     << "gindex:" << ld.g_index    << " "
      << "units:"  << "[ ";
   for (auto uid : ld.unit_ids) {
     ss << uid.id << " ";

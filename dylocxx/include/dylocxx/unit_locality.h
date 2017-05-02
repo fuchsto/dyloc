@@ -38,6 +38,14 @@ std::ostream & operator<<(
   std::ostream                & os,
   const dyloc_unit_locality_t & uloc);
 
+std::ostream & operator<<(
+  std::ostream                & os,
+  const dart_team_unit_t      & tuid);
+
+std::ostream & operator<<(
+  std::ostream                & os,
+  const dart_global_unit_t    & guid);
+
 } // namespace dyloc
 
 #endif // DYLOCXX__UNIT_LOCALITY_H__INCLUDED
