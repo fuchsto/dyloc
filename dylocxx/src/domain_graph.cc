@@ -145,11 +145,6 @@ void domain_graph::build_module_level(
   locality_domain & module_domain,
   graph_vertex_t  & module_domain_vertex,
   int               module_scope_level) {
-  DYLOC_LOG_TRACE(
-    "dylocxx::domain_graph.build_module_level",
-    "module domain:", module_domain);
-  // units located at node:
-  module_domain.unit_ids = _host_topology.unit_ids(module_domain.host);
   /*
    * NOTE: Locality scopes may be heterogeneous but are expected
    *       to be homogeneous within a module domain.
@@ -189,10 +184,6 @@ void domain_graph::build_module_level(
                        &module_leader_unit_id),
     DART_OK);
 
-  // const auto & module_host_topology   = _host_topology.modules().at(
-  //                                         module_domain.host).get();
-  // const auto & module_numa_ids        = module_host_topology.numa_ids;
-
   const auto & module_leader_unit_loc = _unit_mapping[module_leader_unit_id];
   const auto & module_leader_hwinfo   = module_leader_unit_loc.hwinfo;
 
@@ -222,10 +213,10 @@ void domain_graph::build_module_level(
       module_domain.unit_ids.begin(),
       module_domain.unit_ids.end()));
 
-  /* Array of the global indices of the current module subdomains.
-   * Maximum number of global indices, including duplicates, is number
-   * of units:
-   */
+  // Array of the global indices of the current module subdomains.
+  // Maximum number of global indices, including duplicates, is number
+  // of units:
+  //
   std::vector<int> module_subdomain_gids;
   module_subdomain_gids.reserve(module_domain.unit_ids.size());
 
