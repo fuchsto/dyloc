@@ -16,8 +16,9 @@ std::ostream & operator<<(
   const dyloc_unit_locality_t & uloc) {
   std::ostringstream ss;
   ss << "dyloc_unit_locality_t { "
-     << "tag:"    << uloc.domain_tag << " "
-     << "unit:"   << uloc.unit.id << " (t:" << uloc.team << ") "
+     << uloc.domain_tag << " "
+     << "unit:"   << uloc.unit.id    << " "
+     << "t:"      << uloc.team       << " "
      << "hwinfo:" << uloc.hwinfo
      << " }";
   return operator<<(os, ss.str());

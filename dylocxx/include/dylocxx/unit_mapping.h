@@ -50,6 +50,10 @@ struct unit_mapping {
   const dyloc_unit_locality_t & operator[](dart_team_unit_t luid) const {
     return unit_localities[luid.id];
   }
+
+  dyloc_unit_locality_t & operator[](dart_team_unit_t luid) {
+    return unit_localities[luid.id];
+  }
 };
 
 } // namespace dyloc

@@ -24,10 +24,8 @@ class locality_domain {
   int                             g_index   = -1;
   int                             r_index   = -1;
   dart_team_t                     team      = DART_TEAM_NULL;
-  std::shared_ptr<self_t>         parent    = nullptr;
   std::vector<dart_global_unit_t> unit_ids;
   std::vector<int>                core_ids;
-  std::vector<self_t>             children;
 
   locality_domain()                        = default;
   locality_domain(const locality_domain &) = default;

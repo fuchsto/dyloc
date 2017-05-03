@@ -6,7 +6,7 @@
 #include <dylocxx/unit_locality.h>
 #include <dylocxx/locality_domain.h>
 
-#include <dylocxx/domain_graph.h>
+#include <dylocxx/topology.h>
 
 #include <dylocxx/adapter/dart.h>
 
@@ -49,10 +49,10 @@ void runtime::initialize_locality(dart_team_t team) {
       std::make_pair(team, locality_domain(team)));
 
   DYLOC_LOG_DEBUG("dylocxx::runtime.initialize_locality", "domain graph");
-  _domain_graphs.insert(
+  _topologies.insert(
       std::make_pair(
         team,
-        domain_graph(
+        topology(
           _host_topologies.at(team),
           _unit_mappings.at(team),
           _locality_domains.at(team))));

@@ -1,7 +1,7 @@
 
 #include <dylocxx/init.h>
 #include <dylocxx/runtime.h>
-#include <dylocxx/domain_graph.h>
+#include <dylocxx/topology.h>
 
 #include <dylocxx/internal/logging.h>
 #include <dylocxx/internal/assert.h>
@@ -61,7 +61,7 @@ const dyloc_unit_locality_t & query_unit_locality(
   return rt.unit_locality(t, u);
 }
 
-domain_graph & query_locality_graph(
+topology & query_topology(
   dart_team_t t) {
   return rt.locality_graph(t);
 }

@@ -1,5 +1,5 @@
 
-#include <dylocxx/domain_graph.h>
+#include <dylocxx/topology.h>
 #include <dylocxx/utility.h>
 
 #include <dylocxx/internal/logging.h>
@@ -25,27 +25,25 @@ namespace dyloc {
  *
  */
 
-void domain_graph::build_hierarchy() {
-  DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_hierarchy", "()");
+void topology::build_hierarchy() {
+  DYLOC_LOG_DEBUG("dylocxx::topology.build_hierarchy", "()");
 
   _root_domain.scope   = DYLOC_LOCALITY_SCOPE_GLOBAL;
   _root_domain.level   = 0;
   _root_domain.g_index = 0;
   _root_domain.r_index = 0;
 
-  _domains.insert(std::make_pair(".", &_root_domain));
+  _domains.insert(std::make_pair(".", _root_domain));
 
   auto root_domain_vertex
          = boost::add_vertex(
-             { &_root_domain, "." },
+             { ".", &_root_domain, vertex_state::unspecified },
              _graph);
-
-  _root_domain.children.reserve(_host_topology.nodes().size());
 
   int node_index = 0;
   for (auto & node_host_domain : _host_topology.nodes()) {
     const auto & node_hostname = node_host_domain.first;
-    DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_hierarchy",
+    DYLOC_LOG_DEBUG("dylocxx::topology.build_hierarchy",
                     "node host:", node_hostname);
 
     locality_domain node_domain(
@@ -55,20 +53,19 @@ void domain_graph::build_hierarchy() {
     node_domain.unit_ids = _host_topology.unit_ids(node_hostname);
     node_domain.host     = node_hostname;
 
-    DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_node_level",
+    DYLOC_LOG_DEBUG("dylocxx::topology.build_node_level",
                     "add domain:", node_domain);
-
-    _root_domain.children.push_back(node_domain);
 
     _domains.insert(
         std::make_pair(
-          _root_domain.children.back().domain_tag,
-          &_root_domain.children.back()));
+          node_domain.domain_tag,
+          node_domain));
 
     auto node_domain_vertex
            = boost::add_vertex(
-               { &_root_domain.children.back(),
-                 _root_domain.children.back().domain_tag },
+               { node_domain.domain_tag,
+                 &_domains[node_domain.domain_tag],
+                 vertex_state::unspecified },
                _graph);
 
     boost::add_edge(root_domain_vertex, node_domain_vertex,
@@ -76,17 +73,17 @@ void domain_graph::build_hierarchy() {
                     _graph);
 
     build_node_level(
-      _root_domain.children.back(),
+      _domains[node_domain.domain_tag],
       node_domain_vertex);
 
     ++node_index;
   }
 }
 
-void domain_graph::build_node_level(
+void topology::build_node_level(
   locality_domain & node_domain,
   graph_vertex_t  & node_domain_vertex) {
-  DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_node_level",
+  DYLOC_LOG_DEBUG("dylocxx::topology.build_node_level",
                   "node:", node_domain.host);
   // units located at node:
   node_domain.unit_ids = _host_topology.unit_ids(node_domain.host);
@@ -98,12 +95,10 @@ void domain_graph::build_node_level(
     node_domain_vertex,
     0);
 
-  node_domain.children.reserve(node_modules.size());
-
   int module_index = 0;
   for (auto & node_module : node_modules) {
     const auto & module_hostname = node_module.get().host;
-    DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_node_level",
+    DYLOC_LOG_DEBUG("dylocxx::topology.build_node_level",
                     "module host name:", module_hostname);
     locality_domain module_domain(
         node_domain,
@@ -112,20 +107,19 @@ void domain_graph::build_node_level(
     module_domain.unit_ids = _host_topology.unit_ids(module_hostname);
     module_domain.host     = module_hostname;
 
-    DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_node_level",
+    DYLOC_LOG_DEBUG("dylocxx::topology.build_node_level",
                     "add domain:", module_domain);
-
-    node_domain.children.push_back(module_domain);
 
     _domains.insert(
         std::make_pair(
-          node_domain.children.back().domain_tag,
-          &node_domain.children.back()));
+          module_domain.domain_tag,
+          module_domain));
 
     auto module_domain_vertex 
            = boost::add_vertex(
-               { &node_domain.children.back(),
-                 node_domain.children.back().domain_tag },
+               { module_domain.domain_tag,
+                 &_domains[module_domain.domain_tag],
+                 vertex_state::unspecified },
                _graph);
 
     boost::add_edge(node_domain_vertex, module_domain_vertex,
@@ -133,7 +127,7 @@ void domain_graph::build_node_level(
                     _graph);
 
     build_module_level(
-      node_domain.children.back(),
+      _domains[module_domain.domain_tag],
       module_domain_vertex,
       0);
 
@@ -141,7 +135,7 @@ void domain_graph::build_node_level(
   }
 }
 
-void domain_graph::build_module_level(
+void topology::build_module_level(
   locality_domain & module_domain,
   graph_vertex_t  & module_domain_vertex,
   int               module_scope_level) {
@@ -199,7 +193,7 @@ void domain_graph::build_module_level(
   int subdomain_gid_idx = num_scopes - (module_scope_level + 1);
 
   DYLOC_LOG_TRACE(
-    "dylocxx::domain_graph.build_module_level", "--",
+    "dylocxx::topology.build_module_level", "--",
     "current scope:", module_scopes[subdomain_gid_idx],
     "level", subdomain_gid_idx,
     "in module scopes:",
@@ -207,7 +201,7 @@ void domain_graph::build_module_level(
       module_scopes.begin(),
       module_scopes.end()));
   DYLOC_LOG_TRACE(
-    "dylocxx::domain_graph.build_module_level", "--",
+    "dylocxx::topology.build_module_level", "--",
     "module units:",
     dyloc::make_range(
       module_domain.unit_ids.begin(),
@@ -247,13 +241,11 @@ void domain_graph::build_module_level(
                                      module_subdomain_gids.begin(),
                                      module_subdomain_gids_end);
   DYLOC_LOG_TRACE(
-    "dylocxx::domain_graph.build_module_level", "--",
+    "dylocxx::topology.build_module_level", "--",
     "module subdomain gids:",
     dyloc::make_range(
       module_subdomain_gids.begin(),
       module_subdomain_gids_end));
-
-  module_domain.children.reserve(num_subdomains);
   
   for (int sd = 0; sd < num_subdomains; ++sd) {
     locality_domain module_subdomain(
@@ -275,20 +267,19 @@ void domain_graph::build_module_level(
       }
     }
 
-    DYLOC_LOG_DEBUG("dylocxx::domain_graph.build_node_level", "--",
+    DYLOC_LOG_DEBUG("dylocxx::topology.build_node_level", "--",
                     "add domain:", module_subdomain);
-
-    module_domain.children.push_back(module_subdomain);
 
     _domains.insert(
         std::make_pair(
-          module_domain.children.back().domain_tag,
-          &module_domain.children.back()));
+          module_subdomain.domain_tag,
+          module_subdomain));
 
     auto module_subdomain_vertex 
            = boost::add_vertex(
-               { &module_domain.children.back(),
-                 module_domain.children.back().domain_tag },
+               { module_subdomain.domain_tag,
+                 &_domains[module_subdomain.domain_tag],
+                 vertex_state::unspecified },
                _graph);
 
     boost::add_edge(module_domain_vertex, module_subdomain_vertex,
@@ -296,11 +287,45 @@ void domain_graph::build_module_level(
                     _graph);
 
     if (subdomain_gid_idx <= 0) {
-      // At CORE scope:
+      DYLOC_LOG_DEBUG("dylocxx::topology.build_node_level", "--",
+                      "mapped units:",
+                      dyloc::make_range(
+                        module_subdomain.unit_ids.begin(),
+                        module_subdomain.unit_ids.end()));
+      // At unit scope, module subdomain is CORE: add domain for every unit:
+      for (int ud = 0; ud < module_subdomain.unit_ids.size(); ++ud) {
+        auto unit_gid = module_subdomain.unit_ids[ud];
+        locality_domain unit_domain(
+            module_subdomain,
+            DYLOC_LOCALITY_SCOPE_UNIT,
+            ud);
+        unit_domain.host    = module_domain.host;
+        unit_domain.g_index = unit_gid.id;
+
+        unit_domain.unit_ids.push_back(unit_gid);
+
+        // Update unit mapping, set domain tag of unit locality:
+        auto unit_lid = dyloc::g2l(module_subdomain.team, unit_gid);
+        std::strcpy(_unit_mapping[unit_lid].domain_tag,
+                    unit_domain.domain_tag.c_str());
+
+        _domains[unit_domain.domain_tag] = unit_domain;
+
+        auto unit_domain_vertex 
+               = boost::add_vertex(
+                   { unit_domain.domain_tag,
+                     &_domains[unit_domain.domain_tag],
+                     vertex_state::unspecified },
+                   _graph);
+
+        boost::add_edge(module_subdomain_vertex, unit_domain_vertex,
+                        { edge_type::contains, 1 },
+                        _graph);
+      }
     } else {
       // Recurse down:
       build_module_level(
-        module_domain.children.back(),
+        _domains[module_subdomain.domain_tag],
         module_subdomain_vertex,
         module_scope_level + 1);
     }

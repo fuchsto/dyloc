@@ -20,6 +20,22 @@
 namespace dyloc {
 namespace test {
 
+class custom_dfs_visitor : public boost::default_dfs_visitor {
+public:
+  template <typename Vertex, typename Graph>
+  void discover_vertex(Vertex u, const Graph & g) const {
+    dyloc::locality_domain * ldom     = g[u].domain;
+    const std::string &      ldom_tag = g[u].domain_tag;
+    std::cout << std::left << std::setw(10) << ldom->scope
+              << std::left << std::setw(20) << ldom_tag << " | "
+              << "units:"
+              << dyloc::make_range(
+                  ldom->unit_ids.begin(),
+                  ldom->unit_ids.end())
+              << std::endl;
+  }
+};
+
 
 TEST_F(InitTest, ImmediateFinalize) {
   dyloc::init(&TESTENV.argc, &TESTENV.argv);
@@ -30,43 +46,22 @@ TEST_F(InitTest, UnitLocality) {
   dyloc::init(&TESTENV.argc, &TESTENV.argv);
 
   if (dyloc::myid().id == 0) {
-    for (int u = 0; u < dyloc::num_units(); ++u) {
-      const auto & uloc = dyloc::query_unit_locality(u);
-      DYLOC_LOG_DEBUG("InitTest.UnitLocality", "unit locality:", uloc);
-    }
-  }
+    const auto & topo = dyloc::query_topology();
+    custom_dfs_visitor vis;
 
-  dyloc::finalize();
-}
-
-class custom_dfs_visitor : public boost::default_dfs_visitor {
-public:
-  template <typename Vertex, typename Graph>
-  void discover_vertex(Vertex u, const Graph & g) const {
-    dyloc::locality_domain * ldom     = g[u].domain;
-    const std::string &      ldom_tag = g[u].domain_tag;
-    std::cout << std::left << std::setw(8)  << ldom->scope
-              << std::left << std::setw(15) << ldom_tag << " | "
-              << "units:"
-              << dyloc::make_range(
-                  ldom->unit_ids.begin(),
-                  ldom->unit_ids.end())
-              << std::endl;
-  }
-};
-
-TEST_F(InitTest, DomainGraph) {
-  dyloc::init(&TESTENV.argc, &TESTENV.argv);
-
-  if (dyloc::myid().id == 0) {
-    const auto & graph = dyloc::query_locality_graph().graph();
+    // const auto & graph = topo.graph();
     // boost::print_graph(
     //   graph,
     //   boost::get(
-    //     &domain_graph::vertex_properties::domain,
+    //     &topology::vertex_properties::domain,
     //     graph));
-    custom_dfs_visitor vis;
-    boost::depth_first_search(graph, visitor(vis));
+    // boost::depth_first_search(graph, visitor(vis));
+    topo.depth_first_search(visitor(vis));
+
+    for (int u = 0; u < dyloc::num_units(); ++u) {
+      const auto & uloc = dyloc::query_unit_locality(u);
+      DYLOC_LOG_DEBUG("InitTest.UnitLocality", uloc);
+    }
   }
 
   dyloc::finalize();

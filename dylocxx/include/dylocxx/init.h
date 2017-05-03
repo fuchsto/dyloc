@@ -1,7 +1,7 @@
 #ifndef DYLOCXX__INIT_H__INCLUDED
 #define DYLOCXX__INIT_H__INCLUDED
 
-#include <dylocxx/domain_graph.h>
+#include <dylocxx/topology.h>
 
 #include <dyloc/common/types.h>
 
@@ -19,7 +19,7 @@ const dyloc_unit_locality_t & query_unit_locality(
         dart_team_t t,
         dart_team_unit_t u);
 
-domain_graph & query_locality_graph(
+topology & query_topology(
   dart_team_t t = DART_TEAM_ALL);
 
 } // namespace dyloc
