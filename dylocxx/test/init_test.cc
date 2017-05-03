@@ -26,7 +26,7 @@ public:
   void discover_vertex(Vertex u, const Graph & g) const {
     dyloc::locality_domain * ldom     = g[u].domain;
     const std::string &      ldom_tag = g[u].domain_tag;
-    std::cout << std::left << std::setw(10) << ldom->scope
+    std::cout << std::left << std::setw(7)  << ldom->scope << " "
               << std::left << std::setw(20) << ldom_tag << " | "
               << "units:"
               << dyloc::make_range(
@@ -73,6 +73,7 @@ TEST_F(InitTest, ExcludeDomains) {
   auto & topo = dyloc::query_topology();
   custom_dfs_visitor vis;
 
+  DYLOC_LOG_DEBUG("InitTest.ExcludeDomains", "total domain hierarchy:");
   if (dyloc::myid().id == 0) {
     topo.depth_first_search(vis);
   }
@@ -86,6 +87,8 @@ TEST_F(InitTest, ExcludeDomains) {
     excluded_domain_tags.end());
 
   if (dyloc::myid().id == 0) {
+    DYLOC_LOG_DEBUG("InitTest.ExcludeDomains",
+                    "domain hierarchy after excludes:");
     topo.depth_first_search(vis);
   }
   dart_barrier(DART_TEAM_ALL);

@@ -89,7 +89,7 @@ class topology {
      template <typename Vertex, typename Graph>
      void discover_vertex(Vertex u, const Graph & g) const {
        if (g[u].state != vertex_state::hidden) {
-         _v(u,g);
+         _v.discover_vertex(u,g);
        }
      }
    };
@@ -209,7 +209,8 @@ class topology {
     }
   }
 
-  std::vector<std::string> scope_domain_tags(dyloc_locality_scope_t scope) {
+  std::vector<std::string> scope_domain_tags(
+         dyloc_locality_scope_t scope) {
     std::vector<std::string> scope_dom_tags;
     // TODO
     return scope_dom_tags;

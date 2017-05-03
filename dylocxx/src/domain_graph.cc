@@ -297,7 +297,7 @@ void topology::build_module_level(
                         module_subdomain.unit_ids.begin(),
                         module_subdomain.unit_ids.end()));
       // At unit scope, module subdomain is CORE: add domain for every unit:
-      for (int ud = 0; ud < module_subdomain.unit_ids.size(); ++ud) {
+      for (size_t ud = 0; ud < module_subdomain.unit_ids.size(); ++ud) {
         auto unit_gid = module_subdomain.unit_ids[ud];
         locality_domain unit_domain(
             module_subdomain,
