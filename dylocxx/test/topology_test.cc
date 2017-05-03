@@ -54,7 +54,7 @@ TEST_F(TopologyTest, DomainsAncestor) {
   auto & topo = dyloc::query_topology();
   locality_domain_dfs_output_visitor vis;
 
-  DYLOC_LOG_DEBUG("TopologyTest.ExcludeDomains", "total domain hierarchy:");
+  DYLOC_LOG_DEBUG("TopologyTest.DomainsAncestor", "total domain hierarchy:");
   if (dyloc::myid().id == 0) {
     topo.depth_first_search(vis);
   }
@@ -80,6 +80,27 @@ TEST_F(TopologyTest, DomainsAncestor) {
     DYLOC_LOG_DEBUG_VAR("TopologyTest.DomainsAncestor", unit_domain_tag);
   }
   DYLOC_LOG_DEBUG_VAR("TopologyTest.DomainsAncestor", ancestor);
+
+  dyloc::finalize();
+}
+
+TEST_F(TopologyTest, ScopeDomains) {
+  dyloc::init(&TESTENV.argc, &TESTENV.argv);
+
+  auto & topo = dyloc::query_topology();
+  locality_domain_dfs_output_visitor vis;
+
+  DYLOC_LOG_DEBUG("TopologyTest.ScopeDomains", "total domain hierarchy:");
+  if (dyloc::myid().id == 0) {
+    topo.depth_first_search(vis);
+  }
+  dart_barrier(DART_TEAM_ALL);
+
+  auto core_domain_tags = topo.scope_domain_tags(
+                            DYLOC_LOCALITY_SCOPE_CORE);
+  for (const auto & core_domain_tag : core_domain_tags) {
+    DYLOC_LOG_DEBUG_VAR("TopologyTest.ScopeDomains", core_domain_tag);
+  }
 
   dyloc::finalize();
 }

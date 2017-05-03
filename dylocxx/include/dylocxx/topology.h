@@ -107,18 +107,19 @@ class topology {
     typedef std::function<bool(const vertex_t &)>
       match_pred_t;
 
-    const match_pred_t    & _match_pred;
-    std::vector<vertex_t>   _matches;
+    match_pred_t          _match_pred;
+    std::vector<vertex_t> _matches;
    public:
     vertex_matching_dfs_visitor(
       const match_pred_t & match_pred)
     : _match_pred(match_pred)
     { }
 
-    template <typename VertexT, typename GraphT>
-    void discover_vertex(VertexT u, const GraphT & g) const {
+    void discover_vertex(const vertex_t & u, const Graph & g) {
       if (g[u].state != vertex_state::hidden &&
           _match_pred(u)) {
+        DYLOC_LOG_DEBUG("dylocxx::topology.vertex_match",
+                        "matched:", g[u].domain_tag);
         _matches.push_back(u);
       }
     }
@@ -258,10 +259,38 @@ class topology {
   }
 
   std::vector<std::string> scope_domain_tags(
-         dyloc_locality_scope_t scope) {
+         dyloc_locality_scope_t scope) const {
     std::vector<std::string> scope_dom_tags;
-    // TODO
-    dyloc__unused(scope);
+#if 1
+    std::vector<graph_vertex_t> vx_matches;
+    const auto vx_range = vertices(_graph);
+    std::for_each(
+      vx_range.first, vx_range.second,
+      [&](const graph_vertex_t & vx) {
+        if (_domains.at(_graph[vx].domain_tag).scope
+             == scope) {
+          vx_matches.push_back(vx);
+        }
+      });
+#else
+    vertex_matching_dfs_visitor<graph_t> vx_match_vis(
+      [=](const graph_vertex_t & vx) {
+        const auto & vx_domain_tag = _graph[vx].domain_tag;
+        auto         vx_scope      = _domains.at(vx_domain_tag).scope;
+        return (vx_scope == scope);
+      });
+    boost::depth_first_search(_graph, visitor(vx_match_vis));
+
+#endif
+
+    DYLOC_LOG_DEBUG("dylocxx::topology.scope_domain_tags",
+                    "num. domains matched:", vx_matches.size());
+    std::for_each(
+      vx_matches.begin(),
+      vx_matches.end(),
+      [&](const graph_vertex_t & vx) {
+        scope_dom_tags.push_back(_graph[vx].domain_tag);
+      });
     return scope_dom_tags;
   }
 
