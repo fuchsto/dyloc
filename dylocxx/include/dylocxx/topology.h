@@ -49,6 +49,7 @@ class topology {
 
   struct vertex_properties {
     std::string       domain_tag;
+    // TODO: pointer will be invalidated when domain graph is copied.
     locality_domain * domain;
     vertex_state      state;
   };
