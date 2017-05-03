@@ -19,6 +19,7 @@
 #include <boost/graph/graph_traits.hpp>
 
 #include <unordered_map>
+#include <functional>
 #include <algorithm>
 #include <iterator>
 #include <string>
@@ -84,19 +85,48 @@ class topology {
     graph_vertex_t;
 
  private:
-   template <class Visitor>
-   class selective_dfs_visitor : public boost::default_dfs_visitor {
-     Visitor _v;
+  template <class Visitor>
+  class selective_dfs_visitor : public boost::default_dfs_visitor {
+    Visitor _v;
    public:
-     selective_dfs_visitor(Visitor & v) : _v(v) { }
+    selective_dfs_visitor(Visitor & v) : _v(v) { }
 
-     template <typename Vertex, typename Graph>
-     void discover_vertex(Vertex u, const Graph & g) const {
-       if (g[u].state != vertex_state::hidden) {
-         _v.discover_vertex(u,g);
-       }
-     }
-   };
+    template <typename Vertex, typename Graph>
+    void discover_vertex(Vertex u, const Graph & g) const {
+      if (g[u].state != vertex_state::hidden) {
+        _v.discover_vertex(u,g);
+      }
+    }
+  };
+
+  template <class Graph = graph_t>
+  class vertex_matching_dfs_visitor
+    : public boost::default_dfs_visitor {
+    typedef typename boost::graph_traits<Graph>::vertex_descriptor
+      vertex_t;
+    typedef std::function<bool(const vertex_t &)>
+      match_pred_t;
+
+    const match_pred_t    & _match_pred;
+    std::vector<vertex_t>   _matches;
+   public:
+    vertex_matching_dfs_visitor(
+      const match_pred_t & match_pred)
+    : _match_pred(match_pred)
+    { }
+
+    template <typename VertexT, typename GraphT>
+    void discover_vertex(VertexT u, const GraphT & g) const {
+      if (g[u].state != vertex_state::hidden &&
+          _match_pred(u)) {
+        _matches.push_back(u);
+      }
+    }
+  
+    const std::vector<vertex_t> & matches() const noexcept {
+      return _matches;
+    }
+  };
 
  private:
   host_topology    & _host_topology;
