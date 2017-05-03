@@ -6,6 +6,7 @@
 #include <dylocxx/locality_domain.h>
 
 #include <dylocxx/internal/logging.h>
+#include <dylocxx/internal/algorithm.h>
 
 #include <dyloc/common/types.h>
 
@@ -138,6 +139,10 @@ class topology {
   }
 #endif
 
+  inline const graph_t & graph() const noexcept {
+    return _graph;
+  }
+
   const std::unordered_map<std::string, locality_domain> & domains() const {
     return _domains;
   }
@@ -148,10 +153,6 @@ class topology {
 
   const locality_domain & operator[](const std::string & tag) const {
     return _domains.at(tag);
-  }
-
-  inline const graph_t & graph() const noexcept {
-    return _graph;
   }
 
   template <class Visitor>
@@ -176,15 +177,18 @@ class topology {
   const locality_domain & ancestor(
          const Iterator & domain_tag_first,
          const Sentinel & domain_tag_last) const {
-    for (int prefix_len = 0;
-         prefix_len < std::distance(domain_tag_first, domain_tag_last);
-         ++prefix_len) {
-      for (auto it = domain_tag_first; it != domain_tag_last; ++it) {
-        // TODO
-      }
+    // Find lowest common ancestor (longest common prefix) of
+    // specified domain tag list:
+    std::string domain_prefix = dyloc::longest_common_prefix(
+                                  domain_tag_first,
+                                  domain_tag_last);
+    if (domain_prefix.back() == '.') {
+      domain_prefix.pop_back();
     }
-    return _root_domain;
+    return _domains.at(domain_prefix);
   }
+
+
 
   template <class Iterator, class Sentinel>
   void group_domains(
@@ -226,6 +230,7 @@ class topology {
          dyloc_locality_scope_t scope) {
     std::vector<std::string> scope_dom_tags;
     // TODO
+    dyloc__unused(scope);
     return scope_dom_tags;
   }
 
