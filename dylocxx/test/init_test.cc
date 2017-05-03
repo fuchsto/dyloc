@@ -80,7 +80,7 @@ TEST_F(InitTest, ExcludeDomains) {
   dart_barrier(DART_TEAM_ALL);
 
   std::vector<std::string> excluded_domain_tags;
-  excluded_domain_tags.push_back(".0.1");
+  excluded_domain_tags.push_back(".0.0");
 
   topo.exclude_domains(
     excluded_domain_tags.begin(),

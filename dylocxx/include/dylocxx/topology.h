@@ -5,6 +5,8 @@
 #include <dylocxx/unit_mapping.h>
 #include <dylocxx/locality_domain.h>
 
+#include <dylocxx/internal/logging.h>
+
 #include <dyloc/common/types.h>
 
 #include <dash/dart/if/dart.h>
@@ -196,7 +198,18 @@ class topology {
          const Iterator & domain_tag_first,
          const Sentinel & domain_tag_last) {
     for (auto it = domain_tag_first; it != domain_tag_last; ++it) {
-      _graph[_domain_vertices[*it]].state = vertex_state::hidden;
+      exclude_domain(*it);
+    }
+  }
+
+  void exclude_domain(const std::string & tag) {
+    _graph[_domain_vertices[tag]].state = vertex_state::hidden;
+    auto sub_v_range = boost::adjacent_vertices(
+                         _domain_vertices[tag],
+                         _graph);
+    for (auto sv = sub_v_range.first; sv != sub_v_range.second; ++sv) {
+      _graph[*sv].state = vertex_state::hidden;
+      exclude_domain(_graph[*sv].domain_tag);
     }
   }
 
