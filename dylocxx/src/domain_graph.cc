@@ -39,6 +39,7 @@ void topology::build_hierarchy() {
          = boost::add_vertex(
              { ".", &_root_domain, vertex_state::unspecified },
              _graph);
+  _domain_vertices[_root_domain.domain_tag] = root_domain_vertex;
 
   int node_index = 0;
   for (auto & node_host_domain : _host_topology.nodes()) {
@@ -67,6 +68,7 @@ void topology::build_hierarchy() {
                  &_domains[node_domain.domain_tag],
                  vertex_state::unspecified },
                _graph);
+    _domain_vertices[node_domain.domain_tag] = node_domain_vertex;
 
     boost::add_edge(root_domain_vertex, node_domain_vertex,
                     { edge_type::contains, 1 },
@@ -121,6 +123,7 @@ void topology::build_node_level(
                  &_domains[module_domain.domain_tag],
                  vertex_state::unspecified },
                _graph);
+    _domain_vertices[module_domain.domain_tag] = module_domain_vertex;
 
     boost::add_edge(node_domain_vertex, module_domain_vertex,
                     { edge_type::contains, 1 },
@@ -281,6 +284,7 @@ void topology::build_module_level(
                  &_domains[module_subdomain.domain_tag],
                  vertex_state::unspecified },
                _graph);
+    _domain_vertices[module_subdomain.domain_tag] = module_subdomain_vertex;
 
     boost::add_edge(module_domain_vertex, module_subdomain_vertex,
                     { edge_type::contains, 1 },
@@ -317,6 +321,8 @@ void topology::build_module_level(
                      &_domains[unit_domain.domain_tag],
                      vertex_state::unspecified },
                    _graph);
+
+        _domain_vertices[unit_domain.domain_tag] = unit_domain_vertex;
 
         boost::add_edge(module_subdomain_vertex, unit_domain_vertex,
                         { edge_type::contains, 1 },

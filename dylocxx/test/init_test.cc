@@ -56,13 +56,39 @@ TEST_F(InitTest, UnitLocality) {
     //     &topology::vertex_properties::domain,
     //     graph));
     // boost::depth_first_search(graph, visitor(vis));
-    topo.depth_first_search(visitor(vis));
+    topo.depth_first_search(vis);
 
     for (int u = 0; u < dyloc::num_units(); ++u) {
       const auto & uloc = dyloc::query_unit_locality(u);
       DYLOC_LOG_DEBUG("InitTest.UnitLocality", uloc);
     }
   }
+
+  dyloc::finalize();
+}
+
+TEST_F(InitTest, ExcludeDomains) {
+  dyloc::init(&TESTENV.argc, &TESTENV.argv);
+
+  auto & topo = dyloc::query_topology();
+  custom_dfs_visitor vis;
+
+  if (dyloc::myid().id == 0) {
+    topo.depth_first_search(vis);
+  }
+  dart_barrier(DART_TEAM_ALL);
+
+  std::vector<std::string> excluded_domain_tags;
+  excluded_domain_tags.push_back(".0.1");
+
+  topo.exclude_domains(
+    excluded_domain_tags.begin(),
+    excluded_domain_tags.end());
+
+  if (dyloc::myid().id == 0) {
+    topo.depth_first_search(vis);
+  }
+  dart_barrier(DART_TEAM_ALL);
 
   dyloc::finalize();
 }

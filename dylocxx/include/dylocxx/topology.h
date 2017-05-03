@@ -39,9 +39,9 @@ class topology {
   };
 
   enum class vertex_state : int {
-    unspecified     = 0,
-    hidden_vertex   = 100,
-    selected_vertex,
+    unspecified  = 0,
+    hidden       = 100,
+    selected,
   };
 
   struct vertex_properties {
@@ -80,11 +80,27 @@ class topology {
     graph_vertex_t;
 
  private:
+   template <class Visitor>
+   class selective_dfs_visitor : public boost::default_dfs_visitor {
+     Visitor _v;
+   public:
+     selective_dfs_visitor(Visitor & v) : _v(v) { }
+
+     template <typename Vertex, typename Graph>
+     void discover_vertex(Vertex u, const Graph & g) const {
+       if (g[u].state != vertex_state::hidden) {
+         _v(u,g);
+       }
+     }
+   };
+
+ private:
   host_topology    & _host_topology;
   unit_mapping     & _unit_mapping;
   locality_domain  & _root_domain;
 
   std::unordered_map<std::string, locality_domain> _domains;
+  std::unordered_map<std::string, graph_vertex_t>  _domain_vertices;
 
   graph_t _graph;
   
@@ -137,13 +153,15 @@ class topology {
   }
 
   template <class Visitor>
-  void depth_first_search(const Visitor & vis) {
-    boost::depth_first_search(_graph, vis);
+  void depth_first_search(Visitor & vis) {
+    selective_dfs_visitor<Visitor> sel_vis(vis);
+    boost::depth_first_search(_graph, visitor(sel_vis));
   }
 
   template <class Visitor>
-  void depth_first_search(const Visitor & vis) const {
-    boost::depth_first_search(_graph, vis);
+  void depth_first_search(Visitor & vis) const {
+    selective_dfs_visitor<Visitor> sel_vis(vis);
+    boost::depth_first_search(_graph, visitor(sel_vis));
   }
 
   template <class FilterPredicate>
@@ -177,14 +195,24 @@ class topology {
   void exclude_domains(
          const Iterator & domain_tag_first,
          const Sentinel & domain_tag_last) {
-    // TODO
+    for (auto it = domain_tag_first; it != domain_tag_last; ++it) {
+      _graph[_domain_vertices[*it]].state = vertex_state::hidden;
+    }
   }
 
   template <class Iterator, class Sentinel>
   void select_domains(
          const Iterator & domain_tag_first,
          const Sentinel & domain_tag_last) {
+    for (auto it = domain_tag_first; it != domain_tag_last; ++it) {
+      _graph[_domain_vertices[*it]].state = vertex_state::selected;
+    }
+  }
+
+  std::vector<std::string> scope_domain_tags(dyloc_locality_scope_t scope) {
+    std::vector<std::string> scope_dom_tags;
     // TODO
+    return scope_dom_tags;
   }
 
  private:
