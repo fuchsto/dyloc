@@ -23,7 +23,8 @@ TEST_F(TopologyTest, ExcludeDomains) {
   dyloc::init(&TESTENV.argc, &TESTENV.argv);
 
   auto & topo = dyloc::query_topology();
-  locality_domain_dfs_output_visitor vis;
+  locality_domain_dfs_output_visitor<typename topology::domain_map>
+    vis(topo.domains());
 
   DYLOC_LOG_DEBUG("TopologyTest.ExcludeDomains", "total domain hierarchy:");
   if (dyloc::myid().id == 0) {
@@ -51,7 +52,8 @@ TEST_F(TopologyTest, DomainsAncestor) {
   dyloc::init(&TESTENV.argc, &TESTENV.argv);
 
   auto & topo = dyloc::query_topology();
-  locality_domain_dfs_output_visitor vis;
+  locality_domain_dfs_output_visitor<typename topology::domain_map>
+    vis(topo.domains());
 
   DYLOC_LOG_DEBUG("TopologyTest.DomainsAncestor", "total domain hierarchy:");
   if (dyloc::myid().id == 0) {
@@ -87,7 +89,8 @@ TEST_F(TopologyTest, ScopeDomains) {
   dyloc::init(&TESTENV.argc, &TESTENV.argv);
 
   auto & topo = dyloc::query_topology();
-  locality_domain_dfs_output_visitor vis;
+  locality_domain_dfs_output_visitor<typename topology::domain_map>
+    vis(topo.domains());
 
   DYLOC_LOG_DEBUG("TopologyTest.ScopeDomains", "total domain hierarchy:");
   if (dyloc::myid().id == 0) {

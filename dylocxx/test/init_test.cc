@@ -24,7 +24,8 @@ TEST_F(InitTest, UnitLocality) {
 
   if (dyloc::myid().id == 0) {
     const auto & topo = dyloc::query_topology();
-    locality_domain_dfs_output_visitor vis;
+    locality_domain_dfs_output_visitor<typename topology::domain_map>
+      vis(topo.domains());
 
     // const auto & graph = topo.graph();
     // boost::print_graph(

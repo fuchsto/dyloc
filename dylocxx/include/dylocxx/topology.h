@@ -53,7 +53,7 @@ class topology {
   struct vertex_properties {
     std::string       domain_tag;
     // TODO: pointer will be invalidated when domain graph is copied.
-    locality_domain * domain;
+    // locality_domain * domain;
     vertex_state      state;
   };
 
@@ -160,6 +160,9 @@ class topology {
     }
   };
 
+ public:
+  typedef std::unordered_map<std::string, locality_domain> domain_map;
+
  private:
   host_topology    & _host_topology;
   unit_mapping     & _unit_mapping;
@@ -171,7 +174,7 @@ class topology {
 
   // Locality domain property data, stores accumulated domain capabilities
   // as flat hash map, independent from topological structure.
-  std::unordered_map<std::string, locality_domain> _domains;
+  domain_map                                       _domains;
   std::unordered_map<std::string, graph_vertex_t>  _domain_vertices;
   
  public:
@@ -186,10 +189,6 @@ class topology {
   , _root_domain(team_global_dom) {
     build_hierarchy();
   }
-
-#if 0
-  // TODO: copying disabled until pointer invalidation in
-  //       struct vertex_properties is fixed.
  
   topology(const topology & other)
   : _host_topology(other._host_topology)
@@ -207,7 +206,6 @@ class topology {
     boost::copy_graph(rhs._graph, _graph);
     return *this;
   }
-#endif
 
   inline const graph_t & graph() const noexcept {
     return _graph;
@@ -303,16 +301,20 @@ class topology {
                                          group_domains_ancestor_tag);
     auto   group_domain_parent_vx    = _domain_vertices[
                                          group_domain_parent.domain_tag];
-    auto   group_domain_parent_arity = boost::out_degree(
+    auto   group_domain_parent_arity = out_degree(
                                          group_domain_parent_vx, _graph);
+
+    DYLOC_LOG_DEBUG("dylocxx::topology.group_domains",
+                    "group parent domain:", group_domain_parent,
+                    "arity:", group_domain_parent_arity);
 
     // Find parents of specified subdomains that are an immediate child node
     // of the input domain:
     //
     int  num_group_parent_domain_tag_parts =
-             std::count(
-               group_domains_ancestor_tag.begin(),
-               group_domains_ancestor_tag.end(), '.');
+           std::count(
+             group_domains_ancestor_tag.begin(),
+             group_domains_ancestor_tag.end(), '.');
     // Test if group domains ancestor is immediate parent of all grouped
     // domains:
     auto indirect_domain_tag_it =
@@ -353,29 +355,38 @@ class topology {
          const Iterator & subdomain_tag_first,
          const Sentinel & subdomain_tag_last) {
     auto & domain_vx              = _domain_vertices[domain.domain_tag];
-    auto   num_subdomains         = boost::out_degree(domain_vx, _graph);
+    auto   num_subdomains         = out_degree(domain_vx, _graph);
     size_t num_grouped_subdomains = std::distance(subdomain_tag_first,
                                                   subdomain_tag_last);
     if (num_grouped_subdomains <= 0) {
       return;
     }
+    DYLOC_LOG_DEBUG("dylocxx::topology.group_subdomains",
+                    "parent domain:", domain, "arity:", num_subdomains);
 
     locality_domain group_domain(
                       domain,
                       DYLOC_LOCALITY_SCOPE_GROUP,
-                      num_subdomains);
+                      num_subdomains + 1);
+
+    DYLOC_LOG_DEBUG("dylocxx::topology.group_subdomains",
+                    "add group domain", group_domain);
 
     _domains[group_domain.domain_tag] = group_domain;
 
     auto group_domain_vx = boost::add_vertex(
                              {
                                group_domain.domain_tag,
-                               &_domains[group_domain.domain_tag],
+                            // &_domains[group_domain.domain_tag],
                                vertex_state::unspecified
                              },
                              _graph);
 
     _domain_vertices[group_domain.domain_tag] = group_domain_vx;
+
+    boost::add_edge(domain_vx, group_domain_vx,
+                    { edge_type::contains, 1 },
+                    _graph);
 
     // Move grouped subdomains to group domain children:
     //

@@ -65,7 +65,7 @@ void topology::build_hierarchy() {
 
   auto root_domain_vertex
          = boost::add_vertex(
-             { ".", &_root_domain, vertex_state::unspecified },
+             { ".", /* &_root_domain, */ vertex_state::unspecified },
              _graph);
   _domain_vertices[_root_domain.domain_tag] = root_domain_vertex;
 
@@ -93,7 +93,7 @@ void topology::build_hierarchy() {
     auto node_domain_vertex
            = boost::add_vertex(
                { node_domain.domain_tag,
-                 &_domains[node_domain.domain_tag],
+                 // &_domains[node_domain.domain_tag],
                  vertex_state::unspecified },
                _graph);
     _domain_vertices[node_domain.domain_tag] = node_domain_vertex;
@@ -148,7 +148,7 @@ void topology::build_node_level(
     auto module_domain_vertex 
            = boost::add_vertex(
                { module_domain.domain_tag,
-                 &_domains[module_domain.domain_tag],
+                 // &_domains[module_domain.domain_tag],
                  vertex_state::unspecified },
                _graph);
     _domain_vertices[module_domain.domain_tag] = module_domain_vertex;
@@ -311,7 +311,7 @@ void topology::build_module_level(
     auto module_subdomain_vertex 
            = boost::add_vertex(
                { module_subdomain.domain_tag,
-                 &_domains[module_subdomain.domain_tag],
+                 // &_domains[module_subdomain.domain_tag],
                  vertex_state::unspecified },
                _graph);
     _domain_vertices[module_subdomain.domain_tag] = module_subdomain_vertex;
@@ -348,7 +348,7 @@ void topology::build_module_level(
         auto unit_domain_vertex 
                = boost::add_vertex(
                    { unit_domain.domain_tag,
-                     &_domains[unit_domain.domain_tag],
+                     // &_domains[unit_domain.domain_tag],
                      vertex_state::unspecified },
                    _graph);
 

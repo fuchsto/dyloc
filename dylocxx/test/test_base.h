@@ -22,19 +22,26 @@
 namespace dyloc {
 namespace test {
 
+template <class DomainMap>
 class locality_domain_dfs_output_visitor
   : public boost::default_dfs_visitor {
+  const DomainMap & _domains;
 public:
+  locality_domain_dfs_output_visitor(
+    const DomainMap & domain_map)
+  : _domains(domain_map) { }
+
   template <typename Vertex, typename Graph>
   void discover_vertex(Vertex u, const Graph & g) const {
-    dyloc::locality_domain * ldom     = g[u].domain;
-    const std::string &      ldom_tag = g[u].domain_tag;
-    std::cout << std::left << std::setw(7)  << ldom->scope << " "
-              << std::left << std::setw(20) << ldom_tag << " | "
+    const std::string            & ldom_tag = g[u].domain_tag;
+    const dyloc::locality_domain & ldom     = _domains.at(ldom_tag);
+    std::cout << std::left << std::setw(7)  << ldom.scope << " "
+              << std::left << std::setw(4)  << ldom.level << " "
+              << std::left << std::setw(20) << ldom_tag   << " | "
               << "units:"
               << dyloc::make_range(
-                  ldom->unit_ids.begin(),
-                  ldom->unit_ids.end())
+                  ldom.unit_ids.begin(),
+                  ldom.unit_ids.end())
               << std::endl;
   }
 };
