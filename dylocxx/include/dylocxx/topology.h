@@ -264,7 +264,50 @@ class topology {
                       group_domain_parent,
                       DYLOC_LOCALITY_SCOPE_GROUP,
                       group_domain_parent.arity);
-    // TODO: move grouped domains to group_domain
+
+    // =====================================================================
+    // Move grouped domains to group_domain:
+
+    // Find parents of specified subdomains that are an immediate child node
+    // of the input domain:
+    //
+    int  num_group_parent_domain_tag_parts =
+             std::count_if(
+               group_domains_ancestor_tag.begin(),
+               group_domains_ancestor_tag.end(), '.');
+    // Test if group domains ancestor is immediate parent of all grouped
+    // domains:
+    auto indirect_domain_tag_it =
+             std::find_if(
+               group_domain_tag_first,
+               group_domain_tag_last,
+               [&](const std::string & tag) {
+                    return ( std::count_if(tag.begin(), tag.end(), '.') !=
+                             num_group_parent_domain_tag_parts + 1);
+                   });
+
+    if (indirect_domain_tag_it == group_domain_tag_last) {
+      // Subdomains in group are immediate child nodes of group parent
+      // domain:
+      group_subdomains(
+        group_domain_parent,
+        group_domain_tag_first,
+        group_domain_tag_last);
+    } else {
+      // At least one subdomain in group is immediate child nodes of group
+      // parent domain:
+    }
+  }
+
+  /**
+   * Move subset of a domain's immediate child nodes into separate group
+   * subdomain.
+   */
+  template <class Iterator, class Sentinel>
+  void group_subdomains(
+         const locality_domain & domain,
+         const Iterator & subdomain_tag_first,
+         const Sentinel & subdomain_tag_last) {
   }
 
   template <class Iterator, class Sentinel>
