@@ -43,7 +43,6 @@ TEST_F(TopologyTest, ExcludeDomains) {
                     "domain hierarchy after excludes:");
     topo.depth_first_search(vis);
   }
-  dart_barrier(DART_TEAM_ALL);
 
   dyloc::finalize();
 }

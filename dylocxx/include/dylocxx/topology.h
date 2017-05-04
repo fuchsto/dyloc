@@ -265,7 +265,7 @@ class topology {
    * lowest common ancestor.
    */
   template <class Iterator, class Sentinel>
-  void group_domains(
+  void group_locality_domains(
          const Iterator & group_domain_tag_first,
          const Sentinel & group_domain_tag_last) {
     auto group_domains_ancestor_tag = dyloc::longest_common_prefix(
@@ -278,16 +278,16 @@ class topology {
     // ancestor:
     auto & group_domain_parent       = _domains.at(
                                          group_domains_ancestor_tag);
-    auto & group_domain_parent_vx    = _domain_vertices[
+    auto   group_domain_parent_vx    = _domain_vertices[
                                          group_domain_parent.domain_tag];
-    auto & group_domain_parent_arity = boost::out_degree(
+    auto   group_domain_parent_arity = boost::out_degree(
                                          group_domain_parent_vx, _graph);
 
     // Find parents of specified subdomains that are an immediate child node
     // of the input domain:
     //
     int  num_group_parent_domain_tag_parts =
-             std::count_if(
+             std::count(
                group_domains_ancestor_tag.begin(),
                group_domains_ancestor_tag.end(), '.');
     // Test if group domains ancestor is immediate parent of all grouped
@@ -297,7 +297,7 @@ class topology {
                group_domain_tag_first,
                group_domain_tag_last,
                [&](const std::string & tag) {
-                    return ( std::count_if(tag.begin(), tag.end(), '.') !=
+                    return ( std::count(tag.begin(), tag.end(), '.') !=
                              num_group_parent_domain_tag_parts + 1);
                    });
 
@@ -318,6 +318,23 @@ class topology {
     }
   }
 
+  void move_domain(
+      const std::string & domain_tag,
+      const std::string & domain_tag_old_parent,
+      const std::string & domain_tag_new_parent) {
+    // Remove edge to current parent:
+    boost::remove_edge(
+      _domain_vertices[domain_tag_old_parent],
+      _domain_vertices[domain_tag],
+      _graph);
+    // Add edge to new parent:
+    boost::add_edge(
+      _domain_vertices[domain_tag_new_parent],
+      _domain_vertices[domain_tag],
+      { edge_type::contains, 1 },
+      _graph);
+  }
+
   /**
    * Move subset of a domain's immediate child nodes into separate group
    * subdomain.
@@ -327,13 +344,10 @@ class topology {
          const locality_domain & domain,
          const Iterator & subdomain_tag_first,
          const Sentinel & subdomain_tag_last) {
-    auto & domain_vx                = _domain_vertices[domain.domain_tag];
-    auto & num_subdomains           = boost::out_degree(domain_vx, _graph);
-    size_t num_grouped_subdomains   = std::distance(subdomain_tag_first,
-                                                    subdomain_tag_last);
-    size_t num_ungrouped_subdomains = num_subdomains
-                                      - num_grouped_subdomains;
-
+    auto & domain_vx              = _domain_vertices[domain.domain_tag];
+    auto   num_subdomains         = boost::out_degree(domain_vx, _graph);
+    size_t num_grouped_subdomains = std::distance(subdomain_tag_first,
+                                                  subdomain_tag_last);
     if (num_grouped_subdomains <= 0) {
       return;
     }
@@ -341,7 +355,30 @@ class topology {
     locality_domain group_domain(
                       domain,
                       DYLOC_LOCALITY_SCOPE_GROUP,
-                      num_grouped_subdomains);
+                      num_subdomains);
+
+    _domains[group_domain.domain_tag] = group_domain;
+
+    auto group_domain_vx = boost::add_vertex(
+                             {
+                               group_domain.domain_tag,
+                               &_domains[group_domain.domain_tag],
+                               vertex_state::unspecified
+                             },
+                             _graph);
+
+    for (auto group_subdom_tag = subdomain_tag_first;
+         group_subdom_tag != subdomain_tag_last;
+         ++group_subdom_tag) {
+      move_domain(
+        *group_subdom_tag,        // domain to move
+        domain.domain_tag,        // old parent domain
+        group_domain.domain_tag); // new parent domain
+    }
+
+#if 0
+    size_t num_ungrouped_subdomains = num_subdomains
+                                      - num_grouped_subdomains;
 
     // Child nodes are ordered by domain tag.
     // Create sorted copy of group subdomain tags to partition child nodes
@@ -352,7 +389,12 @@ class topology {
       grouped_subdomain_tags.begin(),
       grouped_subdomain_tags.end());
 
+    // Out-edges of group parent domain represent connection to child
+    // domain:
     auto subdomain_edges = boost::out_edges(domain_vx, _graph);
+
+    // Do not partition existing groups in subdomains: count subdomains
+    // in GROUP scope and leave them unchanged in later grouping:
     int  num_existing_domain_groups =
            std::count_if(
              subdomain_edges.first,
@@ -364,6 +406,20 @@ class topology {
              });
 
     num_ungrouped_subdomains -= num_existing_domain_groups;
+
+    auto subdomains_vx_range  = boost::adjacent_vertices(domain_vx, _graph);
+    auto subdomains_vx_size   = std::distance(subdomains_vx_range.first,
+                                              subdomains_vx_range.second);
+    DYLOC_ASSERT(subdomains_vx_size == num_subdomains);
+    std::vector<std::string> subdomain_tags;
+    for (int sd = 0; sd < subdomains_vx_size; ++sd) {
+      // subdomain_tags.push_back(_graph[]
+    }
+
+    // Partition child nodes of domain into
+    //   grouped | ungrouped | existing group
+    // subdomains:
+    //
 
     // Copy child nodes into partitions:
     //
@@ -397,6 +453,7 @@ class topology {
              strrchr(
                domain->children[domain->num_domains - 1]->domain_tag, '.');
     int    domain_last_tag_suffix     = atoi(domain_last_tag_suffix_pos + 1);
+#endif
 #endif
   }
 
