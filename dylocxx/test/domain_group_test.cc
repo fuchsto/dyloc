@@ -21,32 +21,19 @@
 namespace dyloc {
 namespace test {
 
-template <class Graph>
-void graphviz_out(const Graph & graph, const std::string & filename) {
-  std::ofstream of(filename);
-  write_graphviz(of, graph,
-                 boost::make_label_writer(
-                   boost::get(
-                     &topology::vertex_properties::domain_tag,
-                     graph)),
-                 boost::make_label_writer(
-                   boost::get(
-                     &topology::edge_properties::distance,
-                     graph)));
-}
-
-TEST_F(DomainGroupTest, GroupNUMADomains) {
+TEST_F(DomainGroupTest, GroupSubdomains) {
   dyloc::init(&TESTENV.argc, &TESTENV.argv);
 
   auto & topo = dyloc::query_topology();
   locality_domain_dfs_output_visitor<typename topology::domain_map>
     vis(topo.domains());
 
-  DYLOC_LOG_DEBUG("DomainGroupTest.GroupNUMADomains",
+  DYLOC_LOG_DEBUG("DomainGroupTest.GroupSubdomains",
                   "total domain hierarchy:");
   if (dyloc::myid().id == 0) {
     topo.depth_first_search(vis);
-    graphviz_out(topo.graph(), "original.dot");
+    graphviz_out(
+      topo.graph(), "DomainGroupTest.GroupSubdomains.original.dot");
   }
   dart_barrier(DART_TEAM_ALL);
 
@@ -54,7 +41,7 @@ TEST_F(DomainGroupTest, GroupNUMADomains) {
   auto numa_domain_tags = topo.scope_domain_tags(
                             DYLOC_LOCALITY_SCOPE_NUMA);
   for (const auto & numa_domain_tag : numa_domain_tags) {
-    DYLOC_LOG_DEBUG_VAR("DomainGroupTest.GroupNUMADomains", numa_domain_tag);
+    DYLOC_LOG_DEBUG_VAR("DomainGroupTest.GroupSubdomains", numa_domain_tag);
   }
 
   topo.group_domains(
@@ -63,11 +50,38 @@ TEST_F(DomainGroupTest, GroupNUMADomains) {
 
   dart_barrier(DART_TEAM_ALL);
 
-  DYLOC_LOG_DEBUG("DomainGroupTest.GroupNUMADomains",
+  DYLOC_LOG_DEBUG("DomainGroupTest.GroupSubdomains",
                   "total domain hierarchy:");
   if (dyloc::myid().id == 0) {
     topo.depth_first_search(vis);
-    graphviz_out(topo.graph(), "grouped.dot");
+    graphviz_out(
+      topo.graph(), "DomainGroupTest.GroupSubdomains.grouped.dot");
+  }
+  dart_barrier(DART_TEAM_ALL);
+
+  dyloc::finalize();
+}
+
+TEST_F(DomainGroupTest, GroupAsymmetric) {
+  dyloc::init(&TESTENV.argc, &TESTENV.argv);
+
+  auto & topo = dyloc::query_topology();
+  locality_domain_dfs_output_visitor<typename topology::domain_map>
+    vis(topo.domains());
+
+  if (dyloc::myid().id == 0) {
+    topo.depth_first_search(vis);
+    graphviz_out(
+      topo.graph(), "DomainGroupTest.GroupAsymmetric.original.dot");
+  }
+  dart_barrier(DART_TEAM_ALL);
+
+
+
+  if (dyloc::myid().id == 0) {
+    topo.depth_first_search(vis);
+    graphviz_out(
+      topo.graph(), "DomainGroupTest.GroupAsymmetric.grouped.dot");
   }
   dart_barrier(DART_TEAM_ALL);
 

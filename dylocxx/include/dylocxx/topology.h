@@ -51,15 +51,13 @@ class topology {
   };
 
   struct vertex_properties {
-    std::string       domain_tag;
-    // TODO: pointer will be invalidated when domain graph is copied.
-    // locality_domain * domain;
-    vertex_state      state;
+    std::string  domain_tag;
+    vertex_state state;
   };
 
   struct edge_properties {
-    edge_type type;
-    int       distance;
+    edge_type    type;
+    int          distance;
   };
 
   /*
@@ -268,10 +266,6 @@ class topology {
                     "move domain", _domains[domain_tag],
                     "from", domain_tag_old_parent,
                     "to",   domain_tag_new_parent);
-    DYLOC_LOG_DEBUG("dylocxx::topology.move_domain",
-                    "old parent:", _domains[domain_tag_old_parent]);
-    DYLOC_LOG_DEBUG("dylocxx::topology.move_domain",
-                    "new parent:", _domains[domain_tag_new_parent]);
 
     // Remove edge to current parent:
     boost::remove_edge(
@@ -344,10 +338,61 @@ class topology {
       // At least one subdomain in group is immediate child nodes of group
       // parent domain:
       DYLOC_LOG_DEBUG("dylocxx::topology.group_domains", "group domains");
+      std::vector<std::string> immediate_subdomain_tags;
+
+      int group_size = std::distance(group_domain_tag_first,
+                                     group_domain_tag_last);
+      for (int sd = 0; sd < group_size; sd++) {
+        auto group_subdomain_tag = group_domain_tag_first;
+        std::advance(group_subdomain_tag, sd);
+
+        immediate_subdomain_tags[sd]     = *group_subdomain_tag;
+        int  immediate_subdomain_tag_len = 0;
+
+        /* Position of second dot separator in tag of grouped domain
+         * after the end of the parent domain tag, for example:
+         *
+         *   parent:          .0.1
+         *   grouped domain:  .0.1.4.0
+         *   dot_pos: 6 ------------'
+         */
+        auto sep_pos = group_subdomain_tag->find_first_of(
+                         ".", group_domain_parent.domain_tag.length() + 1);
+        if (sep_pos != std::string::npos) {
+          immediate_subdomain_tags[sd].resize(sep_pos);
+        }
+      }
+      auto num_group_subdomains = dyloc::count_unique(
+                                    immediate_subdomain_tags.begin(),
+                                    immediate_subdomain_tags.end());
+      // TODO: Incrementing an existing domain's relative index
+      //       (= num_group_subdomains) could result in naming collisions
+      //       as the relative index of the subdomain can differ from the
+      //       last place in their domain tag.
       locality_domain group_domain(
                         group_domain_parent,
                         DYLOC_LOCALITY_SCOPE_GROUP,
-                        0); // TODO: num_grouped_subdomains);
+                        num_group_subdomains);
+
+      _domains[group_domain.domain_tag] = group_domain;
+      auto group_domain_parent_vertex
+             = _domain_vertices[group_domain_parent.domain_tag];
+      auto group_domain_vertex 
+             = boost::add_vertex(
+                 { group_domain.domain_tag,
+                   vertex_state::unspecified },
+                 _graph);
+
+      _domain_vertices[group_domain.domain_tag] = group_domain_vertex;
+
+      boost::add_edge(group_domain_parent_vertex, group_domain_vertex,
+                      { edge_type::contains, group_domain.level },
+                      _graph);
+
+      for (int gsd = 0; gsd < num_group_subdomains; gsd++) {
+        // Query instance of the group domain's immediate subdomain:
+        auto & group_subdomain_in = _domains[immediate_subdomain_tags[gsd]];
+      }
     }
   }
 
@@ -373,7 +418,7 @@ class topology {
     locality_domain group_domain(
                       domain,
                       DYLOC_LOCALITY_SCOPE_GROUP,
-                      num_subdomains + 1);
+                      num_subdomains);
 
     DYLOC_LOG_DEBUG("dylocxx::topology.group_subdomains",
                     "add group domain", group_domain);
@@ -383,7 +428,6 @@ class topology {
     auto group_domain_vx = boost::add_vertex(
                              {
                                group_domain.domain_tag,
-                            // &_domains[group_domain.domain_tag],
                                vertex_state::unspecified
                              },
                              _graph);

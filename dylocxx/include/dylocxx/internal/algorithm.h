@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iterator>
+#include <set>
 
 
 namespace dyloc {
@@ -25,6 +26,17 @@ std::string longest_common_prefix(
     prefix.push_back(c);
   }
   return prefix;
+}
+
+template<class ForwardIt>
+int count_unique(ForwardIt first, ForwardIt last) {
+  if (first == last) { return 0; }
+  using value_t = typename std::iterator_traits<ForwardIt>::value_type;
+  std::set<value_t> seen;
+  while (++first != last) {
+    seen.insert(*first);
+  }
+  return seen.size();
 }
 
 } // namespace dyloc

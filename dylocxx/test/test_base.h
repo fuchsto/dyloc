@@ -3,6 +3,7 @@
 
 #include <gtest/gtest.h>
 
+#include <dylocxx/topology.h>
 #include <dylocxx/unit_locality.h>
 #include <dylocxx/locality_domain.h>
 #include <dylocxx/hwinfo.h>
@@ -13,6 +14,7 @@
 
 #include <boost/graph/graph_utility.hpp>
 #include <boost/graph/depth_first_search.hpp>
+#include <boost/graph/graphviz.hpp>
 
 #include <string>
 #include <iostream>
@@ -45,6 +47,21 @@ public:
               << std::endl;
   }
 };
+
+template <class Graph>
+void graphviz_out(const Graph & graph, const std::string & filename) {
+  std::ofstream of(filename);
+  write_graphviz(of, graph,
+                 boost::make_label_writer(
+                   boost::get(
+                     &topology::vertex_properties::domain_tag,
+                     graph)),
+                 boost::make_label_writer(
+                   boost::get(
+                     &topology::edge_properties::distance,
+                     graph)));
+}
+
 
 class TestBase : public ::testing::Test {
 
