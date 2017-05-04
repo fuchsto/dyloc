@@ -259,20 +259,32 @@ class topology {
 
   void move_domain(
       const std::string & domain_tag,
-      const std::string & domain_tag_old_parent,
       const std::string & domain_tag_new_parent) {
+
+    std::string domain_tag_old_parent = domain_tag;
+    auto sep_pos = domain_tag_old_parent.find_last_of(".");
+
+    if (sep_pos == std::string::npos) {
+      DYLOC_LOG_ERROR("dylocxx::topology.move_domain",
+                      "could not move", domain_tag,
+                      "to", domain_tag_new_parent);
+      return;
+    }
+
+    domain_tag_old_parent.resize(sep_pos);
 
     DYLOC_LOG_DEBUG("dylocxx::topology.move_domain",
                     "move domain", _domains[domain_tag],
                     "from", domain_tag_old_parent,
                     "to",   domain_tag_new_parent);
-
-    // Remove edge to current parent:
+ 
+    // Remove edge from current parent to domain:
     boost::remove_edge(
       _domain_vertices[domain_tag_old_parent],
       _domain_vertices[domain_tag],
       _graph);
-    // Add edge to new parent:
+
+    // Add edge from new parent to domain:
     boost::add_edge(
       _domain_vertices[domain_tag_new_parent],
       _domain_vertices[domain_tag],
@@ -338,15 +350,19 @@ class topology {
       // At least one subdomain in group is immediate child nodes of group
       // parent domain:
       DYLOC_LOG_DEBUG("dylocxx::topology.group_domains", "group domains");
-      std::vector<std::string> immediate_subdomain_tags;
 
       int group_size = std::distance(group_domain_tag_first,
                                      group_domain_tag_last);
+      std::vector<std::string> immediate_subdomain_tags;
+      immediate_subdomain_tags.reserve(group_size);
       for (int sd = 0; sd < group_size; sd++) {
         auto group_subdomain_tag = group_domain_tag_first;
         std::advance(group_subdomain_tag, sd);
 
-        immediate_subdomain_tags[sd]     = *group_subdomain_tag;
+        DYLOC_LOG_DEBUG_VAR("dylocxx::topology.group_domains",
+                            *group_subdomain_tag);
+
+        immediate_subdomain_tags.push_back(*group_subdomain_tag);
         int  immediate_subdomain_tag_len = 0;
 
         /* Position of second dot separator in tag of grouped domain
@@ -359,12 +375,15 @@ class topology {
         auto sep_pos = group_subdomain_tag->find_first_of(
                          ".", group_domain_parent.domain_tag.length() + 1);
         if (sep_pos != std::string::npos) {
-          immediate_subdomain_tags[sd].resize(sep_pos);
+          DYLOC_LOG_DEBUG_VAR("dylocxx::topology.group_domains", sep_pos);
+          immediate_subdomain_tags.back().resize(sep_pos);
         }
       }
       auto num_group_subdomains = dyloc::count_unique(
                                     immediate_subdomain_tags.begin(),
                                     immediate_subdomain_tags.end());
+      DYLOC_LOG_DEBUG_VAR("dylocxx::topology.group_domains", 
+                          num_group_subdomains);
       // TODO: Incrementing an existing domain's relative index
       //       (= num_group_subdomains) could result in naming collisions
       //       as the relative index of the subdomain can differ from the
@@ -373,6 +392,9 @@ class topology {
                         group_domain_parent,
                         DYLOC_LOCALITY_SCOPE_GROUP,
                         num_group_subdomains);
+
+      DYLOC_LOG_DEBUG_VAR("dylocxx::topology.group_domains", 
+                          group_domain.domain_tag);
 
       _domains[group_domain.domain_tag] = group_domain;
       auto group_domain_parent_vertex
@@ -392,6 +414,10 @@ class topology {
       for (int gsd = 0; gsd < num_group_subdomains; gsd++) {
         // Query instance of the group domain's immediate subdomain:
         auto & group_subdomain_in = _domains[immediate_subdomain_tags[gsd]];
+        // Use move_domain() to partition subdomains into group
+        move_domain(
+          group_subdomain_in.domain_tag,
+          group_domain.domain_tag);
       }
     }
   }
@@ -445,7 +471,7 @@ class topology {
          ++group_subdom_tag) {
       move_domain(
         *group_subdom_tag,        // domain to move
-        domain.domain_tag,        // old parent domain
+      //domain.domain_tag,        // old parent domain
         group_domain.domain_tag); // new parent domain
     }
   }

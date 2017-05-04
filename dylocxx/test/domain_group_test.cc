@@ -76,7 +76,22 @@ TEST_F(DomainGroupTest, GroupAsymmetric) {
   }
   dart_barrier(DART_TEAM_ALL);
 
+  int myid = dyloc::myid().id;
 
+  std::vector<std::string> unit_domain_tags;
+  for (int nd = 0; nd < std::min<int>(3, topo.domains().size()); ++nd) {
+    std::srand((nd + 1) * (myid + 1));
+    int random_unit_id = std::rand() % dyloc::num_units();
+    unit_domain_tags.push_back(
+      dyloc::query_unit_locality(random_unit_id).domain_tag);
+  }
+  for (const auto & unit_domain_tag : unit_domain_tags) {
+    DYLOC_LOG_DEBUG_VAR("DomainGroupTest.GroupAsymmetric", unit_domain_tag);
+  }
+
+  topo.group_domains(
+    unit_domain_tags.begin(),
+    unit_domain_tags.end());
 
   if (dyloc::myid().id == 0) {
     topo.depth_first_search(vis);
