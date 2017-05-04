@@ -265,7 +265,7 @@ class topology {
    * lowest common ancestor.
    */
   template <class Iterator, class Sentinel>
-  void group_locality_domains(
+  void group_domains(
          const Iterator & group_domain_tag_first,
          const Sentinel & group_domain_tag_last) {
     auto group_domains_ancestor_tag = dyloc::longest_common_prefix(
@@ -367,6 +367,8 @@ class topology {
                              },
                              _graph);
 
+    // Move grouped subdomains to group domain children:
+    //
     for (auto group_subdom_tag = subdomain_tag_first;
          group_subdom_tag != subdomain_tag_last;
          ++group_subdom_tag) {
@@ -375,86 +377,6 @@ class topology {
         domain.domain_tag,        // old parent domain
         group_domain.domain_tag); // new parent domain
     }
-
-#if 0
-    size_t num_ungrouped_subdomains = num_subdomains
-                                      - num_grouped_subdomains;
-
-    // Child nodes are ordered by domain tag.
-    // Create sorted copy of group subdomain tags to partition child nodes
-    // in a single pass:
-    std::vector<std::string> grouped_subdomain_tags(
-                               subdomain_tag_first, subdomain_tag_last);
-    std::sort(
-      grouped_subdomain_tags.begin(),
-      grouped_subdomain_tags.end());
-
-    // Out-edges of group parent domain represent connection to child
-    // domain:
-    auto subdomain_edges = boost::out_edges(domain_vx, _graph);
-
-    // Do not partition existing groups in subdomains: count subdomains
-    // in GROUP scope and leave them unchanged in later grouping:
-    int  num_existing_domain_groups =
-           std::count_if(
-             subdomain_edges.first,
-             subdomain_edges.second,
-             [&](const graph_edge_t & sd_e) {
-                 const auto & sd_vx = boost::target(sd_e, _graph);
-                 return ( _domains[_graph[sd_vx].domain_tag].scope
-                            == DYLOC_LOCALITY_SCOPE_GROUP);
-             });
-
-    num_ungrouped_subdomains -= num_existing_domain_groups;
-
-    auto subdomains_vx_range  = boost::adjacent_vertices(domain_vx, _graph);
-    auto subdomains_vx_size   = std::distance(subdomains_vx_range.first,
-                                              subdomains_vx_range.second);
-    DYLOC_ASSERT(subdomains_vx_size == num_subdomains);
-    std::vector<std::string> subdomain_tags;
-    for (int sd = 0; sd < subdomains_vx_size; ++sd) {
-      // subdomain_tags.push_back(_graph[]
-    }
-
-    // Partition child nodes of domain into
-    //   grouped | ungrouped | existing group
-    // subdomains:
-    //
-
-    // Copy child nodes into partitions:
-    //
-    int  sdt                  = 0;
-    int  group_idx            = 0;
-    int  grouped_idx          = 0;
-    int  ungrouped_idx        = 0;
-    int  group_domain_rel_idx = num_ungrouped_subdomains +
-                                  num_existing_domain_groups;
-
-    auto subdomains_vx_range  = boost::adjacent_vertices(domain_vx, _graph);
-    auto subdomains_vx_size   = std::distance(subdomains_vx_range.first,
-                                              subdomains_vx_range.second);
-    DYLOC_ASSERT(subdomains_vx_size == num_subdomains);
-    std::vector<std::string> subdomain_tags;
-    for (int sd = 0; sd < subdomains_vx_size; ++sd) {
-      // subdomain_tags.push_back(_graph[]
-    }
-
-    for (int sd = 0; sd < num_subdomains; ++sd) {
-    }
-
-    // The domain tag of the group to be added must be a successor of the
-    // last subdomain's (the group domain's last sibling) tag to avoid
-    // collisions.
-    // Relative index of last subdomain can differ from its last domain tag
-    // segment, so we need to read and increment the suffix of its domain
-    // tag to obtain the group's domain tag.
-#ifdef __TODO__
-    char * domain_last_tag_suffix_pos =
-             strrchr(
-               domain->children[domain->num_domains - 1]->domain_tag, '.');
-    int    domain_last_tag_suffix     = atoi(domain_last_tag_suffix_pos + 1);
-#endif
-#endif
   }
 
   template <class Iterator, class Sentinel>

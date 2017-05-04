@@ -39,7 +39,7 @@ TEST_F(DomainGroupTest, GroupNUMADomains) {
     DYLOC_LOG_DEBUG_VAR("TopologyTest.ScopeDomains", numa_domain_tag);
   }
 
-  topo.group_locality_domains(
+  topo.group_domains(
     numa_domain_tags.begin(),
     numa_domain_tags.end());
 
