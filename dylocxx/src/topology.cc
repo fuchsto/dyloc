@@ -16,16 +16,57 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <iostream>
+#include <sstream>
 
 
 namespace dyloc {
 
-/* Outline of the domain graph construction procedure:
- *
- * 1. Build graph as domain containment hierarchy
- * 2. Use DFS visitor to collect domain capabilities
- *
- */
+std::ostream & operator<<(
+  std::ostream   & os,
+  const topology & topo) {
+  std::ostringstream ss;
+  ss << "dyloc::topology { ";
+  ss << " }";
+  return operator<<(os, ss.str());
+}
+
+
+void topology::move_domain(
+  const std::string & domain_tag,
+  const std::string & domain_tag_new_parent) {
+
+  std::string domain_tag_old_parent = domain_tag;
+  auto sep_pos = domain_tag_old_parent.find_last_of(".");
+
+  if (sep_pos == std::string::npos) {
+    DYLOC_LOG_ERROR("dylocxx::topology.move_domain",
+                    "could not move", domain_tag,
+                    "to", domain_tag_new_parent);
+    return;
+  }
+
+  domain_tag_old_parent.resize(sep_pos);
+
+  DYLOC_LOG_DEBUG("dylocxx::topology.move_domain",
+                  "move domain", _domains[domain_tag],
+                  "from", domain_tag_old_parent,
+                  "to",   domain_tag_new_parent);
+
+  // Remove edge from current parent to domain:
+  boost::remove_edge(
+    _domain_vertices[domain_tag_old_parent],
+    _domain_vertices[domain_tag],
+    _graph);
+
+  // Add edge from new parent to domain:
+  boost::add_edge(
+    _domain_vertices[domain_tag_new_parent],
+    _domain_vertices[domain_tag],
+    { edge_type::contains, _domains[domain_tag].level },
+    _graph);
+}
+
 
 std::vector<std::string>
 topology::scope_domain_tags(
@@ -52,6 +93,7 @@ topology::scope_domain_tags(
         });
   return scope_dom_tags;
 }
+
 
 void topology::build_hierarchy() {
   DYLOC_LOG_DEBUG("dylocxx::topology.build_hierarchy", "()");
@@ -109,6 +151,7 @@ void topology::build_hierarchy() {
   }
 }
 
+
 void topology::build_node_level(
   locality_domain & node_domain,
   graph_vertex_t  & node_domain_vertex) {
@@ -163,6 +206,7 @@ void topology::build_node_level(
     ++module_index;
   }
 }
+
 
 void topology::build_module_level(
   locality_domain & module_domain,
@@ -364,3 +408,4 @@ void topology::build_module_level(
 }
 
 } // namespace dyloc
+

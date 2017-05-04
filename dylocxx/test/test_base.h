@@ -26,7 +26,7 @@ namespace test {
 
 template <class DomainMap>
 class locality_domain_dfs_output_visitor
-  : public boost::default_dfs_visitor {
+: public boost::default_dfs_visitor {
   const DomainMap & _domains;
 public:
   locality_domain_dfs_output_visitor(
@@ -64,9 +64,7 @@ void graphviz_out(const Graph & graph, const std::string & filename) {
 
 
 class TestBase : public ::testing::Test {
-
  protected:
-
   virtual void SetUp() {
   }
 
