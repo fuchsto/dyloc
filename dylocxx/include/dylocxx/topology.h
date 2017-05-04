@@ -190,6 +190,7 @@ class topology {
     build_hierarchy();
   }
  
+#if 0
   topology(const topology & other)
   : _host_topology(other._host_topology)
   , _unit_mapping(other._unit_mapping)
@@ -206,6 +207,7 @@ class topology {
     boost::copy_graph(rhs._graph, _graph);
     return *this;
   }
+#endif
 
   inline const graph_t & graph() const noexcept {
     return _graph;
@@ -263,9 +265,13 @@ class topology {
       const std::string & domain_tag_new_parent) {
 
     DYLOC_LOG_DEBUG("dylocxx::topology.move_domain",
-                    "move domain", domain_tag,
-                    "from",        domain_tag_old_parent,
-                    "to",          domain_tag_new_parent);
+                    "move domain", _domains[domain_tag],
+                    "from", domain_tag_old_parent,
+                    "to",   domain_tag_new_parent);
+    DYLOC_LOG_DEBUG("dylocxx::topology.move_domain",
+                    "old parent:", _domains[domain_tag_old_parent]);
+    DYLOC_LOG_DEBUG("dylocxx::topology.move_domain",
+                    "new parent:", _domains[domain_tag_new_parent]);
 
     // Remove edge to current parent:
     boost::remove_edge(
@@ -276,7 +282,7 @@ class topology {
     boost::add_edge(
       _domain_vertices[domain_tag_new_parent],
       _domain_vertices[domain_tag],
-      { edge_type::contains, 1 },
+      { edge_type::contains, _domains[domain_tag].level },
       _graph);
   }
 
@@ -385,7 +391,7 @@ class topology {
     _domain_vertices[group_domain.domain_tag] = group_domain_vx;
 
     boost::add_edge(domain_vx, group_domain_vx,
-                    { edge_type::contains, 1 },
+                    { edge_type::contains, group_domain.level },
                     _graph);
 
     // Move grouped subdomains to group domain children:

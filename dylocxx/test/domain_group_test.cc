@@ -28,6 +28,10 @@ void graphviz_out(const Graph & graph, const std::string & filename) {
                  boost::make_label_writer(
                    boost::get(
                      &topology::vertex_properties::domain_tag,
+                     graph)),
+                 boost::make_label_writer(
+                   boost::get(
+                     &topology::edge_properties::distance,
                      graph)));
 }
 

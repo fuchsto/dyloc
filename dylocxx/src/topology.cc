@@ -99,7 +99,7 @@ void topology::build_hierarchy() {
     _domain_vertices[node_domain.domain_tag] = node_domain_vertex;
 
     boost::add_edge(root_domain_vertex, node_domain_vertex,
-                    { edge_type::contains, 1 },
+                    { edge_type::contains, node_domain.level },
                     _graph);
 
     build_node_level(
@@ -154,7 +154,7 @@ void topology::build_node_level(
     _domain_vertices[module_domain.domain_tag] = module_domain_vertex;
 
     boost::add_edge(node_domain_vertex, module_domain_vertex,
-                    { edge_type::contains, 1 },
+                    { edge_type::contains, module_domain.level },
                     _graph);
 
     build_module_level(
@@ -317,7 +317,7 @@ void topology::build_module_level(
     _domain_vertices[module_subdomain.domain_tag] = module_subdomain_vertex;
 
     boost::add_edge(module_domain_vertex, module_subdomain_vertex,
-                    { edge_type::contains, 1 },
+                    { edge_type::contains, module_domain.level },
                     _graph);
 
     if (subdomain_gid_idx <= 0) {
@@ -355,7 +355,7 @@ void topology::build_module_level(
         _domain_vertices[unit_domain.domain_tag] = unit_domain_vertex;
 
         boost::add_edge(module_subdomain_vertex, unit_domain_vertex,
-                        { edge_type::contains, 1 },
+                        { edge_type::contains, unit_domain.level },
                         _graph);
       }
     } else {
