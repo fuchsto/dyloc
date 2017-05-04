@@ -26,7 +26,8 @@ TEST_F(DomainGroupTest, GroupNUMADomains) {
   auto & topo = dyloc::query_topology();
   locality_domain_dfs_output_visitor vis;
 
-  DYLOC_LOG_DEBUG("TopologyTest.ScopeDomains", "total domain hierarchy:");
+  DYLOC_LOG_DEBUG("DomainGroupTest.GroupNUMADomains",
+                  "total domain hierarchy:");
   if (dyloc::myid().id == 0) {
     topo.depth_first_search(vis);
   }
@@ -36,14 +37,17 @@ TEST_F(DomainGroupTest, GroupNUMADomains) {
   auto numa_domain_tags = topo.scope_domain_tags(
                             DYLOC_LOCALITY_SCOPE_NUMA);
   for (const auto & numa_domain_tag : numa_domain_tags) {
-    DYLOC_LOG_DEBUG_VAR("TopologyTest.ScopeDomains", numa_domain_tag);
+    DYLOC_LOG_DEBUG_VAR("DomainGroupTest.GroupNUMADomains", numa_domain_tag);
   }
 
   topo.group_domains(
     numa_domain_tags.begin(),
     numa_domain_tags.end());
 
-  DYLOC_LOG_DEBUG("TopologyTest.ScopeDomains", "total domain hierarchy:");
+  dart_barrier(DART_TEAM_ALL);
+
+  DYLOC_LOG_DEBUG("DomainGroupTest.GroupNUMADomains",
+                  "total domain hierarchy:");
   if (dyloc::myid().id == 0) {
     topo.depth_first_search(vis);
   }

@@ -259,6 +259,29 @@ class topology {
     return _domains.at(domain_prefix);
   }
 
+  void move_domain(
+      const std::string & domain_tag,
+      const std::string & domain_tag_old_parent,
+      const std::string & domain_tag_new_parent) {
+
+    DYLOC_LOG_DEBUG("dylocxx::topology.move_domain",
+                    "move domain", domain_tag,
+                    "from",        domain_tag_old_parent,
+                    "to",          domain_tag_new_parent);
+
+    // Remove edge to current parent:
+    boost::remove_edge(
+      _domain_vertices[domain_tag_old_parent],
+      _domain_vertices[domain_tag],
+      _graph);
+    // Add edge to new parent:
+    boost::add_edge(
+      _domain_vertices[domain_tag_new_parent],
+      _domain_vertices[domain_tag],
+      { edge_type::contains, 1 },
+      _graph);
+  }
+
   /**
    * Move domains with specified domain tags into separate group domain.
    * The group domain will be created as child node of the grouped domains'
@@ -304,6 +327,7 @@ class topology {
     if (indirect_domain_tag_it == group_domain_tag_last) {
       // Subdomains in group are immediate child nodes of group parent
       // domain:
+      DYLOC_LOG_DEBUG("dylocxx::topology.group_domains", "group subdomains");
       group_subdomains(
         group_domain_parent,
         group_domain_tag_first,
@@ -311,28 +335,12 @@ class topology {
     } else {
       // At least one subdomain in group is immediate child nodes of group
       // parent domain:
+      DYLOC_LOG_DEBUG("dylocxx::topology.group_domains", "group domains");
       locality_domain group_domain(
                         group_domain_parent,
                         DYLOC_LOCALITY_SCOPE_GROUP,
                         0); // TODO: num_grouped_subdomains);
     }
-  }
-
-  void move_domain(
-      const std::string & domain_tag,
-      const std::string & domain_tag_old_parent,
-      const std::string & domain_tag_new_parent) {
-    // Remove edge to current parent:
-    boost::remove_edge(
-      _domain_vertices[domain_tag_old_parent],
-      _domain_vertices[domain_tag],
-      _graph);
-    // Add edge to new parent:
-    boost::add_edge(
-      _domain_vertices[domain_tag_new_parent],
-      _domain_vertices[domain_tag],
-      { edge_type::contains, 1 },
-      _graph);
   }
 
   /**
@@ -366,6 +374,8 @@ class topology {
                                vertex_state::unspecified
                              },
                              _graph);
+
+    _domain_vertices[group_domain.domain_tag] = group_domain_vx;
 
     // Move grouped subdomains to group domain children:
     //
