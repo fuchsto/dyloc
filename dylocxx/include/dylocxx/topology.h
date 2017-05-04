@@ -45,7 +45,8 @@ class topology {
   enum class vertex_state : int {
     unspecified  = 0,
     hidden       = 100,
-    selected,
+    moved,
+    selected
   };
 
   struct vertex_properties {
@@ -99,33 +100,45 @@ class topology {
     }
   };
 
+  /* Example usage:
+   *
+   *   vertex_matching_dfs_visitor<graph_t> vx_match_vis(
+   *     // match predicate:
+   *        [&](const graph_vertex_t & u, const graph_t & g) {
+   *          const auto & vx_domain_tag = g[u].domain_tag;
+   *          auto         vx_scope      = _domains.at(vx_domain_tag).scope;
+   *          return (vx_scope == scope);
+   *        },
+   *     // function to call for every match:
+   *        [](const graph_vertex_t & u, const graph_t & g) {
+   *          std::cout << "matched: " << g[u].domain_tag << '\n';
+   *        });
+   *
+   *   boost::depth_first_search(_graph, visitor(vx_match_vis));
+   *
+   */
   template <class Graph = graph_t>
   class vertex_matching_dfs_visitor
     : public boost::default_dfs_visitor {
     typedef typename boost::graph_traits<Graph>::vertex_descriptor
       vertex_t;
-    typedef std::function<bool(const vertex_t &)>
+    typedef std::function<bool(const vertex_t &, const Graph & g)>
       match_pred_t;
+    typedef std::function<void(const vertex_t &, const Graph & g)>
+      match_callback_t;
 
-    match_pred_t          _match_pred;
-    std::vector<vertex_t> _matches;
+    match_pred_t     _match_pred;
+    match_callback_t _match_callback;
    public:
     vertex_matching_dfs_visitor(
-      const match_pred_t & match_pred)
+      const match_pred_t     & match_pred,
+      const match_callback_t & match_callback)
     : _match_pred(match_pred)
+    , _match_callback(match_callback)
     { }
 
     void discover_vertex(const vertex_t & u, const Graph & g) {
-      if (g[u].state != vertex_state::hidden &&
-          _match_pred(u)) {
-        DYLOC_LOG_DEBUG("dylocxx::topology.vertex_match",
-                        "matched:", g[u].domain_tag);
-        _matches.push_back(u);
-      }
-    }
-  
-    const std::vector<vertex_t> & matches() const noexcept {
-      return _matches;
+      if (_match_pred(u, g)) { _match_callback(u, g); }
     }
   };
 
@@ -134,10 +147,14 @@ class topology {
   unit_mapping     & _unit_mapping;
   locality_domain  & _root_domain;
 
+  // Topological structure, represents connections between locality
+  // domains, disregarding locality domain properties.
+  graph_t _graph;
+
+  // Locality domain property data, stores accumulated domain capabilities
+  // as flat hash map, independent from topological structure.
   std::unordered_map<std::string, locality_domain> _domains;
   std::unordered_map<std::string, graph_vertex_t>  _domain_vertices;
-
-  graph_t _graph;
   
  public:
   topology() = delete;
@@ -153,6 +170,9 @@ class topology {
   }
 
 #if 0
+  // TODO: copying disabled until pointer invalidation in
+  //       struct vertex_properties is fixed.
+ 
   topology(const topology & other)
   : _host_topology(other._host_topology)
   , _unit_mapping(other._unit_mapping)
@@ -202,6 +222,7 @@ class topology {
   template <class FilterPredicate>
   void filter(
          const FilterPredicate & filter) {
+    dyloc__unused(filter);
     // filtered_graph<graph_t, filter> fg(_graph, filter);
   }
 
@@ -221,12 +242,29 @@ class topology {
   }
 
 
-
+  /**
+   * Move domains with specified domain tags into separate group domain.
+   * The group domain will be created as child node of the grouped domains'
+   * lowest common ancestor.
+   */
   template <class Iterator, class Sentinel>
   void group_domains(
          const Iterator & group_domain_tag_first,
          const Sentinel & group_domain_tag_last) {
-    // TODO
+    auto group_domains_ancestor_tag = dyloc::longest_common_prefix(
+                                        group_domain_tag_first,
+                                        group_domain_tag_last);
+    if (group_domains_ancestor_tag.back() == '.') {
+      group_domains_ancestor_tag.pop_back();
+    }
+    // Add group domain to children of the grouped domains' lowest common
+    // ancestor:
+    auto & group_domain_parent = _domains.at(group_domains_ancestor_tag);
+    locality_domain group_domain(
+                      group_domain_parent,
+                      DYLOC_LOCALITY_SCOPE_GROUP,
+                      group_domain_parent.arity);
+    // TODO: move grouped domains to group_domain
   }
 
   template <class Iterator, class Sentinel>
@@ -259,40 +297,7 @@ class topology {
   }
 
   std::vector<std::string> scope_domain_tags(
-         dyloc_locality_scope_t scope) const {
-    std::vector<std::string> scope_dom_tags;
-#if 1
-    std::vector<graph_vertex_t> vx_matches;
-    const auto vx_range = vertices(_graph);
-    std::for_each(
-      vx_range.first, vx_range.second,
-      [&](const graph_vertex_t & vx) {
-        if (_domains.at(_graph[vx].domain_tag).scope
-             == scope) {
-          vx_matches.push_back(vx);
-        }
-      });
-#else
-    vertex_matching_dfs_visitor<graph_t> vx_match_vis(
-      [=](const graph_vertex_t & vx) {
-        const auto & vx_domain_tag = _graph[vx].domain_tag;
-        auto         vx_scope      = _domains.at(vx_domain_tag).scope;
-        return (vx_scope == scope);
-      });
-    boost::depth_first_search(_graph, visitor(vx_match_vis));
-
-#endif
-
-    DYLOC_LOG_DEBUG("dylocxx::topology.scope_domain_tags",
-                    "num. domains matched:", vx_matches.size());
-    std::for_each(
-      vx_matches.begin(),
-      vx_matches.end(),
-      [&](const graph_vertex_t & vx) {
-        scope_dom_tags.push_back(_graph[vx].domain_tag);
-      });
-    return scope_dom_tags;
-  }
+         dyloc_locality_scope_t scope) const;
 
  private:
   void build_hierarchy();

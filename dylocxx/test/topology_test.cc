@@ -96,10 +96,18 @@ TEST_F(TopologyTest, ScopeDomains) {
   }
   dart_barrier(DART_TEAM_ALL);
 
+  // Tags of locality domains in CORE scope:
   auto core_domain_tags = topo.scope_domain_tags(
                             DYLOC_LOCALITY_SCOPE_CORE);
   for (const auto & core_domain_tag : core_domain_tags) {
     DYLOC_LOG_DEBUG_VAR("TopologyTest.ScopeDomains", core_domain_tag);
+  }
+
+  // Tags of locality domains in NUMA scope:
+  auto numa_domain_tags = topo.scope_domain_tags(
+                            DYLOC_LOCALITY_SCOPE_NUMA);
+  for (const auto & numa_domain_tag : numa_domain_tags) {
+    DYLOC_LOG_DEBUG_VAR("TopologyTest.ScopeDomains", numa_domain_tag);
   }
 
   dyloc::finalize();
