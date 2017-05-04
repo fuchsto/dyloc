@@ -64,7 +64,21 @@ class topology {
 
   /*
    * Using boost graph with domain data as external properties, see:
+   *
    *   http://programmingexamples.net/wiki/CPP/Boost/BGL/GridGraphProperties
+   *
+   * For boost::adjacency_list and the implications of its underlying
+   * container types, see:
+   *
+   *   http://www.boost.org/doc/libs/1_58_0/libs/graph/doc/adjacency_list.html
+   *
+   *   "In general, if you want your vertex and edge descriptors to be stable
+   *    (never invalidated) then use listS or setS for the VertexList and
+   *    OutEdgeList template parameters of adjacency_list. If you are not as
+   *    concerned about descriptor and iterator stability, and are more
+   *    concerned about memory consumption and graph traversal speed, use
+   *    vecS for the VertexList and/or OutEdgeList template parameters."
+   *
    */
   typedef boost::adjacency_list<
             boost::listS,          // out-edges stored in a std::list
@@ -85,6 +99,9 @@ class topology {
 
   typedef boost::graph_traits<graph_t>::vertex_descriptor
     graph_vertex_t;
+
+  typedef boost::graph_traits<graph_t>::edge_descriptor
+    graph_edge_t;
 
  private:
   template <class Visitor>
@@ -242,7 +259,6 @@ class topology {
     return _domains.at(domain_prefix);
   }
 
-
   /**
    * Move domains with specified domain tags into separate group domain.
    * The group domain will be created as child node of the grouped domains'
@@ -322,6 +338,11 @@ class topology {
       return;
     }
 
+    locality_domain group_domain(
+                      domain,
+                      DYLOC_LOCALITY_SCOPE_GROUP,
+                      num_grouped_subdomains);
+
     // Child nodes are ordered by domain tag.
     // Create sorted copy of group subdomain tags to partition child nodes
     // in a single pass:
@@ -331,28 +352,31 @@ class topology {
       grouped_subdomain_tags.begin(),
       grouped_subdomain_tags.end());
 
-    int num_existing_domain_groups = 0;
-#ifdef __TODO__
-    for (int sd = 0; sd < domain->num_domains; sd++) {
-      if (domain->children[sd]->scope == DART_LOCALITY_SCOPE_GROUP) {
-        num_existing_domain_groups++;
-      }
-    }
-#endif
+    auto subdomain_edges = boost::out_edges(domain_vx, _graph);
+    int  num_existing_domain_groups =
+           std::count_if(
+             subdomain_edges.first,
+             subdomain_edges.second,
+             [&](const graph_edge_t & sd_e) {
+                 const auto & sd_vx = boost::target(sd_e, _graph);
+                 return ( _domains[_graph[sd_vx].domain_tag].scope
+                            == DYLOC_LOCALITY_SCOPE_GROUP);
+             });
+
     num_ungrouped_subdomains -= num_existing_domain_groups;
 
     // Copy child nodes into partitions:
     //
-    int sdt                  = 0;
-    int group_idx            = 0;
-    int grouped_idx          = 0;
-    int ungrouped_idx        = 0;
-    int group_domain_rel_idx = num_ungrouped_subdomains +
-                                 num_existing_domain_groups;
+    int  sdt                  = 0;
+    int  group_idx            = 0;
+    int  grouped_idx          = 0;
+    int  ungrouped_idx        = 0;
+    int  group_domain_rel_idx = num_ungrouped_subdomains +
+                                  num_existing_domain_groups;
 
-    auto subdomains_vx_range = boost::adjacent_vertices(domain_vx, _graph);
-    auto subdomains_vx_size  = std::distance(subdomains_vx_range.first,
-                                             subdomains_vx_range.second);
+    auto subdomains_vx_range  = boost::adjacent_vertices(domain_vx, _graph);
+    auto subdomains_vx_size   = std::distance(subdomains_vx_range.first,
+                                              subdomains_vx_range.second);
     DYLOC_ASSERT(subdomains_vx_size == num_subdomains);
     std::vector<std::string> subdomain_tags;
     for (int sd = 0; sd < subdomains_vx_size; ++sd) {
@@ -374,10 +398,6 @@ class topology {
                domain->children[domain->num_domains - 1]->domain_tag, '.');
     int    domain_last_tag_suffix     = atoi(domain_last_tag_suffix_pos + 1);
 #endif
-    locality_domain group_domain(
-                      domain,
-                      DYLOC_LOCALITY_SCOPE_GROUP,
-                      num_grouped_subdomains);
   }
 
   template <class Iterator, class Sentinel>

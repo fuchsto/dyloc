@@ -449,8 +449,7 @@ void host_topology::local_topology(
       DYLOC_LOG_TRACE("dylocxx::host_topology.local_topology",
                       "hwloc: PCI device: (",
                       "name:",  coproc_obj->name,
-                      "arity:", coproc_obj->arity,
-                      ")");
+                      "arity:", coproc_obj->arity, ")");
       if (NULL != coproc_obj->name &&
           NULL != strstr(coproc_obj->name, "Xeon Phi")) {
         DYLOC_LOG_TRACE("dylocxx::host_topology.local_topology",
@@ -461,8 +460,7 @@ void host_topology::local_topology(
             DYLOC_LOG_TRACE("dylocxx::host_topology.local_topology",
                             "hwloc: Xeon Phi child node: (",
                             "name:",  coproc_child_obj->name,
-                            "arity:", coproc_child_obj->arity,
-                            ")");
+                            "arity:", coproc_child_obj->arity, ")");
 
             dyloc_module_location_t module_loc;
             char * hostname     = module_loc.host;
@@ -498,8 +496,7 @@ void host_topology::local_topology(
                               "type:", mic_host_obj->type,
                               "->",
                               "scope:", module_loc.pos.scope,
-                              "idx:",   module_loc.pos.index,
-                              ")");
+                              "idx:",   module_loc.pos.index, ")");
             }
             module_locations.push_back(std::move(module_loc));
           }
