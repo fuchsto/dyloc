@@ -6,6 +6,7 @@
 #include <dylocxx/locality_domain.h>
 
 #include <dylocxx/internal/logging.h>
+#include <dylocxx/internal/assert.h>
 #include <dylocxx/internal/algorithm.h>
 
 #include <dyloc/common/types.h>
@@ -259,11 +260,16 @@ class topology {
     }
     // Add group domain to children of the grouped domains' lowest common
     // ancestor:
-    auto & group_domain_parent = _domains.at(group_domains_ancestor_tag);
+    auto & group_domain_parent       = _domains.at(
+                                         group_domains_ancestor_tag);
+    auto & group_domain_parent_vx    = _domain_vertices[
+                                         group_domain_parent.domain_tag];
+    auto & group_domain_parent_arity = boost::out_degree(
+                                         group_domain_parent_vx, _graph);
     locality_domain group_domain(
                       group_domain_parent,
                       DYLOC_LOCALITY_SCOPE_GROUP,
-                      group_domain_parent.arity);
+                      group_domain_parent_arity);
 
     // =====================================================================
     // Move grouped domains to group_domain:
@@ -308,6 +314,50 @@ class topology {
          const locality_domain & domain,
          const Iterator & subdomain_tag_first,
          const Sentinel & subdomain_tag_last) {
+    auto & domain_vx                = _domain_vertices[domain.domain_tag];
+    auto & num_subdomains           = boost::out_degree(domain_vx, _graph);
+    size_t num_grouped_subdomains   = std::distance(subdomain_tag_first,
+                                                    subdomain_tag_last);
+    size_t num_ungrouped_subdomains = num_subdomains
+                                      - num_grouped_subdomains;
+
+    if (num_grouped_subdomains <= 0) {
+      return;
+    }
+
+    // The domain tag of the group to be added must be a successor of the
+    // last subdomain's (the group domain's last sibling) tag to avoid 
+    // collisions.
+    // Relative index of last subdomain can differ from its last domain tag
+    // segment, so we need to read and increment the suffix of its domain
+    // tag to obtain the group's domain tag.
+    char * domain_last_tag_suffix_pos =
+             strrchr(
+               domain->children[domain->num_domains - 1]->domain_tag, '.');
+    int    domain_last_tag_suffix     = atoi(domain_last_tag_suffix_pos + 1);
+
+    // Child nodes are ordered by domain tag.
+    // Create sorted copy of group subdomain tags to partition child nodes
+    // in a single pass:
+    std::vector<std::string> grouped_subdomain_tags(
+                               subdomain_tag_first, subdomain_tag_last);
+    std::sort(grouped_subdomain_tags);
+
+    // Copy child nodes into partitions:
+    //
+    int sdt                  = 0;
+    int group_idx            = 0;
+    int grouped_idx          = 0;
+    int ungrouped_idx        = 0;
+    int group_domain_rel_idx = num_ungrouped + num_existing_domain_groups;
+
+    auto subdomains_vx_range = boost::adjacent_vertices(domain_vx, _graph);
+    DYLOC_ASSERT(
+      std::distance(subdomains_vx_range.first, subdomains_vx_range.second)
+      == num_subdomains);
+
+    for (int sd = 0; sd < num_subdomains; ++sd) {
+    }
   }
 
   template <class Iterator, class Sentinel>

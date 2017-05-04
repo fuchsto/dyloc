@@ -31,6 +31,8 @@ endif(POLICY CMP0016)
 ## Build options
 option(ENABLE_LOGGING
        "Specify whether logging should be enabled" off)
+option(ENABLE_ASSERTIONS
+       "Specify whether logging should be enabled" on)
 
 option(BUILD_SHARED_LIBS
        "Specify whether libraries should be built as shared objects" off)
