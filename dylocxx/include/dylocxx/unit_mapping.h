@@ -39,19 +39,25 @@ struct unit_mapping {
    */
   unit_mapping(dart_team_t team);
 
-  unit_locality_const_iterator begin() const {
+  inline unit_locality_const_iterator begin() const {
     return unit_localities.begin();
   }
 
-  unit_locality_const_iterator end() const {
+  inline unit_locality_const_iterator end() const {
     return unit_localities.end();
   }
 
-  const dyloc_unit_locality_t & operator[](dart_team_unit_t luid) const {
+  inline size_t size() const noexcept {
+    return unit_localities.size();
+  }
+
+  inline const dyloc_unit_locality_t & operator[](
+      dart_team_unit_t luid) const {
     return unit_localities[luid.id];
   }
 
-  dyloc_unit_locality_t & operator[](dart_team_unit_t luid) {
+  inline dyloc_unit_locality_t & operator[](
+      dart_team_unit_t luid) {
     return unit_localities[luid.id];
   }
 };

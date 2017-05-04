@@ -30,7 +30,7 @@ host_topology::host_topology(const unit_mapping & unit_map) {
 
   size_t num_units;
   DYLOC_ASSERT_RETURNS(dart_team_size(team, &num_units), DART_OK);
-  DYLOC_ASSERT_MSG(num_units == unit_mapping.num_units,
+  DYLOC_ASSERT_MSG(num_units == unit_map.size(),
                    "Number of units in mapping differs from team size");
 
   // Map unit ids to their host name:

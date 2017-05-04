@@ -266,13 +266,6 @@ class topology {
                                          group_domain_parent.domain_tag];
     auto & group_domain_parent_arity = boost::out_degree(
                                          group_domain_parent_vx, _graph);
-    locality_domain group_domain(
-                      group_domain_parent,
-                      DYLOC_LOCALITY_SCOPE_GROUP,
-                      group_domain_parent_arity);
-
-    // =====================================================================
-    // Move grouped domains to group_domain:
 
     // Find parents of specified subdomains that are an immediate child node
     // of the input domain:
@@ -302,6 +295,10 @@ class topology {
     } else {
       // At least one subdomain in group is immediate child nodes of group
       // parent domain:
+      locality_domain group_domain(
+                        group_domain_parent,
+                        DYLOC_LOCALITY_SCOPE_GROUP,
+                        0); // TODO: num_grouped_subdomains);
     }
   }
 
@@ -325,23 +322,24 @@ class topology {
       return;
     }
 
-    // The domain tag of the group to be added must be a successor of the
-    // last subdomain's (the group domain's last sibling) tag to avoid 
-    // collisions.
-    // Relative index of last subdomain can differ from its last domain tag
-    // segment, so we need to read and increment the suffix of its domain
-    // tag to obtain the group's domain tag.
-    char * domain_last_tag_suffix_pos =
-             strrchr(
-               domain->children[domain->num_domains - 1]->domain_tag, '.');
-    int    domain_last_tag_suffix     = atoi(domain_last_tag_suffix_pos + 1);
-
     // Child nodes are ordered by domain tag.
     // Create sorted copy of group subdomain tags to partition child nodes
     // in a single pass:
     std::vector<std::string> grouped_subdomain_tags(
                                subdomain_tag_first, subdomain_tag_last);
-    std::sort(grouped_subdomain_tags);
+    std::sort(
+      grouped_subdomain_tags.begin(),
+      grouped_subdomain_tags.end());
+
+    int num_existing_domain_groups = 0;
+#ifdef __TODO__
+    for (int sd = 0; sd < domain->num_domains; sd++) {
+      if (domain->children[sd]->scope == DART_LOCALITY_SCOPE_GROUP) {
+        num_existing_domain_groups++;
+      }
+    }
+#endif
+    num_ungrouped_subdomains -= num_existing_domain_groups;
 
     // Copy child nodes into partitions:
     //
@@ -349,15 +347,37 @@ class topology {
     int group_idx            = 0;
     int grouped_idx          = 0;
     int ungrouped_idx        = 0;
-    int group_domain_rel_idx = num_ungrouped + num_existing_domain_groups;
+    int group_domain_rel_idx = num_ungrouped_subdomains +
+                                 num_existing_domain_groups;
 
     auto subdomains_vx_range = boost::adjacent_vertices(domain_vx, _graph);
-    DYLOC_ASSERT(
-      std::distance(subdomains_vx_range.first, subdomains_vx_range.second)
-      == num_subdomains);
+    auto subdomains_vx_size  = std::distance(subdomains_vx_range.first,
+                                             subdomains_vx_range.second);
+    DYLOC_ASSERT(subdomains_vx_size == num_subdomains);
+    std::vector<std::string> subdomain_tags;
+    for (int sd = 0; sd < subdomains_vx_size; ++sd) {
+      // subdomain_tags.push_back(_graph[]
+    }
 
     for (int sd = 0; sd < num_subdomains; ++sd) {
     }
+
+    // The domain tag of the group to be added must be a successor of the
+    // last subdomain's (the group domain's last sibling) tag to avoid
+    // collisions.
+    // Relative index of last subdomain can differ from its last domain tag
+    // segment, so we need to read and increment the suffix of its domain
+    // tag to obtain the group's domain tag.
+#ifdef __TODO__
+    char * domain_last_tag_suffix_pos =
+             strrchr(
+               domain->children[domain->num_domains - 1]->domain_tag, '.');
+    int    domain_last_tag_suffix     = atoi(domain_last_tag_suffix_pos + 1);
+#endif
+    locality_domain group_domain(
+                      domain,
+                      DYLOC_LOCALITY_SCOPE_GROUP,
+                      num_grouped_subdomains);
   }
 
   template <class Iterator, class Sentinel>

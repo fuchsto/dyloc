@@ -265,6 +265,8 @@ void topology::build_module_level(
   }
   std::sort(module_subdomain_gids.begin(),
             module_subdomain_gids.end());
+
+
   auto module_subdomain_gids_end = std::unique(
                                      module_subdomain_gids.begin(),
                                      module_subdomain_gids.end());
