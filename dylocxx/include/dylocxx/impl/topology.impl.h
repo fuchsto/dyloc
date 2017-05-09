@@ -2,6 +2,7 @@
 #define DYLOC__IMPL__TOPOLOGY_IMPL_H__INCLUDED
 
 #include <dylocxx/topology.h>
+#include <dylocxx/exception.h>
 
 #include <set>
 #include <string>
@@ -14,6 +15,11 @@ template <class Iterator, class Sentinel>
 void topology::group_domains(
        const Iterator & group_domain_tag_first,
        const Sentinel & group_domain_tag_last) {
+  if (std::distance(group_domain_tag_first, group_domain_tag_last) == 0) {
+    DYLOC_THROW(
+        dyloc::exception::invalid_argument,
+        "cannot create empty group");
+  }
   auto group_domains_ancestor_tag = dyloc::longest_common_prefix(
                                       group_domain_tag_first,
                                       group_domain_tag_last);

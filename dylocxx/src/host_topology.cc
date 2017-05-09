@@ -71,13 +71,14 @@ host_topology::host_topology(const unit_mapping & unit_map) {
 
     // write host name to host domain data:
     host_name.copy(host_dom.host, host_name.size());
+    host_dom.host[host_name.size()] = '\0';
 
     DYLOC_LOG_TRACE("dylocxx::host_topology.()",
                     "mapping units to", host_name);
 
     // NUMA ids occupied by units on the host:
     std::set<int> host_numa_ids;
-    for (dart_global_unit_t host_unit_gid : host_unit_gids) {
+    for (const dart_global_unit_t & host_unit_gid : host_unit_gids) {
       dart_team_unit_t luid;
       DYLOC_ASSERT_RETURNS(
         dart_team_unit_g2l(team, host_unit_gid, &luid),
@@ -161,10 +162,16 @@ void host_topology::collect_topology(
                   "local host:", local_hostname);
 
   for (const auto & host_dom : _host_domains) {
-    std::string host_name(host_dom.host);
-    const auto  & host_unit_gids  = _host_units[host_name];
+    std::string  host_name(host_dom.host);
+    const auto & host_unit_gids = _host_units[host_name];
 
-    dart_global_unit_t leader_unit_gid = host_unit_gids[0];
+    if (host_unit_gids.size() == 0) {
+      DYLOC_LOG_WARN("dylocxx::host_topology.collect_topology",
+                     "no units at host", host_name);
+      continue;
+    }
+
+    const dart_global_unit_t & leader_unit_gid = host_unit_gids[0];
     DYLOC_ASSERT_RETURNS(
       dart_group_addmember(leader_group, leader_unit_gid),
       DART_OK);

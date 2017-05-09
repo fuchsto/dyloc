@@ -3,6 +3,11 @@ my.*
 tags
 .ycm*
 
+# Editor temp files
+*.swp
+*.swo
+#*
+
 # Build directory
 build
 build.dev

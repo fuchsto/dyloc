@@ -65,6 +65,8 @@ TEST_F(DomainGroupTest, GroupSubdomains) {
 TEST_F(DomainGroupTest, GroupAsymmetric) {
   dyloc::init(&TESTENV.argc, &TESTENV.argv);
 
+  if (dyloc::num_units() < 2) { return; }
+
   auto & topo = dyloc::query_topology();
   locality_domain_dfs_output_visitor<typename topology::domain_map>
     vis(topo.domains());
