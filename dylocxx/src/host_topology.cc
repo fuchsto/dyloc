@@ -306,7 +306,7 @@ void host_topology::collect_topology(
    * local node:
    */
   if (DART_UNDEFINED_UNIT_ID != local_leader_unit_lid.id) {
-    dart_team_t      local_team; 
+    dart_team_t      local_team;
     dart_team_unit_t host_topo_bcast_root = local_leader_unit_lid;
     dart_team_t      host_topo_bcast_team = team;
     if (num_hosts > 1) {

@@ -246,6 +246,10 @@ class topology {
     // filtered_graph<graph_t, filter> fg(_graph, filter);
   }
 
+  /**
+   * Return lowest common ancestor of the domains specified by the given
+   * domain tags.
+   */
   template <class Iterator, class Sentinel>
   const locality_domain & ancestor(
          const Iterator & domain_tag_first,
@@ -261,6 +265,14 @@ class topology {
     return _domains.at(domain_prefix);
   }
 
+  const locality_domain & ancestor(
+         const std::initializer_list<std::string> domain_tags) const {
+    return ancestor(std::begin(domain_tags), std::end(domain_tags));
+  }
+
+  /**
+   * Move domain to child nodes of the specified parent domain.
+   */
   void move_domain(
       const std::string & domain_tag,
       const std::string & domain_tag_new_parent);
@@ -314,6 +326,9 @@ class topology {
     }
   }
 
+  /**
+   * Resolve tags of all domains at specified scope.
+   */
   std::vector<std::string> scope_domain_tags(
          dyloc_locality_scope_t scope) const;
 
@@ -328,6 +343,15 @@ class topology {
          locality_domain & module_domain,
          graph_vertex_t  & node_domain_vertex,
          int               module_scope_level);
+
+  void relink_to_parent(
+      const std::string & domain_tag,
+      const std::string & domain_tag_new_parent);
+
+  void rename_domain(const std::string & tag, const std::string & new_tag);
+
+  void update_domain_capacities();
+  void update_domain_attributes(const std::string & tag);
 };
 
 } // namespace dyloc

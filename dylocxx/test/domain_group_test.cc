@@ -85,6 +85,12 @@ TEST_F(DomainGroupTest, GroupAsymmetric) {
     unit_domain_tags.push_back(
       dyloc::query_unit_locality(random_unit_id).domain_tag);
   }
+  std::sort(unit_domain_tags.begin(),
+            unit_domain_tags.end());
+  unit_domain_tags.resize(
+      std::distance(unit_domain_tags.begin(),
+                    std::unique(unit_domain_tags.begin(),
+                                unit_domain_tags.end())));
   for (const auto & unit_domain_tag : unit_domain_tags) {
     DYLOC_LOG_DEBUG_VAR("DomainGroupTest.GroupAsymmetric", unit_domain_tag);
   }

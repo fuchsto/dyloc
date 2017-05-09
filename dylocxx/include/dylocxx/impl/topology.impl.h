@@ -59,8 +59,8 @@ void topology::group_domains(
       group_domain_tag_first,
       group_domain_tag_last);
   } else {
-    // At least one subdomain in group is immediate child nodes of group
-    // parent domain:
+    // At least one subdomain in group is not an immediate child node of
+    // group parent domain:
     DYLOC_LOG_DEBUG("dylocxx::topology.group_domains", "group domains");
 
     int group_size = std::distance(group_domain_tag_first,
@@ -75,7 +75,6 @@ void topology::group_domains(
                           *group_subdomain_tag);
 
       immediate_subdomain_tags.push_back(*group_subdomain_tag);
-      int  immediate_subdomain_tag_len = 0;
 
       /* Position of second dot separator in tag of grouped domain
        * after the end of the parent domain tag, for example:
@@ -91,19 +90,16 @@ void topology::group_domains(
         immediate_subdomain_tags.back().resize(sep_pos);
       }
     }
-    auto num_group_subdomains = dyloc::count_unique(
-                                  immediate_subdomain_tags.begin(),
-                                  immediate_subdomain_tags.end());
+    auto num_group_subdomains  = dyloc::count_unique(
+                                   immediate_subdomain_tags.begin(),
+                                   immediate_subdomain_tags.end());
     DYLOC_LOG_DEBUG_VAR("dylocxx::topology.group_domains", 
                         num_group_subdomains);
-    // TODO: Incrementing an existing domain's relative index
-    //       (= num_group_subdomains) could result in naming collisions
-    //       as the relative index of the subdomain can differ from the
-    //       last place in their domain tag.
+
     locality_domain group_domain(
                       group_domain_parent,
                       DYLOC_LOCALITY_SCOPE_GROUP,
-                      num_group_subdomains);
+                      group_domain_parent_arity);
 
     DYLOC_LOG_DEBUG_VAR("dylocxx::topology.group_domains", 
                         group_domain.domain_tag);
@@ -126,12 +122,16 @@ void topology::group_domains(
     for (int gsd = 0; gsd < num_group_subdomains; gsd++) {
       // Query instance of the group domain's immediate subdomain:
       auto & group_subdomain_in = _domains[immediate_subdomain_tags[gsd]];
-      // Use move_domain() to partition subdomains into group
-      move_domain(
+      // Use relink_to_parent() to partition subdomains into group
+      relink_to_parent(
         group_subdomain_in.domain_tag,
         group_domain.domain_tag);
     }
+
+    update_domain_attributes(group_domain.domain_tag);
   }
+
+  update_domain_capacities();
 }
 
 
@@ -178,10 +178,12 @@ void topology::group_subdomains(
   for (auto group_subdom_tag = subdomain_tag_first;
        group_subdom_tag != subdomain_tag_last;
        ++group_subdom_tag) {
-    move_domain(
+    relink_to_parent(
       *group_subdom_tag,        // domain to move
       group_domain.domain_tag); // new parent domain
   }
+
+  update_domain_attributes(group_domain.domain_tag);
 }
 
 } // namespace dyloc

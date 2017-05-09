@@ -13,7 +13,7 @@ std::string longest_common_prefix(
        const Iterator & string_first,
        const Sentinel & string_last) {
   std::string prefix;
-  int  pos  = 0;
+  size_t      pos  = 0;
   for (; pos < string_first->length(); ++pos) {
     char c = (*string_first)[pos];
     // Test if character at position `pos` is identical in all
@@ -33,9 +33,7 @@ int count_unique(ForwardIt first, ForwardIt last) {
   if (first == last) { return 0; }
   using value_t = typename std::iterator_traits<ForwardIt>::value_type;
   std::set<value_t> seen;
-  while (++first != last) {
-    seen.insert(*first);
-  }
+  seen.insert(first, last);
   return seen.size();
 }
 

@@ -31,8 +31,59 @@ std::ostream & operator<<(
   return operator<<(os, ss.str());
 }
 
+void topology::rename_domain(
+  const std::string & old_tag,
+  const std::string & new_tag) {
+  DYLOC_LOG_TRACE("dylocxx::topology.rename_domain",
+                  "old tag:", old_tag, "new tag:", new_tag);
+  auto domain_it = _domains.find(old_tag);
+  if (domain_it != _domains.end()) {
+    domain_it->second.domain_tag = new_tag;
+    std::swap(_domains[new_tag], domain_it->second);
+    _domains.erase(domain_it);
+  }
+  auto domain_vx_it = _domain_vertices.find(old_tag);
+  if (domain_vx_it != _domain_vertices.end()) {
+    _graph[domain_vx_it->second].domain_tag = new_tag;
+    std::swap(_domain_vertices[new_tag], domain_vx_it->second);
+    _domain_vertices.erase(domain_vx_it);
+  }
+}
 
-void topology::move_domain(
+void topology::update_domain_attributes(const std::string & parent_tag) {
+  // Update domain tags, recursing down from specified domain:
+  auto parent_vx_it = _domain_vertices.find(parent_tag);
+  if (parent_vx_it == _domain_vertices.end()) {
+    return;
+  }
+  typedef boost::graph_traits<graph_t>::out_edge_iterator::reference
+    out_edge_ref;
+
+  DYLOC_LOG_TRACE_VAR("dylocxx::topology.update_domain_attributes",
+                      parent_tag);
+
+  auto & domain_vx       = parent_vx_it->second;
+  int    rel_index       = 0;
+  auto   domain_edges    = out_edges(domain_vx, _graph);
+  std::for_each(
+    domain_edges.first,
+    domain_edges.second,
+    [&](out_edge_ref parent_domain_edge) {
+      auto sub_domain_vx = target(parent_domain_edge, _graph);
+      const auto & sub_domain_old_tag = _graph[sub_domain_vx].domain_tag;
+      std::ostringstream ss;
+      ss << parent_tag << "." << rel_index;
+      rename_domain(sub_domain_old_tag, ss.str());
+      update_domain_attributes(ss.str());
+      ++rel_index;
+    });
+}
+
+void topology::update_domain_capacities() {
+  // Accumulate domain capacities upwards, starting from unit domains:
+}
+
+void topology::relink_to_parent(
   const std::string & domain_tag,
   const std::string & domain_tag_new_parent) {
 
@@ -40,7 +91,7 @@ void topology::move_domain(
   auto sep_pos = domain_tag_old_parent.find_last_of(".");
 
   if (sep_pos == std::string::npos) {
-    DYLOC_LOG_ERROR("dylocxx::topology.move_domain",
+    DYLOC_LOG_ERROR("dylocxx::topology.relink_to_parent",
                     "could not move", domain_tag,
                     "to", domain_tag_new_parent);
     return;
@@ -48,7 +99,7 @@ void topology::move_domain(
 
   domain_tag_old_parent.resize(sep_pos);
 
-  DYLOC_LOG_DEBUG("dylocxx::topology.move_domain",
+  DYLOC_LOG_DEBUG("dylocxx::topology.relink_to_parent",
                   "move domain", _domains[domain_tag],
                   "from", domain_tag_old_parent,
                   "to",   domain_tag_new_parent);
@@ -67,6 +118,13 @@ void topology::move_domain(
     _graph);
 }
 
+void topology::move_domain(
+  const std::string & domain_tag,
+  const std::string & domain_tag_new_parent) {
+  relink_to_parent(domain_tag, domain_tag_new_parent);
+  update_domain_attributes(
+    ancestor({ domain_tag, domain_tag_new_parent }).domain_tag);
+}
 
 std::vector<std::string>
 topology::scope_domain_tags(
