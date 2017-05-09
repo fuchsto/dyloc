@@ -51,7 +51,8 @@ void topology::rename_domain(
 }
 
 void topology::update_domain_attributes(const std::string & parent_tag) {
-  // Update domain tags, recursing down from specified domain:
+  // Update domain tags, recursing down from specified domain.
+  // Could also be implemented using boost::depth_first_search.
   auto parent_vx_it = _domain_vertices.find(parent_tag);
   if (parent_vx_it == _domain_vertices.end()) {
     return;
@@ -62,9 +63,9 @@ void topology::update_domain_attributes(const std::string & parent_tag) {
   DYLOC_LOG_TRACE_VAR("dylocxx::topology.update_domain_attributes",
                       parent_tag);
 
-  auto & domain_vx       = parent_vx_it->second;
-  int    rel_index       = 0;
-  auto   domain_edges    = out_edges(domain_vx, _graph);
+  auto & domain_vx    = parent_vx_it->second;
+  int    rel_index    = 0;
+  auto   domain_edges = out_edges(domain_vx, _graph);
   std::for_each(
     domain_edges.first,
     domain_edges.second,
@@ -79,8 +80,42 @@ void topology::update_domain_attributes(const std::string & parent_tag) {
     });
 }
 
-void topology::update_domain_capacities() {
-  // Accumulate domain capacities upwards, starting from unit domains:
+void topology::update_domain_capabilities(const std::string & domain_tag) {
+  // Accumulate domain capacities
+  auto parent_vx_it = _domain_vertices.find(domain_tag);
+  if (parent_vx_it == _domain_vertices.end()) {
+    return;
+  }
+  typedef boost::graph_traits<graph_t>::out_edge_iterator::reference
+    out_edge_ref;
+
+  DYLOC_LOG_TRACE_VAR("dylocxx::topology.update_domain_capabilities",
+                      domain_tag);
+
+  auto & domain = _domains[domain_tag];
+  if (domain.scope != DYLOC_LOCALITY_SCOPE_UNIT) {
+    domain.unit_ids.clear();
+    domain.core_ids.clear();
+    auto & domain_vx    = parent_vx_it->second;
+    auto   domain_edges = out_edges(domain_vx, _graph);
+    std::for_each(
+      domain_edges.first,
+      domain_edges.second,
+      [&](out_edge_ref domain_edge) {
+        auto sub_domain_vx          = target(domain_edge, _graph);
+        const auto & sub_domain_tag = _graph[sub_domain_vx].domain_tag;
+        auto & sub_domain           = _domains[sub_domain_tag];
+        // depth-first recurse:
+        update_domain_capabilities(sub_domain_tag);
+        // accumulate:
+        domain.unit_ids.insert(domain.unit_ids.begin(),
+                               sub_domain.unit_ids.begin(),
+                               sub_domain.unit_ids.end());
+        domain.core_ids.insert(domain.core_ids.begin(),
+                               sub_domain.core_ids.begin(),
+                               sub_domain.core_ids.end());
+      });
+  }
 }
 
 void topology::relink_to_parent(

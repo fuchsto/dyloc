@@ -15,7 +15,9 @@ rm -Rf $BUILD_DIR/*
   cmake -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX=$BUILD_DIR/install/ \
         \
-        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=OFF \
+        \
+        -DENABLE_LOGGING=OFF \
         \
         -DPAPI_PREFIX=${PAPI_BASE} \
         -DDART_PREFIX=${DART_BASE} \

@@ -9,8 +9,6 @@
 #include <iostream>
 
 
-
-
 namespace dyloc {
 
 /**

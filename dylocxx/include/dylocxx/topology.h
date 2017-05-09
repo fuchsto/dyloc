@@ -350,7 +350,7 @@ class topology {
 
   void rename_domain(const std::string & tag, const std::string & new_tag);
 
-  void update_domain_capacities();
+  void update_domain_capabilities(const std::string & tag);
   void update_domain_attributes(const std::string & tag);
 };
 
