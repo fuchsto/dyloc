@@ -183,31 +183,23 @@ class topology {
   topology() = delete;
 
   topology(
+    dart_team_t       team,
     host_topology   & host_topo,
-    unit_mapping    & unit_map,
-    locality_domain & team_global_dom)
+    unit_mapping    & unit_map)
   : _unit_mapping(unit_map) {
-    build_hierarchy(host_topo, team_global_dom);
+    build_hierarchy(team, host_topo);
   }
  
-#if 0
+#if 1
   topology(const topology & other)
-  : _host_topology(other._host_topology)
-  , _unit_mapping(other._unit_mapping)
-  , _root_domain(other._root_domain)
-  , _domains(other._domains) {
+  : _unit_mapping(other._unit_mapping)
+  , _domains(other._domains)
+  , _domain_vertices(other._domain_vertices) {
     boost::copy_graph(other._graph, _graph);
   }
-
-  topology & operator=(const topology & rhs) {
-    _host_topology = rhs._host_topology;
-    _unit_mapping  = rhs._unit_mapping;
-    _root_domain   = rhs._root_domain;
-    _domains       = rhs._domains;
-    boost::copy_graph(rhs._graph, _graph);
-    return *this;
-  }
 #endif
+
+  topology & operator=(const topology & rhs) = delete;
 
   inline const graph_t & graph() const noexcept {
     return _graph;
@@ -336,8 +328,8 @@ class topology {
 
  private:
   void build_hierarchy(
-          const host_topology & host_topo,
-          locality_domain     & root_domain);
+          dart_team_t           team,
+          const host_topology & host_topo);
 
   void build_node_level(
           const host_topology & host_topo,

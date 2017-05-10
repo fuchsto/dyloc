@@ -18,7 +18,6 @@ namespace dyloc {
 class runtime {
   std::unordered_map<dart_team_t, host_topology>   _host_topologies;
   std::unordered_map<dart_team_t, unit_mapping>    _unit_mappings;
-  std::unordered_map<dart_team_t, locality_domain> _locality_domains;
 
   std::unordered_map<dart_team_t, topology>        _topologies;
 

@@ -209,9 +209,11 @@ topology::scope_domain_tags(
 
 
 void topology::build_hierarchy(
-       const host_topology & host_topo,
-       locality_domain     & root_domain) {
+       dart_team_t           team,
+       const host_topology & host_topo) {
   DYLOC_LOG_DEBUG("dylocxx::topology.build_hierarchy", "()");
+
+  locality_domain root_domain(team);
 
   root_domain.scope   = DYLOC_LOCALITY_SCOPE_GLOBAL;
   root_domain.level   = 0;
