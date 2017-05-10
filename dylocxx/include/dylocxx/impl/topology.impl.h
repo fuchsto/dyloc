@@ -147,10 +147,9 @@ locality_domain & topology::group_domains(
         group_domain_tag_first,   // e.g. { .0.2.0.1, .0.2.1.1, .0.2.1.2 }
         group_domain_tag_last,
         group_domain.domain_tag); // e.g. .0.3
-      // TODO: add alias-edge
     }
 
-    // update_domain_attributes(group_domain.domain_tag);
+    update_domain_attributes(group_domain.domain_tag);
     update_domain_capabilities(group_domain_parent.domain_tag);
 
     return _domains[group_domain.domain_tag];
@@ -190,8 +189,12 @@ void topology::split_to_parent(
   _domain_vertices[dst_subdomain.domain_tag] = dst_subdomain_vertex;
 
   boost::add_edge(dst_domain_vertex, dst_subdomain_vertex,
-                  { edge_type::contains, 0 },
+                  { edge_type::contains,
+                    subdomain_distance(dst_domain_tag,
+                                       dst_subdomain.domain_tag) },
                   _graph);
+  // TODO: add alias-edge
+
   for (auto src_subdomain_tag_it = src_subdomain_tag_first;
        src_subdomain_tag_it != src_subdomain_tag_last;
        ++src_subdomain_tag_it) {
@@ -251,7 +254,7 @@ locality_domain & topology::group_subdomains(
   _domain_vertices[group_domain.domain_tag] = group_domain_vx;
 
   boost::add_edge(domain_vx, group_domain_vx,
-                  { edge_type::contains, group_domain.level },
+                  { edge_type::contains, 0 },
                   _graph);
 
   // Move grouped subdomains to group domain children:

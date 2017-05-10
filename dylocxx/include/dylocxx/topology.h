@@ -361,6 +361,10 @@ class topology {
 
   void update_domain_capabilities(const std::string & tag);
   void update_domain_attributes(const std::string & tag);
+
+  int  subdomain_distance(
+          const std::string & parent_tag,
+          const std::string & child_tag);
 };
 
 } // namespace dyloc

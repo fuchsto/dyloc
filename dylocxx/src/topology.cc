@@ -35,6 +35,7 @@ std::ostream & operator<<(
 void topology::rename_domain(
   const std::string & old_tag,
   const std::string & new_tag) {
+  if (old_tag == new_tag) { return; }
   DYLOC_LOG_TRACE("dylocxx::topology.rename_domain",
                   "old tag:", old_tag, "new tag:", new_tag);
   auto domain_it = _domains.find(old_tag);
@@ -46,7 +47,7 @@ void topology::rename_domain(
   auto domain_vx_it = _domain_vertices.find(old_tag);
   if (domain_vx_it != _domain_vertices.end()) {
     _graph[domain_vx_it->second].domain_tag = new_tag;
-    std::swap(_domain_vertices[new_tag], domain_vx_it->second);
+    _domain_vertices[new_tag] = domain_vx_it->second;
     _domain_vertices.erase(domain_vx_it);
   }
 }
@@ -504,6 +505,12 @@ void topology::build_module_level(
         module_scope_level + 1);
     }
   }
+}
+
+int topology::subdomain_distance(
+  const std::string & parent_tag,
+  const std::string & child_tag) {
+  return (_domains[child_tag].level - _domains[parent_tag].level);
 }
 
 } // namespace dyloc
