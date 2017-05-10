@@ -50,6 +50,19 @@ void topology::rename_domain(
     _domain_vertices[new_tag] = domain_vx_it->second;
     _domain_vertices.erase(domain_vx_it);
   }
+  const auto & dom = _domains[new_tag];
+  if (dom.scope == DYLOC_LOCALITY_SCOPE_UNIT) {
+    if (dom.unit_ids.size() != 1) {
+      DYLOC_THROW(
+          dyloc::exception::invalid_argument,
+          "expected exactly 1 unit in domain");
+    }
+    auto & uloc = _unit_mapping[dyloc::g2l(dom.team, dom.unit_ids[0])];
+    dom.domain_tag.copy(
+      uloc.domain_tag,
+      dom.domain_tag.length());
+    uloc.domain_tag[dom.domain_tag.length()] = '\0';
+  }
 }
 
 void topology::update_domain_attributes(const std::string & parent_tag) {
@@ -510,7 +523,9 @@ void topology::build_module_level(
 int topology::subdomain_distance(
   const std::string & parent_tag,
   const std::string & child_tag) {
-  return (_domains[child_tag].level - _domains[parent_tag].level);
+  return ( _domains[child_tag].level *
+           ( _domains[child_tag].level -
+             _domains[parent_tag].level ) );
 }
 
 } // namespace dyloc

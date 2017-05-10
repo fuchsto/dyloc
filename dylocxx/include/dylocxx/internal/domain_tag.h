@@ -3,6 +3,8 @@
 
 #include <dylocxx/internal/algorithm.h>
 
+#include <dylocxx/exception.h>
+
 #include <string>
 #include <algorithm>
 
@@ -48,6 +50,15 @@ class htag {
   static std::string ancestor(
     const Iterator & first,
     const Sentinel & last) {
+    const auto num_domains = std::distance(first, last);
+    if (num_domains == 0) {
+      DYLOC_THROW(
+        dyloc::exception::invalid_argument,
+        "cannot resolve ancestor of empty domain set");
+    } else if (num_domains == 1) {
+      dyloc::htag ancestor_tag(*first);
+      return ancestor_tag.head(ancestor_tag.length() - 1);
+    }
     auto common_prefix = dyloc::longest_common_prefix(first, last);
     if (common_prefix.back() == '.') {
       common_prefix.pop_back();

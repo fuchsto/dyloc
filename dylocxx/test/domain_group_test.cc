@@ -134,11 +134,14 @@ TEST_F(DomainGroupTest, GroupNUMALeaders) {
                             DYLOC_LOCALITY_SCOPE_NUMA);
 
   // Select first unit in NUMA domain as leader:
-  std::vector<std::string> leader_unit_domain_tags;
+  std::vector<dart_global_unit_t> leader_unit_ids;
+  std::vector<std::string>        leader_unit_domain_tags;
   for (const auto & numa_domain_tag : numa_domain_tags) {
     DYLOC_LOG_DEBUG_VAR("DomainGroupTest.GroupNUMALeaders", numa_domain_tag);
     const auto & numa_domain = topo[numa_domain_tag];
     dart_global_unit_t leader_unit_id = numa_domain.unit_ids[0];
+    leader_unit_ids.push_back(
+      leader_unit_id);
     leader_unit_domain_tags.push_back(
       dyloc::query_unit_locality(leader_unit_id).domain_tag);
   }
@@ -155,6 +158,13 @@ TEST_F(DomainGroupTest, GroupNUMALeaders) {
 
   if (dyloc::myid().id == 0) {
     topo.depth_first_search(vis);
+    for (const auto & leader_unit_id : leader_unit_ids) {
+      auto leader_unit_loc = dyloc::query_unit_locality(leader_unit_id);
+      DYLOC_LOG_DEBUG_VAR("DomainGroupTest.GroupNUMALeaders",
+                          leader_unit_id);
+      DYLOC_LOG_DEBUG_VAR("DomainGroupTest.GroupNUMALeaders",
+                          leader_unit_loc);
+    }
     graphviz_out(
       topo.graph(), "DomainGroupTest.GroupNUMALeaders.grouped.dot");
   }

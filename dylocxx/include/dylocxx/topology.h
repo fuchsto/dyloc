@@ -4,10 +4,12 @@
 #include <dylocxx/host_topology.h>
 #include <dylocxx/unit_mapping.h>
 #include <dylocxx/locality_domain.h>
+#include <dylocxx/exception.h>
 
 #include <dylocxx/internal/logging.h>
 #include <dylocxx/internal/assert.h>
 #include <dylocxx/internal/algorithm.h>
+#include <dylocxx/internal/domain_tag.h>
 
 #include <dyloc/common/types.h>
 
@@ -256,9 +258,8 @@ class topology {
          const Sentinel & domain_tag_last) const {
     // Find lowest common ancestor (longest common prefix) of
     // specified domain tag list:
-    std::string domain_prefix = dyloc::longest_common_prefix(
-                                  domain_tag_first,
-                                  domain_tag_last);
+    std::string domain_prefix = dyloc::htag::ancestor(domain_tag_first,
+                                                      domain_tag_last);
     if (domain_prefix.back() == '.') {
       domain_prefix.pop_back();
     }

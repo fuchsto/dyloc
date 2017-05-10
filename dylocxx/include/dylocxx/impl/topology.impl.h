@@ -56,7 +56,7 @@ locality_domain & topology::group_domains(
   if (indirect_domain_tag_it == group_domain_tag_last) {
     // Subdomains in group are immediate child nodes of group parent
     // domain:
-    DYLOC_LOG_DEBUG("dylocxx::topology.group_domains", "group subdomains");
+    DYLOC_LOG_TRACE("dylocxx::topology.group_domains", "group subdomains");
     return group_subdomains(
              group_domain_parent,
              group_domain_tag_first,
@@ -64,7 +64,7 @@ locality_domain & topology::group_domains(
   } else {
     // At least one subdomain in group is not an immediate child node of
     // group parent domain:
-    DYLOC_LOG_DEBUG("dylocxx::topology.group_domains", "group domains");
+    DYLOC_LOG_TRACE("dylocxx::topology.group_domains", "group domains");
 
     int group_size = std::distance(group_domain_tag_first,
                                    group_domain_tag_last);
@@ -103,7 +103,7 @@ locality_domain & topology::group_domains(
       if (sep_pos != std::string::npos) {
         group_subdomain_tag.resize(sep_pos);
       }
-      DYLOC_LOG_DEBUG_VAR("dylocxx::topology.group_domains",
+      DYLOC_LOG_TRACE_VAR("dylocxx::topology.group_domains",
                           group_subdomain_tag);
 
       group_subdomain_tags.insert(
@@ -112,16 +112,17 @@ locality_domain & topology::group_domains(
       group_subdomain_tags[group_subdomain_tag]
         .push_back(*group_subdomain_tag_it);
     }
-    DYLOC_LOG_DEBUG_VAR("dylocxx::topology.group_domains", 
+    DYLOC_LOG_TRACE_VAR("dylocxx::topology.group_domains", 
                         group_subdomain_tags.size());
 
     locality_domain group_domain(
                       group_domain_parent,
                       DYLOC_LOCALITY_SCOPE_GROUP,
                       group_domain_parent_arity);
+    group_domain.level = group_domain_parent.level;
 
-    DYLOC_LOG_DEBUG_VAR("dylocxx::topology.group_domains", 
-                        group_domain.domain_tag);
+    DYLOC_LOG_TRACE("dylocxx::topology.group_domains", 
+                    "add group domain:", group_domain);
 
     _domains[group_domain.domain_tag] = group_domain;
     auto group_domain_parent_vertex
@@ -231,7 +232,7 @@ locality_domain & topology::group_subdomains(
         dyloc::exception::invalid_argument,
         "cannot create empty group");
   }
-  DYLOC_LOG_DEBUG("dylocxx::topology.group_subdomains",
+  DYLOC_LOG_TRACE("dylocxx::topology.group_subdomains",
                   "parent domain:", domain, "arity:", num_subdomains);
 
   locality_domain group_domain(
@@ -239,8 +240,8 @@ locality_domain & topology::group_subdomains(
                     DYLOC_LOCALITY_SCOPE_GROUP,
                     num_subdomains);
 
-  DYLOC_LOG_DEBUG("dylocxx::topology.group_subdomains",
-                  "add group domain", group_domain);
+  DYLOC_LOG_TRACE("dylocxx::topology.group_subdomains",
+                  "add group domain:", group_domain);
 
   _domains[group_domain.domain_tag] = group_domain;
 
