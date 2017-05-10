@@ -141,18 +141,6 @@ locality_domain & topology::group_domains(
     for (const auto & group_subdom: group_subdomain_tags) {
       const auto & group_subdom_tag = group_subdom.first;
       const auto & group_subdomains = group_subdom.second;
-      // predicate indicating whether a domain will be split to
-      // the new parent domain:
-      //  auto  domain_copy_pred
-      //          = [&](const std::string & tag) -> bool {
-      //               return std::find_if(
-      //                        group_domain_tag_first,
-      //                        group_domain_tag_last,
-      //                        [&](const std::string & subdom_tag) {
-      //                          return subdom_tag.find(tag, 0) == 0;
-      //                        })
-      //                      != subdomain_tag_last;
-      //             };
       // Partition subdomains into group:
       split_to_parent(
         group_subdom_tag,         // e.g. .0.2
@@ -162,7 +150,7 @@ locality_domain & topology::group_domains(
       // TODO: add alias-edge
     }
 
-    update_domain_attributes(group_domain.domain_tag);
+    // update_domain_attributes(group_domain.domain_tag);
     update_domain_capabilities(group_domain_parent.domain_tag);
 
     return _domains[group_domain.domain_tag];
@@ -176,10 +164,34 @@ void topology::split_to_parent(
   const Sentinel    & src_subdomain_tag_last,
   const std::string & dst_domain_tag) {
   DYLOC_LOG_DEBUG("dylocxx::topology.split_to_parent",
-                  "src domain:", src_domain_tag,
-                  "dst domain:", dst_domain_tag);
-  auto src_domain_tag_len = htag(src_domain_tag).length();
-  int dst_subdomain_rindex = 0;
+                  "src:", src_domain_tag,
+                  "dst:", dst_domain_tag);
+  auto src_domain_tag_len  = htag(src_domain_tag).length();
+  int dst_subdomain_rindex = out_degree(_domain_vertices[dst_domain_tag],
+                                        _graph);
+  locality_domain dst_subdomain(_domains[dst_domain_tag],
+                                _domains[src_domain_tag].scope,
+                                dst_subdomain_rindex);
+  _domains[dst_subdomain.domain_tag] = dst_subdomain;
+
+  DYLOC_LOG_DEBUG_VAR("dylocxx::topology.split_to_parent",
+                      dst_subdomain.domain_tag);
+  DYLOC_LOG_DEBUG_VAR("dylocxx::topology.split_to_parent",
+                      dst_subdomain.scope);
+
+  auto dst_domain_vertex
+         = _domain_vertices[dst_domain_tag];
+  auto dst_subdomain_vertex 
+         = boost::add_vertex(
+             { dst_subdomain.domain_tag,
+               vertex_state::unspecified },
+             _graph);
+
+  _domain_vertices[dst_subdomain.domain_tag] = dst_subdomain_vertex;
+
+  boost::add_edge(dst_domain_vertex, dst_subdomain_vertex,
+                  { edge_type::contains, 0 },
+                  _graph);
   for (auto src_subdomain_tag_it = src_subdomain_tag_first;
        src_subdomain_tag_it != src_subdomain_tag_last;
        ++src_subdomain_tag_it) {
@@ -188,37 +200,16 @@ void topology::split_to_parent(
     }
     auto src_subdomain_tag = htag(*src_subdomain_tag_it)
                              .head(src_domain_tag_len + 1);
-    DYLOC_LOG_DEBUG("dylocxx::topology.split_to_parent",
-                    "src_subdomain_tag:", *src_subdomain_tag_it,
-                    "->", src_subdomain_tag);
+    DYLOC_LOG_DEBUG_VAR("dylocxx::topology.split_to_parent",
+                        src_subdomain_tag);
     if (src_subdomain_tag.length() < src_subdomain_tag_it->length()) {
-      locality_domain dst_subdomain(_domains[dst_domain_tag],
-                                    _domains[src_subdomain_tag].scope,
-                                    dst_subdomain_rindex);
-      _domains[dst_subdomain.domain_tag] = dst_subdomain;
-      DYLOC_LOG_DEBUG_VAR("dylocxx::topology.split_to_parent",
-                          dst_subdomain.domain_tag);
-      auto dst_domain_vertex
-             = _domain_vertices[dst_domain_tag];
-      auto dst_subdomain_vertex 
-             = boost::add_vertex(
-                 { dst_subdomain.domain_tag,
-                   vertex_state::unspecified },
-                 _graph);
-
-      _domain_vertices[dst_subdomain.domain_tag] = dst_subdomain_vertex;
-
-      boost::add_edge(dst_domain_vertex, dst_subdomain_vertex,
-                      { edge_type::contains, 0 },
-                      _graph);
       split_to_parent(src_subdomain_tag,
                       src_subdomain_tag_first,
                       src_subdomain_tag_last,
                       dst_subdomain.domain_tag);
     } else {
-      relink_to_parent(*src_subdomain_tag_it, dst_domain_tag);
+      relink_to_parent(src_subdomain_tag, dst_subdomain.domain_tag);
     }
-    ++dst_subdomain_rindex;
   }
 }
 
