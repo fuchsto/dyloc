@@ -36,8 +36,14 @@ public:
   template <typename Vertex, typename Graph>
   void discover_vertex(Vertex u, const Graph & g) const {
     const std::string            & ldom_tag = g[u].domain_tag;
-    const dyloc::locality_domain & ldom     = _domains.at(ldom_tag);
-    std::cout << std::left << std::setw(7)  << ldom.scope << " "
+    const auto &                   ldom_it  = _domains.find(ldom_tag);
+    if (ldom_it == _domains.end()) {
+      DYLOC_LOG_ERROR("locality_domain_dfs_output_visitor.discover_vertex",
+                      "domain not found:", ldom_tag);
+    }
+    const dyloc::locality_domain & ldom     = ldom_it->second;
+    std::cout << std::left << std::setw(7)  << u          << " "
+              << std::left << std::setw(7)  << ldom.scope << " "
               << std::left << std::setw(4)  << ldom.level << " "
               << std::left << std::setw(20) << ldom_tag   << " | "
               << "units:"

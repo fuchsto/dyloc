@@ -85,7 +85,7 @@ TEST_F(DomainGroupTest, GroupAsymmetric) {
     std::srand((nd + 1) * (myid + 1));
     int random_unit_id = std::rand() % dyloc::num_units();
     unit_domain_tags.push_back(
-      dyloc::query_unit_locality(random_unit_id).domain_tag);
+      topo[random_unit_id].domain_tag);
   }
   std::sort(unit_domain_tags.begin(),
             unit_domain_tags.end());
@@ -115,6 +115,8 @@ TEST_F(DomainGroupTest, GroupAsymmetric) {
 TEST_F(DomainGroupTest, GroupNUMALeaders) {
   dyloc::init(&TESTENV.argc, &TESTENV.argv);
 
+  dart_barrier(DART_TEAM_ALL);
+
   if (dyloc::num_units() < 2) { return; }
 
   auto & topo = dyloc::team_topology();
@@ -143,7 +145,7 @@ TEST_F(DomainGroupTest, GroupNUMALeaders) {
     leader_unit_ids.push_back(
       leader_unit_id);
     leader_unit_domain_tags.push_back(
-      dyloc::query_unit_locality(leader_unit_id).domain_tag);
+      topo[leader_unit_id].domain_tag);
   }
   for (const auto & leader_unit_domain_tag : leader_unit_domain_tags) {
     DYLOC_LOG_DEBUG_VAR("DomainGroupTest.GroupNUMALeaders",
@@ -157,14 +159,14 @@ TEST_F(DomainGroupTest, GroupNUMALeaders) {
   dart_barrier(DART_TEAM_ALL);
 
   if (dyloc::myid().id == 0) {
-    std::cerr << '\n' << "Topology after grouping:" << '\n';
+    std::cout << '\n' << "Topology after grouping:" << '\n';
     topo.depth_first_search(vis);
-    std::cerr << '\n' << "NUMA scope leader units locality:" << '\n';
+    std::cout << '\n' << "NUMA scope leader units locality:" << '\n';
     for (const auto & leader_unit_id : leader_unit_ids) {
-      auto leader_unit_loc = dyloc::query_unit_locality(leader_unit_id);
+      auto leader_unit_loc = topo[leader_unit_id];
       DYLOC_LOG_DEBUG_VAR("DomainGroupTest.GroupNUMALeaders",
                           leader_unit_id);
-      std::cerr << leader_unit_loc << std::endl;
+      std::cout << leader_unit_loc << std::endl;
     }
     graphviz_out(
       topo.graph(), "DomainGroupTest.GroupNUMALeaders.grouped.dot");

@@ -37,7 +37,7 @@ TEST_F(InitTest, UnitLocality) {
     topo.depth_first_search(vis);
 
     for (int u = 0; u < dyloc::num_units(); ++u) {
-      const auto & uloc = dyloc::query_unit_locality(u);
+      const auto & uloc = topo[u];
       DYLOC_LOG_DEBUG("InitTest.UnitLocality", uloc);
     }
   }

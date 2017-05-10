@@ -20,6 +20,7 @@
 #include <boost/graph/connected_components.hpp>
 #include <boost/graph/copy.hpp>
 #include <boost/graph/graph_traits.hpp>
+#include <boost/graph/properties.hpp>
 
 #include <unordered_map>
 #include <functional>
@@ -85,8 +86,8 @@ class topology {
    *
    */
   typedef boost::adjacency_list<
-            boost::listS,          // out-edges stored in a std::list
-            boost::vecS,           // vertex set stored here
+            boost::vecS,           // out edge list
+            boost::vecS,           // vertex list
             boost::directedS,      // directed graph (parent -> sub)
             vertex_properties,     // vertex properties
             edge_properties,       // edge properties
@@ -168,38 +169,47 @@ class topology {
   typedef std::unordered_map<std::string, locality_domain> domain_map;
 
  private:
-  unit_mapping & _unit_mapping;
+  const unit_mapping                             * _unit_mapping;
 
-  // Topological structure, represents connections between locality
-  // domains, disregarding locality domain properties.
-  graph_t        _graph;
-
-  // Locality domain property data, stores accumulated domain capabilities
-  // as flat hash map, independent from topological structure.
+  /// Topological structure, represents connections between locality
+  /// domains, disregarding locality domain properties.
+  graph_t                                          _graph;
+  /// Locality domain property data, stores accumulated domain capabilities
+  /// as flat hash map, independent from topological structure.
   domain_map                                       _domains;
+  /// Maps domain tag to topology graph vertex.
   std::unordered_map<std::string, graph_vertex_t>  _domain_vertices;
+  /// Maps global unit id to topology graph vertex.
+  std::unordered_map<int,         graph_vertex_t>  _unit_vertices;
   
  public:
   topology() = delete;
 
   topology(
-    dart_team_t       team,
-    host_topology   & host_topo,
-    unit_mapping    & unit_map)
-  : _unit_mapping(unit_map) {
+    dart_team_t           team,
+    const host_topology & host_topo,
+    const unit_mapping  & unit_map)
+  : _unit_mapping(&unit_map) {
     build_hierarchy(team, host_topo);
   }
  
-#if 1
   topology(const topology & other)
   : _unit_mapping(other._unit_mapping)
   , _domains(other._domains)
-  , _domain_vertices(other._domain_vertices) {
-    boost::copy_graph(other._graph, _graph);
+  , _domain_vertices(other._domain_vertices)
+  , _unit_vertices(other._unit_vertices) {
+    DYLOC_LOG_DEBUG("dylocxx::topology.topology(other)", "copy constructor");
+  	typedef graph_t::vertex_descriptor vertex_t;
+    typedef std::map<vertex_t, vertex_t> vertex_map_t;
+  	vertex_map_t vertexMap;
+    boost::associative_property_map<vertex_map_t> vertexMapWrapper(vertexMap);
+    boost::copy_graph(other._graph, _graph,
+                      boost::orig_to_copy(vertexMapWrapper));
   }
-#endif
 
   topology & operator=(const topology & rhs) = delete;
+  topology(topology && other)           = default;
+  topology & operator=(topology && rhs) = default;
 
   inline const graph_t & graph() const noexcept {
     return _graph;
@@ -215,6 +225,14 @@ class topology {
 
   const locality_domain & operator[](const std::string & tag) const {
     return _domains.at(tag);
+  }
+
+  locality_domain & operator[](dart_global_unit_t uid) {
+    return _domains.at(_graph[_unit_vertices.at(uid.id)].domain_tag);
+  }
+
+  const locality_domain & operator[](dart_global_unit_t uid) const {
+    return _domains.at(_graph[_unit_vertices.at(uid.id)].domain_tag);
   }
 
   template <class Visitor>

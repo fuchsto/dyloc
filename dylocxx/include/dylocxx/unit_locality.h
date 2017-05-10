@@ -22,7 +22,17 @@ class unit_locality {
 
  public:
   unit_locality() = default;
-  unit_locality(const dyloc_unit_locality_t & uloc) : _uloc(uloc) { }
+
+  /**
+   * Converting constructor.
+   */
+  unit_locality(const dyloc_unit_locality_t & uloc);
+
+  unit_locality(const unit_locality & other)
+  : unit_locality(*other.data())
+  { }
+
+  unit_locality & operator=(const unit_locality & uloc);
 
   /**
    * Obtain local hardware locality in unit scope.
@@ -31,6 +41,18 @@ class unit_locality {
 
   inline const dyloc_unit_locality_t * data() const noexcept {
     return &_uloc;
+  }
+
+  inline dyloc_unit_locality_t * data() noexcept {
+    return &_uloc;
+  }
+
+  operator dyloc_unit_locality_t & () {
+    return _uloc;
+  }
+
+  operator const dyloc_unit_locality_t & () const {
+    return _uloc;
   }
 };
 

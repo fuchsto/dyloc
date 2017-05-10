@@ -25,14 +25,16 @@ namespace test {
 TEST_F(DomainFilterTest, SelectLeaderDomains) {
   dyloc::init(&TESTENV.argc, &TESTENV.argv);
 
-  if (dyloc::num_units() < 2) { return; }
+  dart_barrier(DART_TEAM_ALL);
+
+  // if (dyloc::num_units() < 2) { return; }
 
   auto & topo_all = dyloc::team_topology();
   locality_domain_dfs_output_visitor<typename topology::domain_map>
-    vis(topo_all.domains());
+    vis_all(topo_all.domains());
 
   if (dyloc::myid().id == 0) {
-    topo_all.depth_first_search(vis);
+    topo_all.depth_first_search(vis_all);
     graphviz_out(
       topo_all.graph(),
       "DomainFilterTest.SelectLeaderDomains.original.dot");
@@ -40,11 +42,14 @@ TEST_F(DomainFilterTest, SelectLeaderDomains) {
   dart_barrier(DART_TEAM_ALL);
 
   DYLOC_LOG_DEBUG("DomainFilterTest.SelectLeaderDomains", "> clone topology");
-  dyloc::topology topo(topo_all);
+  dyloc::topology topo_cp(topo_all);
   DYLOC_LOG_DEBUG("DomainFilterTest.SelectLeaderDomains", "< clone topology");
 
+  locality_domain_dfs_output_visitor<typename topology::domain_map>
+    vis_cp(topo_cp.domains());
+
   // Tags of locality domains in NUMA scope:
-  auto numa_domain_tags = topo.scope_domain_tags(
+  auto numa_domain_tags = topo_cp.scope_domain_tags(
                             DYLOC_LOCALITY_SCOPE_NUMA);
 
   // Select first unit in NUMA domain as leader:
@@ -53,19 +58,19 @@ TEST_F(DomainFilterTest, SelectLeaderDomains) {
   for (const auto & numa_domain_tag : numa_domain_tags) {
     DYLOC_LOG_DEBUG_VAR("DomainFilterTest.SelectLeaderDomains",
                         numa_domain_tag);
-    const auto & numa_domain = topo[numa_domain_tag];
+    const auto & numa_domain = topo_cp[numa_domain_tag];
     dart_global_unit_t leader_unit_id = numa_domain.unit_ids[0];
     leader_unit_ids.push_back(
       leader_unit_id);
     leader_unit_domain_tags.push_back(
-      dyloc::query_unit_locality(leader_unit_id).domain_tag);
+      topo_cp[leader_unit_id].domain_tag);
   }
   for (const auto & leader_unit_domain_tag : leader_unit_domain_tags) {
     DYLOC_LOG_DEBUG_VAR("DomainFilterTest.SelectLeaderDomains",
                         leader_unit_domain_tag);
   }
 
-  auto & leader_group_domain = topo.group_domains(
+  auto & leader_group_domain = topo_cp.group_domains(
                                  leader_unit_domain_tags.begin(),
                                  leader_unit_domain_tags.end());
   // topo.select_domain(leader_group_domain.domain_tag);
@@ -73,19 +78,19 @@ TEST_F(DomainFilterTest, SelectLeaderDomains) {
   dart_barrier(DART_TEAM_ALL);
 
   if (dyloc::myid().id == 0) {
-    std::cerr << '\n' << "Topology after grouping:" << '\n';
-    topo_all.depth_first_search(vis);
-    std::cerr << '\n' << "Topology after grouping:" << '\n';
-    topo.depth_first_search(vis);
+    std::cerr << "\n\n" << "Original topology after grouping:" << '\n';
+    topo_all.depth_first_search(vis_all);
+    std::cerr << "\n\n" << "Topology after grouping:" << '\n';
+    topo_cp.depth_first_search(vis_cp);
     std::cerr << '\n' << "NUMA scope leader units locality:" << '\n';
     for (const auto & leader_unit_id : leader_unit_ids) {
-      auto leader_unit_loc = dyloc::query_unit_locality(leader_unit_id);
+      auto leader_unit_loc = topo_cp[leader_unit_id];
       DYLOC_LOG_DEBUG_VAR("DomainFilterTest.SelectLeaderDomains",
                           leader_unit_id);
       std::cerr << leader_unit_loc << std::endl;
     }
     graphviz_out(
-      topo.graph(), "DomainFilterTest.SelectLeaderDomains.grouped.dot");
+      topo_cp.graph(), "DomainFilterTest.SelectLeaderDomains.grouped.dot");
   }
 
   dyloc::finalize();

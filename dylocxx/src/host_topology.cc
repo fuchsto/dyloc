@@ -43,7 +43,7 @@ host_topology::host_topology(const unit_mapping & unit_map) {
       dart_team_unit_l2g(team, luid, &guid),
       DART_OK);
     // Add global unit id to list of units of its host:
-    std::string unit_hostname(unit_map[guid.id].hwinfo.host);
+    std::string unit_hostname(unit_map[guid.id].data()->hwinfo.host);
     DYLOC_LOG_TRACE("dylocxx::host_topology.()",
                     "team unit id:",   luid,
                     "global unit id:", guid.id,
@@ -84,8 +84,8 @@ host_topology::host_topology(const unit_mapping & unit_map) {
         dart_team_unit_g2l(team, host_unit_gid, &luid),
         DART_OK);
       const auto & ul   = unit_map[luid];
-      int unit_numa_id  = ul.hwinfo.numa_id;
-      int unit_num_numa = ul.hwinfo.num_numa;
+      int unit_numa_id  = ul.data()->hwinfo.numa_id;
+      int unit_num_numa = ul.data()->hwinfo.num_numa;
 
       if (unit_num_numa == 0) {
         unit_numa_id = 0;
@@ -156,7 +156,7 @@ void host_topology::collect_topology(
    */
 
   const auto & my_uloc        = unit_map[my_id];
-  const auto & local_hostname = my_uloc.hwinfo.host;
+  const auto & local_hostname = my_uloc.data()->hwinfo.host;
 
   DYLOC_LOG_TRACE("dylocxx::host_topology.collect_topology",
                   "local host:", local_hostname);

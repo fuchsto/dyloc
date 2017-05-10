@@ -57,26 +57,32 @@ void topology::rename_domain(
           dyloc::exception::invalid_argument,
           "expected exactly 1 unit in domain");
     }
-    auto & uloc = _unit_mapping[dyloc::g2l(dom.team, dom.unit_ids[0])];
+#if 0
+    dyloc_unit_locality_t & uloc =
+      (*_unit_mapping)[dyloc::g2l(dom.team, dom.unit_ids[0])];
     dom.domain_tag.copy(
       uloc.domain_tag,
       dom.domain_tag.length());
     uloc.domain_tag[dom.domain_tag.length()] = '\0';
+#else
+		_unit_vertices[dom.unit_ids[0].id] = _domain_vertices[new_tag];
+#endif
   }
 }
 
 void topology::update_domain_attributes(const std::string & parent_tag) {
+  DYLOC_LOG_TRACE_VAR("dylocxx::topology.update_domain_attributes",
+                      parent_tag);
   // Update domain tags, recursing down from specified domain.
   // Could also be implemented using boost::depth_first_search.
   auto parent_vx_it = _domain_vertices.find(parent_tag);
   if (parent_vx_it == _domain_vertices.end()) {
+    DYLOC_LOG_TRACE("dylocxx::topology.update_domain_attributes",
+                    "no vertex found for domain", parent_tag);
     return;
   }
   typedef boost::graph_traits<graph_t>::out_edge_iterator::reference
     out_edge_ref;
-
-  DYLOC_LOG_TRACE_VAR("dylocxx::topology.update_domain_attributes",
-                      parent_tag);
 
   auto & domain_vx    = parent_vx_it->second;
   int    rel_index    = 0;
@@ -373,7 +379,8 @@ void topology::build_module_level(
                        &module_leader_unit_id),
     DART_OK);
 
-  const auto & module_leader_unit_loc = _unit_mapping[module_leader_unit_id];
+  const auto & module_leader_unit_loc =
+                *((*_unit_mapping)[module_leader_unit_id].data());
   const auto & module_leader_hwinfo   = module_leader_unit_loc.hwinfo;
 
   int num_scopes = module_leader_hwinfo.num_scopes;
@@ -413,7 +420,8 @@ void topology::build_module_level(
     dart_team_unit_t module_unit_lid
       = dyloc::g2l(module_domain.team, module_unit_gid);
 
-    const auto & module_unit_loc    = _unit_mapping[module_unit_lid];
+    const auto & module_unit_loc    =
+                   *((*_unit_mapping)[module_unit_lid].data());
     const auto & module_unit_hwinfo = module_unit_loc.hwinfo;
 
     int unit_level_gid = module_unit_hwinfo.scopes[subdomain_gid_idx+1].index;
@@ -455,7 +463,8 @@ void topology::build_module_level(
       dart_team_unit_t module_unit_lid
         = dyloc::g2l(module_domain.team, module_unit_gid);
 
-      const auto & module_unit_loc    = _unit_mapping[module_unit_lid];
+      const auto & module_unit_loc    =
+                     *((*_unit_mapping)[module_unit_lid].data());
       const auto & module_unit_hwinfo = module_unit_loc.hwinfo;
       if (module_unit_hwinfo.scopes[subdomain_gid_idx].index ==
           module_subdomain.g_index) {
@@ -501,9 +510,9 @@ void topology::build_module_level(
         unit_domain.unit_ids.push_back(unit_gid);
 
         // Update unit mapping, set domain tag of unit locality:
-        auto unit_lid = dyloc::g2l(module_subdomain.team, unit_gid);
-        std::strcpy(_unit_mapping[unit_lid].domain_tag,
-                    unit_domain.domain_tag.c_str());
+        // auto unit_lid = dyloc::g2l(module_subdomain.team, unit_gid);
+        // std::strcpy((*(*_unit_mapping)[unit_lid].data()).domain_tag,
+        //             unit_domain.domain_tag.c_str());
 
         _domains[unit_domain.domain_tag] = unit_domain;
 
@@ -514,6 +523,7 @@ void topology::build_module_level(
                    _graph);
 
         _domain_vertices[unit_domain.domain_tag] = unit_domain_vertex;
+        _unit_vertices[unit_gid.id]              = unit_domain_vertex;
 
         boost::add_edge(module_subdomain_vertex, unit_domain_vertex,
                         { edge_type::contains, unit_domain.level },

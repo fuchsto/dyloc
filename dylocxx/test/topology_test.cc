@@ -65,13 +65,13 @@ TEST_F(TopologyTest, DomainsAncestor) {
 
   std::vector<std::string> unit_domain_tags;
   unit_domain_tags.push_back(
-    dyloc::query_unit_locality(dyloc::myid().id).domain_tag);
+    topo[dyloc::myid().id].domain_tag);
 
   for (int nd = 0; nd < std::min<int>(3, topo.domains().size()); ++nd) {
     std::srand((nd + 1) * (myid + 1));
     int random_unit_id = std::rand() % dyloc::num_units();
     unit_domain_tags.push_back(
-      dyloc::query_unit_locality(random_unit_id).domain_tag);
+      topo[random_unit_id].domain_tag);
   }
 
   const auto & ancestor = topo.ancestor(

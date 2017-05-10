@@ -12,12 +12,14 @@ void init(int * argc, char *** argv);
 void finalize();
 bool is_initialized();
 
-const dyloc_unit_locality_t & query_unit_locality(
+#if 0
+const unit_locality & query_unit_locality(
         dart_global_unit_t u);
 
-const dyloc_unit_locality_t & query_unit_locality(
+const unit_locality & query_unit_locality(
         dart_team_t t,
         dart_team_unit_t u);
+#endif
 
 topology & team_topology(
   dart_team_t t = DART_TEAM_ALL);

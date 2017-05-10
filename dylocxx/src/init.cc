@@ -50,16 +50,18 @@ bool is_initialized() {
   return _is_initialized;
 }
 
-const dyloc_unit_locality_t & query_unit_locality(
+#if 0
+const unit_locality & query_unit_locality(
   dart_global_unit_t u) {
   return rt.unit_locality(u);
 }
 
-const dyloc_unit_locality_t & query_unit_locality(
+const unit_locality & query_unit_locality(
   dart_team_t t,
   dart_team_unit_t u) {
   return rt.unit_locality(t, u);
 }
+#endif
 
 topology & team_topology(
   dart_team_t t) {
