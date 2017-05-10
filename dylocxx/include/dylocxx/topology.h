@@ -168,13 +168,11 @@ class topology {
   typedef std::unordered_map<std::string, locality_domain> domain_map;
 
  private:
-  host_topology    & _host_topology;
-  unit_mapping     & _unit_mapping;
-  locality_domain  & _root_domain;
+  unit_mapping & _unit_mapping;
 
   // Topological structure, represents connections between locality
   // domains, disregarding locality domain properties.
-  graph_t _graph;
+  graph_t        _graph;
 
   // Locality domain property data, stores accumulated domain capabilities
   // as flat hash map, independent from topological structure.
@@ -188,10 +186,8 @@ class topology {
     host_topology   & host_topo,
     unit_mapping    & unit_map,
     locality_domain & team_global_dom)
-  : _host_topology(host_topo)
-  , _unit_mapping(unit_map)
-  , _root_domain(team_global_dom) {
-    build_hierarchy();
+  : _unit_mapping(unit_map) {
+    build_hierarchy(host_topo, team_global_dom);
   }
  
 #if 0
@@ -327,6 +323,11 @@ class topology {
     }
   }
 
+  void select_domain(
+         const std::string & domain_tag) {
+    _graph[_domain_vertices[domain_tag]].state = vertex_state::selected;
+  }
+
   /**
    * Resolve tags of all domains at specified scope.
    */
@@ -334,16 +335,20 @@ class topology {
          dyloc_locality_scope_t scope) const;
 
  private:
-  void build_hierarchy();
+  void build_hierarchy(
+          const host_topology & host_topo,
+          locality_domain     & root_domain);
 
   void build_node_level(
-          locality_domain & node_domain,
-          graph_vertex_t  & node_domain_vertex);
+          const host_topology & host_topo,
+          locality_domain     & node_domain,
+          graph_vertex_t      & node_domain_vertex);
 
   void build_module_level(
-          locality_domain & module_domain,
-          graph_vertex_t  & node_domain_vertex,
-          int               module_scope_level);
+          const host_topology & host_topo,
+          locality_domain     & module_domain,
+          graph_vertex_t      & node_domain_vertex,
+          int                   module_scope_level);
 
   void relink_to_parent(
           const std::string & domain_tag,

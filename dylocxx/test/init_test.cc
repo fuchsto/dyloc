@@ -23,7 +23,7 @@ TEST_F(InitTest, UnitLocality) {
   dyloc::init(&TESTENV.argc, &TESTENV.argv);
 
   if (dyloc::myid().id == 0) {
-    const auto & topo = dyloc::query_topology();
+    const auto & topo = dyloc::team_topology();
     locality_domain_dfs_output_visitor<typename topology::domain_map>
       vis(topo.domains());
 

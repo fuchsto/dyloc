@@ -61,6 +61,8 @@ void runtime::initialize_locality(dart_team_t team) {
 }
 
 void runtime::finalize_locality(dart_team_t team) {
+  _topologies.erase(
+      _topologies.find(team));
   _locality_domains.erase(
       _locality_domains.find(team));
   _unit_mappings.erase(

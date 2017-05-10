@@ -19,7 +19,7 @@ const dyloc_unit_locality_t & query_unit_locality(
         dart_team_t t,
         dart_team_unit_t u);
 
-topology & query_topology(
+topology & team_topology(
   dart_team_t t = DART_TEAM_ALL);
 
 } // namespace dyloc

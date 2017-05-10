@@ -22,7 +22,7 @@ namespace test {
 TEST_F(TopologyTest, ExcludeDomains) {
   dyloc::init(&TESTENV.argc, &TESTENV.argv);
 
-  auto & topo = dyloc::query_topology();
+  auto & topo = dyloc::team_topology();
   locality_domain_dfs_output_visitor<typename topology::domain_map>
     vis(topo.domains());
 
@@ -51,7 +51,7 @@ TEST_F(TopologyTest, ExcludeDomains) {
 TEST_F(TopologyTest, DomainsAncestor) {
   dyloc::init(&TESTENV.argc, &TESTENV.argv);
 
-  auto & topo = dyloc::query_topology();
+  auto & topo = dyloc::team_topology();
   locality_domain_dfs_output_visitor<typename topology::domain_map>
     vis(topo.domains());
 
@@ -88,7 +88,7 @@ TEST_F(TopologyTest, DomainsAncestor) {
 TEST_F(TopologyTest, ScopeDomains) {
   dyloc::init(&TESTENV.argc, &TESTENV.argv);
 
-  auto & topo = dyloc::query_topology();
+  auto & topo = dyloc::team_topology();
   locality_domain_dfs_output_visitor<typename topology::domain_map>
     vis(topo.domains());
 

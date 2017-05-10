@@ -41,7 +41,7 @@ class runtime {
     return _unit_mappings.at(DART_TEAM_ALL)[u.id];
   }
 
-  topology & locality_graph(
+  topology & team_topology(
     dart_team_t t) {
     return _topologies.at(t);
   }

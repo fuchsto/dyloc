@@ -61,9 +61,9 @@ const dyloc_unit_locality_t & query_unit_locality(
   return rt.unit_locality(t, u);
 }
 
-topology & query_topology(
+topology & team_topology(
   dart_team_t t) {
-  return rt.locality_graph(t);
+  return rt.team_topology(t);
 }
 
 } // namespace dyloc

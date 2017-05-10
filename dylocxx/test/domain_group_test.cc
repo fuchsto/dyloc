@@ -24,7 +24,7 @@ namespace test {
 TEST_F(DomainGroupTest, GroupSubdomains) {
   dyloc::init(&TESTENV.argc, &TESTENV.argv);
 
-  auto & topo = dyloc::query_topology();
+  auto & topo = dyloc::team_topology();
   locality_domain_dfs_output_visitor<typename topology::domain_map>
     vis(topo.domains());
 
@@ -67,7 +67,7 @@ TEST_F(DomainGroupTest, GroupAsymmetric) {
 
   if (dyloc::num_units() < 2) { return; }
 
-  auto & topo = dyloc::query_topology();
+  auto & topo = dyloc::team_topology();
   locality_domain_dfs_output_visitor<typename topology::domain_map>
     vis(topo.domains());
 
@@ -117,7 +117,7 @@ TEST_F(DomainGroupTest, GroupNUMALeaders) {
 
   if (dyloc::num_units() < 2) { return; }
 
-  auto & topo = dyloc::query_topology();
+  auto & topo = dyloc::team_topology();
   locality_domain_dfs_output_visitor<typename topology::domain_map>
     vis(topo.domains());
 
@@ -157,13 +157,14 @@ TEST_F(DomainGroupTest, GroupNUMALeaders) {
   dart_barrier(DART_TEAM_ALL);
 
   if (dyloc::myid().id == 0) {
+    std::cerr << '\n' << "Topology after grouping:" << '\n';
     topo.depth_first_search(vis);
+    std::cerr << '\n' << "NUMA scope leader units locality:" << '\n';
     for (const auto & leader_unit_id : leader_unit_ids) {
       auto leader_unit_loc = dyloc::query_unit_locality(leader_unit_id);
       DYLOC_LOG_DEBUG_VAR("DomainGroupTest.GroupNUMALeaders",
                           leader_unit_id);
-      DYLOC_LOG_DEBUG_VAR("DomainGroupTest.GroupNUMALeaders",
-                          leader_unit_loc);
+      std::cerr << leader_unit_loc << std::endl;
     }
     graphviz_out(
       topo.graph(), "DomainGroupTest.GroupNUMALeaders.grouped.dot");

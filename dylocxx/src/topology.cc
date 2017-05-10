@@ -208,33 +208,35 @@ topology::scope_domain_tags(
 }
 
 
-void topology::build_hierarchy() {
+void topology::build_hierarchy(
+       const host_topology & host_topo,
+       locality_domain     & root_domain) {
   DYLOC_LOG_DEBUG("dylocxx::topology.build_hierarchy", "()");
 
-  _root_domain.scope   = DYLOC_LOCALITY_SCOPE_GLOBAL;
-  _root_domain.level   = 0;
-  _root_domain.g_index = 0;
-  _root_domain.r_index = 0;
+  root_domain.scope   = DYLOC_LOCALITY_SCOPE_GLOBAL;
+  root_domain.level   = 0;
+  root_domain.g_index = 0;
+  root_domain.r_index = 0;
 
-  _domains.insert(std::make_pair(".", _root_domain));
+  _domains.insert(std::make_pair(".", root_domain));
 
   auto root_domain_vertex
          = boost::add_vertex(
              { ".", vertex_state::unspecified },
              _graph);
-  _domain_vertices[_root_domain.domain_tag] = root_domain_vertex;
+  _domain_vertices[root_domain.domain_tag] = root_domain_vertex;
 
   int node_index = 0;
-  for (auto & node_host_domain : _host_topology.nodes()) {
+  for (auto & node_host_domain : host_topo.nodes()) {
     const auto & node_hostname = node_host_domain.first;
     DYLOC_LOG_DEBUG("dylocxx::topology.build_hierarchy",
                     "node host:", node_hostname);
 
     locality_domain node_domain(
-        _root_domain,
+        root_domain,
         DYLOC_LOCALITY_SCOPE_NODE,
         node_index);
-    node_domain.unit_ids = _host_topology.unit_ids(node_hostname);
+    node_domain.unit_ids = host_topo.unit_ids(node_hostname);
     node_domain.host     = node_hostname;
 
     DYLOC_LOG_DEBUG("dylocxx::topology.build_node_level",
@@ -257,6 +259,7 @@ void topology::build_hierarchy() {
                     _graph);
 
     build_node_level(
+      host_topo,
       _domains[node_domain.domain_tag],
       node_domain_vertex);
 
@@ -266,16 +269,18 @@ void topology::build_hierarchy() {
 
 
 void topology::build_node_level(
-  locality_domain & node_domain,
-  graph_vertex_t  & node_domain_vertex) {
+       const host_topology & host_topo,
+       locality_domain     & node_domain,
+       graph_vertex_t      & node_domain_vertex) {
   DYLOC_LOG_DEBUG("dylocxx::topology.build_node_level",
                   "node:", node_domain.host);
   // units located at node:
-  node_domain.unit_ids = _host_topology.unit_ids(node_domain.host);
+  node_domain.unit_ids = host_topo.unit_ids(node_domain.host);
   // modules located at node:
-  auto & node_modules  = _host_topology.node_modules(node_domain.host);
+  auto & node_modules  = host_topo.node_modules(node_domain.host);
 
   build_module_level(
+    host_topo,
     node_domain,
     node_domain_vertex,
     0);
@@ -289,7 +294,7 @@ void topology::build_node_level(
         node_domain,
         DYLOC_LOCALITY_SCOPE_MODULE,
         module_index);
-    module_domain.unit_ids = _host_topology.unit_ids(module_hostname);
+    module_domain.unit_ids = host_topo.unit_ids(module_hostname);
     module_domain.host     = module_hostname;
 
     DYLOC_LOG_DEBUG("dylocxx::topology.build_node_level",
@@ -312,6 +317,7 @@ void topology::build_node_level(
                     _graph);
 
     build_module_level(
+      host_topo,
       _domains[module_domain.domain_tag],
       module_domain_vertex,
       0);
@@ -322,9 +328,10 @@ void topology::build_node_level(
 
 
 void topology::build_module_level(
-  locality_domain & module_domain,
-  graph_vertex_t  & module_domain_vertex,
-  int               module_scope_level) {
+       const host_topology & host_topo,
+       locality_domain     & module_domain,
+       graph_vertex_t      & module_domain_vertex,
+       int                   module_scope_level) {
   /*
    * NOTE: Locality scopes may be heterogeneous but are expected
    *       to be homogeneous within a module domain.
@@ -513,6 +520,7 @@ void topology::build_module_level(
     } else {
       // Recurse down:
       build_module_level(
+        host_topo,
         _domains[module_subdomain.domain_tag],
         module_subdomain_vertex,
         module_scope_level + 1);
