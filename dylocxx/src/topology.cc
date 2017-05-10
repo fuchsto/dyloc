@@ -25,6 +25,7 @@ namespace dyloc {
 std::ostream & operator<<(
   std::ostream   & os,
   const topology & topo) {
+  dyloc__unused(topo);
   std::ostringstream ss;
   ss << "dyloc::topology { ";
   ss << " }";
@@ -115,6 +116,11 @@ void topology::update_domain_capabilities(const std::string & domain_tag) {
                                sub_domain.core_ids.begin(),
                                sub_domain.core_ids.end());
       });
+    std::sort(domain.unit_ids.begin(),
+              domain.unit_ids.end(),
+              [](dart_global_unit_t a,
+                 dart_global_unit_t b) { return a.id < b.id; });
+    std::sort(domain.core_ids.begin(), domain.core_ids.end());
   }
 }
 

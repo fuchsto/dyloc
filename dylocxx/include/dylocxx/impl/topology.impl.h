@@ -4,6 +4,8 @@
 #include <dylocxx/topology.h>
 #include <dylocxx/exception.h>
 
+#include <dylocxx/internal/domain_tag.h>
+
 #include <set>
 #include <string>
 #include <iterator>
@@ -12,7 +14,7 @@
 namespace dyloc {
 
 template <class Iterator, class Sentinel>
-void topology::group_domains(
+locality_domain & topology::group_domains(
        const Iterator & group_domain_tag_first,
        const Sentinel & group_domain_tag_last) {
   if (std::distance(group_domain_tag_first, group_domain_tag_last) == 0) {
@@ -20,16 +22,10 @@ void topology::group_domains(
         dyloc::exception::invalid_argument,
         "cannot create empty group");
   }
-  auto group_domains_ancestor_tag = dyloc::longest_common_prefix(
-                                      group_domain_tag_first,
-                                      group_domain_tag_last);
-  if (group_domains_ancestor_tag.back() == '.') {
-    group_domains_ancestor_tag.pop_back();
-  }
   // Add group domain to children of the grouped domains' lowest common
   // ancestor:
-  auto & group_domain_parent       = _domains.at(
-                                       group_domains_ancestor_tag);
+  auto & group_domain_parent       = ancestor(group_domain_tag_first,
+                                              group_domain_tag_last);
   auto   group_domain_parent_vx    = _domain_vertices[
                                        group_domain_parent.domain_tag];
   auto   group_domain_parent_arity = out_degree(
@@ -44,8 +40,8 @@ void topology::group_domains(
   //
   int  num_group_parent_domain_tag_parts =
          std::count(
-           group_domains_ancestor_tag.begin(),
-           group_domains_ancestor_tag.end(), '.');
+           group_domain_parent.domain_tag.begin(),
+           group_domain_parent.domain_tag.end(), '.');
   // Test if group domains ancestor is immediate parent of all grouped
   // domains:
   auto indirect_domain_tag_it =
@@ -61,10 +57,10 @@ void topology::group_domains(
     // Subdomains in group are immediate child nodes of group parent
     // domain:
     DYLOC_LOG_DEBUG("dylocxx::topology.group_domains", "group subdomains");
-    group_subdomains(
-      group_domain_parent,
-      group_domain_tag_first,
-      group_domain_tag_last);
+    return group_subdomains(
+             group_domain_parent,
+             group_domain_tag_first,
+             group_domain_tag_last);
   } else {
     // At least one subdomain in group is not an immediate child node of
     // group parent domain:
@@ -72,7 +68,23 @@ void topology::group_domains(
 
     int group_size = std::distance(group_domain_tag_first,
                                    group_domain_tag_last);
-    std::set<std::string> immediate_subdomain_tags;
+    /* Subdomains in group are in indirect child nodes of group parent
+     * domain.
+     * Find immediate child nodes that are parents of group subdomains.
+     * Example:
+     *
+     *     group domains: { .0.1.2.0, .0.1.3.1, .0.2.0 }
+     *
+     *     --> group ancestor subdomains:
+     *           { .0.1, .0.2 }
+     *         group split domain tags:
+     *           {
+     *             .0.1 -> { .0.1.2.0, .0.1.3.1 },
+     *             .0.2 -> { .0.2.0 }
+     *           }
+     */
+    std::unordered_map<std::string, std::vector<std::string>>
+      group_subdomain_tags;
     for (int sd = 0; sd < group_size; sd++) {
       auto group_subdomain_tag_it = group_domain_tag_first;
       std::advance(group_subdomain_tag_it, sd);
@@ -94,10 +106,14 @@ void topology::group_domains(
       DYLOC_LOG_DEBUG_VAR("dylocxx::topology.group_domains",
                           group_subdomain_tag);
 
-      immediate_subdomain_tags.insert(group_subdomain_tag);
+      group_subdomain_tags.insert(
+        std::make_pair(group_subdomain_tag,
+                       std::vector<std::string>()));
+      group_subdomain_tags[group_subdomain_tag]
+        .push_back(*group_subdomain_tag_it);
     }
     DYLOC_LOG_DEBUG_VAR("dylocxx::topology.group_domains", 
-                        immediate_subdomain_tags.size());
+                        group_subdomain_tags.size());
 
     locality_domain group_domain(
                       group_domain_parent,
@@ -119,28 +135,96 @@ void topology::group_domains(
     _domain_vertices[group_domain.domain_tag] = group_domain_vertex;
 
     boost::add_edge(group_domain_parent_vertex, group_domain_vertex,
-                    { edge_type::contains, group_domain.level },
+                    { edge_type::contains, 0 },
                     _graph);
 
-    for (const auto & group_subdom_tag : immediate_subdomain_tags) {
-      // Query instance of the group domain's immediate subdomain:
-      auto & group_subdomain_in = _domains[group_subdom_tag];
-      // Use relink_to_parent() to partition subdomains into group
-      relink_to_parent(
-        group_subdomain_in.domain_tag,
-        group_domain.domain_tag);
+    for (const auto & group_subdom: group_subdomain_tags) {
+      const auto & group_subdom_tag = group_subdom.first;
+      const auto & group_subdomains = group_subdom.second;
+      // predicate indicating whether a domain will be split to
+      // the new parent domain:
+      //  auto  domain_copy_pred
+      //          = [&](const std::string & tag) -> bool {
+      //               return std::find_if(
+      //                        group_domain_tag_first,
+      //                        group_domain_tag_last,
+      //                        [&](const std::string & subdom_tag) {
+      //                          return subdom_tag.find(tag, 0) == 0;
+      //                        })
+      //                      != subdomain_tag_last;
+      //             };
+      // Partition subdomains into group:
+      split_to_parent(
+        group_subdom_tag,         // e.g. .0.2
+        group_domain_tag_first,   // e.g. { .0.2.0.1, .0.2.1.1, .0.2.1.2 }
+        group_domain_tag_last,
+        group_domain.domain_tag); // e.g. .0.3
       // TODO: add alias-edge
     }
 
     update_domain_attributes(group_domain.domain_tag);
-  }
+    update_domain_capabilities(group_domain_parent.domain_tag);
 
-  update_domain_capabilities(group_domain_parent.domain_tag);
+    return _domains[group_domain.domain_tag];
+  }
+}
+
+template <class Iterator, class Sentinel>
+void topology::split_to_parent(
+  const std::string & src_domain_tag,
+  const Iterator    & src_subdomain_tag_first,
+  const Sentinel    & src_subdomain_tag_last,
+  const std::string & dst_domain_tag) {
+  DYLOC_LOG_DEBUG("dylocxx::topology.split_to_parent",
+                  "src domain:", src_domain_tag,
+                  "dst domain:", dst_domain_tag);
+  auto src_domain_tag_len = htag(src_domain_tag).length();
+  int dst_subdomain_rindex = 0;
+  for (auto src_subdomain_tag_it = src_subdomain_tag_first;
+       src_subdomain_tag_it != src_subdomain_tag_last;
+       ++src_subdomain_tag_it) {
+    if (src_subdomain_tag_it->find(src_domain_tag, 0) != 0) {
+      continue;
+    }
+    auto src_subdomain_tag = htag(*src_subdomain_tag_it)
+                             .head(src_domain_tag_len + 1);
+    DYLOC_LOG_DEBUG("dylocxx::topology.split_to_parent",
+                    "src_subdomain_tag:", *src_subdomain_tag_it,
+                    "->", src_subdomain_tag);
+    if (src_subdomain_tag.length() < src_subdomain_tag_it->length()) {
+      locality_domain dst_subdomain(_domains[dst_domain_tag],
+                                    _domains[src_subdomain_tag].scope,
+                                    dst_subdomain_rindex);
+      _domains[dst_subdomain.domain_tag] = dst_subdomain;
+      DYLOC_LOG_DEBUG_VAR("dylocxx::topology.split_to_parent",
+                          dst_subdomain.domain_tag);
+      auto dst_domain_vertex
+             = _domain_vertices[dst_domain_tag];
+      auto dst_subdomain_vertex 
+             = boost::add_vertex(
+                 { dst_subdomain.domain_tag,
+                   vertex_state::unspecified },
+                 _graph);
+
+      _domain_vertices[dst_subdomain.domain_tag] = dst_subdomain_vertex;
+
+      boost::add_edge(dst_domain_vertex, dst_subdomain_vertex,
+                      { edge_type::contains, 0 },
+                      _graph);
+      split_to_parent(src_subdomain_tag,
+                      src_subdomain_tag_first,
+                      src_subdomain_tag_last,
+                      dst_subdomain.domain_tag);
+    } else {
+      relink_to_parent(*src_subdomain_tag_it, dst_domain_tag);
+    }
+    ++dst_subdomain_rindex;
+  }
 }
 
 
 template <class Iterator, class Sentinel>
-void topology::group_subdomains(
+locality_domain & topology::group_subdomains(
        const locality_domain & domain,
        const Iterator & subdomain_tag_first,
        const Sentinel & subdomain_tag_last) {
@@ -149,7 +233,9 @@ void topology::group_subdomains(
   size_t num_grouped_subdomains = std::distance(subdomain_tag_first,
                                                 subdomain_tag_last);
   if (num_grouped_subdomains <= 0) {
-    return;
+    DYLOC_THROW(
+        dyloc::exception::invalid_argument,
+        "cannot create empty group");
   }
   DYLOC_LOG_DEBUG("dylocxx::topology.group_subdomains",
                   "parent domain:", domain, "arity:", num_subdomains);
@@ -188,6 +274,9 @@ void topology::group_subdomains(
   }
 
   update_domain_attributes(group_domain.domain_tag);
+  update_domain_capabilities(domain.domain_tag);
+
+  return _domains[group_domain.domain_tag];
 }
 
 } // namespace dyloc

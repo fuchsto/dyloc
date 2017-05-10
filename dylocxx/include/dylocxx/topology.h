@@ -274,8 +274,8 @@ class topology {
    * Move domain to child nodes of the specified parent domain.
    */
   void move_domain(
-      const std::string & domain_tag,
-      const std::string & domain_tag_new_parent);
+    const std::string & domain_tag,
+    const std::string & domain_tag_new_parent);
 
   /**
    * Move domains with specified domain tags into separate group domain.
@@ -283,24 +283,24 @@ class topology {
    * lowest common ancestor.
    */
   template <class Iterator, class Sentinel>
-  void group_domains(
-         const Iterator & group_domain_tag_first,
-         const Sentinel & group_domain_tag_last);
+  locality_domain & group_domains(
+    const Iterator & group_domain_tag_first,
+    const Sentinel & group_domain_tag_last);
 
   /**
    * Move subset of a domain's immediate child nodes into separate group
    * subdomain.
    */
   template <class Iterator, class Sentinel>
-  void group_subdomains(
-         const locality_domain & domain,
-         const Iterator & subdomain_tag_first,
-         const Sentinel & subdomain_tag_last);
+  locality_domain & group_subdomains(
+    const locality_domain & domain,
+    const Iterator & subdomain_tag_first,
+    const Sentinel & subdomain_tag_last);
 
   template <class Iterator, class Sentinel>
   void exclude_domains(
-         const Iterator & domain_tag_first,
-         const Sentinel & domain_tag_last) {
+    const Iterator & domain_tag_first,
+    const Sentinel & domain_tag_last) {
     for (auto it = domain_tag_first; it != domain_tag_last; ++it) {
       exclude_domain(*it);
     }
@@ -336,19 +336,28 @@ class topology {
   void build_hierarchy();
 
   void build_node_level(
-         locality_domain & node_domain,
-         graph_vertex_t  & node_domain_vertex);
+          locality_domain & node_domain,
+          graph_vertex_t  & node_domain_vertex);
 
   void build_module_level(
-         locality_domain & module_domain,
-         graph_vertex_t  & node_domain_vertex,
-         int               module_scope_level);
+          locality_domain & module_domain,
+          graph_vertex_t  & node_domain_vertex,
+          int               module_scope_level);
 
   void relink_to_parent(
-      const std::string & domain_tag,
-      const std::string & domain_tag_new_parent);
+          const std::string & domain_tag,
+          const std::string & domain_tag_new_parent);
 
-  void rename_domain(const std::string & tag, const std::string & new_tag);
+  template <class Iterator, class Sentinel>
+  void split_to_parent(
+          const std::string & domain_tag,
+          const Iterator    & subdomain_tag_first,
+          const Sentinel    & subdomain_tag_last,
+          const std::string & domain_tag_new_parent);
+
+  void rename_domain(
+          const std::string & tag,
+          const std::string & new_tag);
 
   void update_domain_capabilities(const std::string & tag);
   void update_domain_attributes(const std::string & tag);

@@ -101,12 +101,63 @@ TEST_F(DomainGroupTest, GroupAsymmetric) {
     unit_domain_tags.begin(),
     unit_domain_tags.end());
 
+  dart_barrier(DART_TEAM_ALL);
+
   if (dyloc::myid().id == 0) {
     topo.depth_first_search(vis);
     graphviz_out(
       topo.graph(), "DomainGroupTest.GroupAsymmetric.grouped.dot");
   }
+
+  dyloc::finalize();
+}
+
+TEST_F(DomainGroupTest, GroupNUMALeaders) {
+  dyloc::init(&TESTENV.argc, &TESTENV.argv);
+
+  if (dyloc::num_units() < 2) { return; }
+
+  auto & topo = dyloc::query_topology();
+  locality_domain_dfs_output_visitor<typename topology::domain_map>
+    vis(topo.domains());
+
+  if (dyloc::myid().id == 0) {
+    topo.depth_first_search(vis);
+    graphviz_out(
+      topo.graph(), "DomainGroupTest.GroupNUMALeaders.original.dot");
+  }
   dart_barrier(DART_TEAM_ALL);
+
+
+  // Tags of locality domains in NUMA scope:
+  auto numa_domain_tags = topo.scope_domain_tags(
+                            DYLOC_LOCALITY_SCOPE_NUMA);
+
+  // Select first unit in NUMA domain as leader:
+  std::vector<std::string> leader_unit_domain_tags;
+  for (const auto & numa_domain_tag : numa_domain_tags) {
+    DYLOC_LOG_DEBUG_VAR("DomainGroupTest.GroupNUMALeaders", numa_domain_tag);
+    const auto & numa_domain = topo[numa_domain_tag];
+    dart_global_unit_t leader_unit_id = numa_domain.unit_ids[0];
+    leader_unit_domain_tags.push_back(
+      dyloc::query_unit_locality(leader_unit_id).domain_tag);
+  }
+  for (const auto & leader_unit_domain_tag : leader_unit_domain_tags) {
+    DYLOC_LOG_DEBUG_VAR("DomainGroupTest.GroupNUMALeaders",
+                        leader_unit_domain_tag);
+  }
+
+  topo.group_domains(
+    leader_unit_domain_tags.begin(),
+    leader_unit_domain_tags.end());
+
+  dart_barrier(DART_TEAM_ALL);
+
+  if (dyloc::myid().id == 0) {
+    topo.depth_first_search(vis);
+    graphviz_out(
+      topo.graph(), "DomainGroupTest.GroupNUMALeaders.grouped.dot");
+  }
 
   dyloc::finalize();
 }
