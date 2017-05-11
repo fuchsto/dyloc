@@ -45,8 +45,14 @@ public:
   void discover_vertex(Vertex u, const Graph & g) const {
     dyloc::locality_domain * ldom     = g[u].domain;
     const std::string &      ldom_tag = g[u].domain_tag;
-    std::cout << std::left << std::setw(8)  << ldom->scope
+    std::cout << std::left << std::setw(10) << ldom->scope
               << std::left << std::setw(15) << ldom_tag << " | "
+              << "rx:" << ldom->r_index  << " "
+              << "gx:" << ldom->g_index  << " "
+              << "cores:"
+              << dyloc::make_range(
+                  ldom->core_ids.begin(),
+                  ldom->core_ids.end())  << " "
               << "units:"
               << dyloc::make_range(
                   ldom->unit_ids.begin(),
