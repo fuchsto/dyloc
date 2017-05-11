@@ -1,7 +1,7 @@
 #ifndef DYLOCXX__INIT_H__INCLUDED
 #define DYLOCXX__INIT_H__INCLUDED
 
-#include <dylocxx/domain_graph.h>
+#include <dylocxx/topology.h>
 
 #include <dyloc/common/types.h>
 
@@ -12,14 +12,16 @@ void init(int * argc, char *** argv);
 void finalize();
 bool is_initialized();
 
-const dyloc_unit_locality_t & query_unit_locality(
+#if 0
+const unit_locality & query_unit_locality(
         dart_global_unit_t u);
 
-const dyloc_unit_locality_t & query_unit_locality(
+const unit_locality & query_unit_locality(
         dart_team_t t,
         dart_team_unit_t u);
+#endif
 
-domain_graph & query_locality_graph(
+topology & team_topology(
   dart_team_t t = DART_TEAM_ALL);
 
 } // namespace dyloc

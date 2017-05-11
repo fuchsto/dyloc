@@ -2,9 +2,6 @@
 set (CC_WARN_FLAG  "${CC_WARN_FLAG} -Wall -Wextra -Wpedantic")
 set (CXX_WARN_FLAG "${CXX_WARN_FLAG} -Wall -Wextra -Wpedantic")
 
-set (CXX_STD_FLAG "--std=c++11"
-     CACHE STRING "C++ compiler std flag")
-
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES ".*Clang")
   set (CXX_GDB_FLAG "-g"
        CACHE STRING "C++ compiler GDB debug symbols flag")
@@ -12,6 +9,47 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
   set (CXX_GDB_FLAG "-ggdb3 -rdynamic"
        CACHE STRING "C++ compiler GDB debug symbols flag")
 endif()
+
+# Set C++ compiler flags:
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES ".*Clang")
+  # using Clang
+  set (CXX_STD_FLAG "--std=c++11"
+       CACHE STRING "C++ compiler std flag")
+  set (CXX_GDB_FLAG "-g"
+       CACHE STRING "C++ compiler (clang++) debug symbols flag")
+  set (CXX_OMP_FLAG ${OpenMP_CXX_FLAGS})
+  set (CC_OMP_FLAG  ${OpenMP_CC_FLAGS})
+
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.8.0")
+    message(FATAL_ERROR "Insufficient Clang version (< 3.8.0)")
+  endif()
+
+elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+  # using GCC
+  set (CXX_STD_FLAG "--std=c++11"
+       CACHE STRING "C++ compiler std flag")
+  set (CXX_GDB_FLAG "-ggdb3 -rdynamic"
+       CACHE STRING "C++ compiler GDB debug symbols flag")
+  set (CXX_OMP_FLAG ${OpenMP_CXX_FLAGS})
+  set (CC_OMP_FLAG  ${OpenMP_CC_FLAGS})
+  if(ENABLE_LT_OPTIMIZATION)
+    set (CXX_LTO_FLAG "-flto -fwhole-program -fno-use-linker-plugin")
+  endif()
+
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.8.1")
+    message(FATAL_ERROR "Insufficient GCC version (< 4.8.1)")
+  endif()
+
+elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Intel")
+  # using Intel C++
+  set (CXX_STD_FLAG "-std=c++11"
+       CACHE STRING "C++ compiler std flag")
+
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "15.0.0")
+    message(FATAL_ERROR "Insufficient Intel compiler version (< 15.0.0)")
+  endif()
+endif()
+
 
 # Set C compiler flags:
 if ("${CMAKE_C_COMPILER_ID}" MATCHES ".*Clang")
@@ -36,6 +74,14 @@ elseif ("${CMAKE_C_COMPILER_ID}" MATCHES "Cray")
        CACHE STRING "C compiler std flag")
 endif()
 
+set(CMAKE_C_FLAGS_DEBUG
+    "${CMAKE_C_FLAGS_DEBUG} ${CC_ENV_SETUP_FLAGS}")
+set(CMAKE_CXX_FLAGS_DEBUG
+    "${CMAKE_CXX_FLAGS_DEBUG} ${CXX_ENV_SETUP_FLAGS}")
+set(CMAKE_C_FLAGS_RELEASE
+    "${CMAKE_C_FLAGS_RELEASE} ${CC_ENV_SETUP_FLAGS}")
+set(CMAKE_CXX_FLAGS_RELEASE
+    "${CMAKE_CXX_FLAGS_RELEASE} ${CXX_ENV_SETUP_FLAGS}")
 
 set(CMAKE_CXX_FLAGS_DEBUG
     "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")

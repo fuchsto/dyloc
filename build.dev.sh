@@ -18,6 +18,7 @@ rm -Rf $BUILD_DIR/*
         -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
         \
         -DENABLE_LOGGING=ON \
+        -DENABLE_PAPI=OFF \
         \
         -DPAPI_PREFIX=${PAPI_BASE} \
         -DDART_PREFIX=${DART_BASE} \

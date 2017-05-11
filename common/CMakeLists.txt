@@ -96,6 +96,7 @@ set(DYLOC_COMMON_INCLUDE_DIRS
 include_directories(
   ${DYLOC_COMMON_INCLUDE_DIRS}
   ${DART_INCLUDE_DIRS}
+  ${ADDITIONAL_INCLUDES}
 )
 
 
@@ -141,6 +142,6 @@ install(TARGETS ${DYLOC_COMMON_LIBRARY}
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/dyloc
         DESTINATION include FILES_MATCHING PATTERN "*.h")
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/dyloc_common.h
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/dyloc/dyloc_common.h
         DESTINATION include)
 

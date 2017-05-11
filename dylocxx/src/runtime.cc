@@ -6,7 +6,7 @@
 #include <dylocxx/unit_locality.h>
 #include <dylocxx/locality_domain.h>
 
-#include <dylocxx/domain_graph.h>
+#include <dylocxx/topology.h>
 
 #include <dylocxx/adapter/dart.h>
 
@@ -26,7 +26,6 @@ void runtime::initialize() {
 }
 
 void runtime::finalize() {
-  _locality_domains.clear();
   _unit_mappings.clear();
   _host_topologies.clear();
 }
@@ -44,25 +43,21 @@ void runtime::initialize_locality(dart_team_t team) {
         team,
         host_topology(_unit_mappings.at(team))));
 
-  DYLOC_LOG_DEBUG("dylocxx::runtime.initialize_locality", "team domain");
-  _locality_domains.insert(
-      std::make_pair(team, locality_domain(team)));
-
   DYLOC_LOG_DEBUG("dylocxx::runtime.initialize_locality", "domain graph");
-  _domain_graphs.insert(
+  _topologies.insert(
       std::make_pair(
         team,
-        domain_graph(
+        topology(
+          team,
           _host_topologies.at(team),
-          _unit_mappings.at(team),
-          _locality_domains.at(team))));
+          _unit_mappings.at(team))));
 
   DYLOC_LOG_DEBUG("dylocxx::runtime.initialize_locality", ">");
 }
 
 void runtime::finalize_locality(dart_team_t team) {
-  _locality_domains.erase(
-      _locality_domains.find(team));
+  _topologies.erase(
+      _topologies.find(team));
   _unit_mappings.erase(
       _unit_mappings.find(team));
   _host_topologies.erase(

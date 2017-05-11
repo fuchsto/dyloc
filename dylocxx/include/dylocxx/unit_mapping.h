@@ -18,13 +18,13 @@ namespace dyloc {
  *
  */
 struct unit_mapping {
-  std::vector<dyloc_unit_locality_t>  unit_localities;
-  dart_team_t                         team;
+  std::vector<unit_locality>  unit_localities;
+  dart_team_t                 team;
   
  public:
-  typedef std::vector<dyloc_unit_locality_t>::iterator
+  typedef std::vector<unit_locality>::iterator
     unit_locality_iterator;
-  typedef std::vector<dyloc_unit_locality_t>::const_iterator
+  typedef std::vector<unit_locality>::const_iterator
     unit_locality_const_iterator;
 
  public:
@@ -39,15 +39,25 @@ struct unit_mapping {
    */
   unit_mapping(dart_team_t team);
 
-  unit_locality_const_iterator begin() const {
+  inline unit_locality_const_iterator begin() const {
     return unit_localities.begin();
   }
 
-  unit_locality_const_iterator end() const {
+  inline unit_locality_const_iterator end() const {
     return unit_localities.end();
   }
 
-  const dyloc_unit_locality_t & operator[](dart_team_unit_t luid) const {
+  inline size_t size() const noexcept {
+    return unit_localities.size();
+  }
+
+  inline const unit_locality & operator[](
+      dart_team_unit_t luid) const {
+    return unit_localities[luid.id];
+  }
+
+  inline unit_locality & operator[](
+      dart_team_unit_t luid) {
     return unit_localities[luid.id];
   }
 };

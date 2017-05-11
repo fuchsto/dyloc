@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <cstring>
 
 
 namespace dyloc {
@@ -16,8 +17,9 @@ std::ostream & operator<<(
   const dyloc_unit_locality_t & uloc) {
   std::ostringstream ss;
   ss << "dyloc_unit_locality_t { "
-     << "tag:"    << uloc.domain_tag << " "
-     << "unit:"   << uloc.unit.id << " (t:" << uloc.team << ") "
+  // << uloc.domain_tag << " "
+     << "unit:"   << uloc.unit.id    << " "
+     << "t:"      << uloc.team       << " "
      << "hwinfo:" << uloc.hwinfo
      << " }";
   return operator<<(os, ss.str());
@@ -43,10 +45,33 @@ unit_locality::unit_locality(dart_team_unit_t u, dart_team_t t) {
   hwinfo unit_hwinfo;
   unit_hwinfo.collect();
 
-  _uloc.domain_tag[0] = '\0';
+  // _uloc.domain_tag[0] = '\0';
   _uloc.unit          = u;
   _uloc.team          = t;
   _uloc.hwinfo        = *unit_hwinfo.data();
+}
+
+unit_locality::unit_locality(const dyloc_unit_locality_t & uloc)
+: _uloc(uloc) {
+  // std::strncpy(_uloc.domain_tag, uloc.domain_tag,
+  //              DYLOC_LOCALITY_DOMAIN_TAG_MAX_SIZE);
+  std::strncpy(_uloc.hwinfo.host, uloc.hwinfo.host,
+               DYLOC_LOCALITY_HOST_MAX_SIZE);
+  std::copy(uloc.hwinfo.scopes, uloc.hwinfo.scopes + uloc.hwinfo.num_scopes,
+            _uloc.hwinfo.scopes);
+}
+
+unit_locality & unit_locality::operator=(
+  const unit_locality & uloc) {
+  _uloc = uloc;
+  // std::strncpy(_uloc.domain_tag, uloc.data()->domain_tag,
+  //              DYLOC_LOCALITY_DOMAIN_TAG_MAX_SIZE);
+  std::strncpy(_uloc.hwinfo.host, uloc.data()->hwinfo.host,
+               DYLOC_LOCALITY_HOST_MAX_SIZE);
+  std::copy(uloc.data()->hwinfo.scopes,
+            uloc.data()->hwinfo.scopes + uloc.data()->hwinfo.num_scopes,
+            _uloc.hwinfo.scopes);
+  return *this;
 }
 
 } // namespace dyloc

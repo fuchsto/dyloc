@@ -11,6 +11,8 @@ set(ENABLE_PAPI       ${ENABLE_PAPI}
     PARENT_SCOPE)
 set(ENABLE_LOGGING    ${ENABLE_LOGGING}
     PARENT_SCOPE)
+set(ENABLE_ASSERTIONS ${ENABLE_ASSERTIONS}
+    PARENT_SCOPE)
 
 # ---------------------------------------------------------------------------
 # Dependencies
@@ -25,7 +27,7 @@ set(Boost_USE_STATIC_LIBS     ON)
 set(Boost_USE_MULTITHREADED  OFF)
 set(Boost_USE_STATIC_RUNTIME  ON)
 
-find_package(Boost 1.58.0 REQUIRED)
+find_package(Boost 1.56.0 REQUIRED)
 
 message(STATUS "Boost include directories: "
         ${Boost_INCLUDE_DIRS})
@@ -53,6 +55,13 @@ if (ENABLE_LOGGING)
        "${ADDITIONAL_COMPILE_FLAGS} -DDYLOC_ENABLE_LOGGING")
   set (ADDITIONAL_COMPILE_FLAGS
        "${ADDITIONAL_COMPILE_FLAGS} -DDART_ENABLE_LOGGING")
+endif()
+
+if (ENABLE_ASSERTIONS)
+  set (ADDITIONAL_COMPILE_FLAGS
+       "${ADDITIONAL_COMPILE_FLAGS} -DDYLOC_ENABLE_ASSERTIONS")
+  set (ADDITIONAL_COMPILE_FLAGS
+       "${ADDITIONAL_COMPILE_FLAGS} -DDART_ENABLE_ASSERTIONS")
 endif()
 
 
@@ -123,6 +132,7 @@ include_directories(
   ${DYLOC_COMMON_INCLUDE_DIRS}
   ${DART_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
+  ${ADDITIONAL_INCLUDES}
 )
 
 foreach (dart_variant ${DART_IMPLEMENTATIONS_LIST})
@@ -157,6 +167,10 @@ foreach (dart_variant ${DART_IMPLEMENTATIONS_LIST})
     ${DYLOCXX_LIBRARY} PROPERTIES
     CXX_STANDARD_REQUIRED 11
   )
+
+  # Library Installation
+  install(TARGETS ${DYLOCXX_LIBRARY}
+          DESTINATION lib)
 
 endforeach() # dart_variant
 

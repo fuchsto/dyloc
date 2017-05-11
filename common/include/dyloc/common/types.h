@@ -260,7 +260,7 @@ typedef struct {
     /** Hardware specification of the unit's affinity. */
     dyloc_hwinfo_t            hwinfo;
 
-    char                      domain_tag[DYLOC_LOCALITY_DOMAIN_TAG_MAX_SIZE];
+//  char                      domain_tag[DYLOC_LOCALITY_DOMAIN_TAG_MAX_SIZE];
 }
 dyloc_unit_locality_t;
 

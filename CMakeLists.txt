@@ -31,6 +31,8 @@ endif(POLICY CMP0016)
 ## Build options
 option(ENABLE_LOGGING
        "Specify whether logging should be enabled" off)
+option(ENABLE_ASSERTIONS
+       "Specify whether run-time assertions should be enabled" on)
 
 option(BUILD_SHARED_LIBS
        "Specify whether libraries should be built as shared objects" off)
@@ -52,13 +54,14 @@ include(${CMAKE_SOURCE_DIR}/CMakeExt/DART.cmake)
 include(${CMAKE_SOURCE_DIR}/CMakeExt/MPI.cmake)
 include(${CMAKE_SOURCE_DIR}/CMakeExt/PAPI.cmake)
 include(${CMAKE_SOURCE_DIR}/CMakeExt/NUMA.cmake)
+include(${CMAKE_SOURCE_DIR}/CMakeExt/Environment.cmake)
 
 # ------------------------------------------------------------------------
 # Version
 
-set(DYLOC_VERSION_MAJOR 0 CACHE STRING "DYLOC major version number.")
-set(DYLOC_VERSION_MINOR 3 CACHE STRING "DYLOC minor version number.")
-set(DYLOC_VERSION_PATCH 0 CACHE STRING "DYLOC patch version number.")
+set(DYLOC_VERSION_MAJOR 0 CACHE STRING "dyloc major version number.")
+set(DYLOC_VERSION_MINOR 3 CACHE STRING "dyloc minor version number.")
+set(DYLOC_VERSION_PATCH 0 CACHE STRING "dyloc patch version number.")
 
 mark_as_advanced(
   DYLOC_VERSION_MAJOR
@@ -120,7 +123,7 @@ add_subdirectory(dyloc)
 # ------------------------------------------------------------------------
 # Build Configuration Banner
 
-message(EMPH "DyLoc library version ${DYLOC_VERSION}")
+message(EMPH "dyloc library version ${DYLOC_VERSION}")
 message(EMPH "-----------------------------------------------------------")
 
 message(EMPH "Install prefix:           (INSTALL_PREFIX)                 "

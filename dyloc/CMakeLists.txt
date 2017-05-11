@@ -1,13 +1,17 @@
 project(project_libdyloc CXX)
 
-set(ENABLE_HWLOC ${ENABLE_HWLOC}
-    PARENT_SCOPE)
-set(ENABLE_LIBNUMA ${ENABLE_LIBNUMA}
-    PARENT_SCOPE)
-set(ENABLE_PAPI ${ENABLE_PAPI}
+set(DART_IMPLEMENTATIONS_LIST ${DART_IMPLEMENTATIONS_LIST}
     PARENT_SCOPE)
 
-set(ENABLE_LOGGING ${ENABLE_LOGGING}
+set(ENABLE_HWLOC      ${ENABLE_HWLOC}
+    PARENT_SCOPE)
+set(ENABLE_LIBNUMA    ${ENABLE_LIBNUMA}
+    PARENT_SCOPE)
+set(ENABLE_PAPI       ${ENABLE_PAPI}
+    PARENT_SCOPE)
+set(ENABLE_LOGGING    ${ENABLE_LOGGING}
+    PARENT_SCOPE)
+set(ENABLE_ASSERTIONS ${ENABLE_ASSERTIONS}
     PARENT_SCOPE)
 
 # ---------------------------------------------------------------------------
@@ -17,7 +21,16 @@ include(${CMAKE_SOURCE_DIR}/CMakeExt/InstallHelpers.cmake)
 include(${CMAKE_SOURCE_DIR}/CMakeExt/DART.cmake)
 include(${CMAKE_SOURCE_DIR}/CMakeExt/hwloc.cmake)
 
-set(DYLOC_TARGET_NAME dyloc)
+set(Boost_USE_STATIC_LIBS     ON)
+set(Boost_USE_MULTITHREADED  OFF)
+set(Boost_USE_STATIC_RUNTIME  ON)
+
+find_package(Boost 1.56.0 REQUIRED)
+
+message(STATUS "Boost include directories: "
+        ${Boost_INCLUDE_DIRS})
+message(STATUS "Boost libraries: "
+        ${Boost_LIBRARIES})
 
 
 # ---------------------------------------------------------------------------
@@ -85,28 +98,39 @@ include_directories(
   ${DYLOCXX_INCLUDE_DIRS}
   ${DYLOC_COMMON_INCLUDE_DIRS}
   ${DART_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+  ${ADDITIONAL_INCLUDES}
 )
 
-add_library(
-  ${DYLOC_TARGET_NAME}
-  ${DYLOC_HEADERS}
-  ${DYLOC_SOURCES}
-)
+foreach (dart_variant ${DART_IMPLEMENTATIONS_LIST})
 
-target_link_libraries(
-  ${DYLOC_TARGET_NAME}
-  ${ADDITIONAL_LIBRARIES}
-  ${DART_LIBRARIES}
-  dylocxx
-)
+  set(DYLOC_LIBRARY        "dyloc-${dart_variant}")
+  set(DYLOCXX_LIBRARY      "dylocxx-${dart_variant}")
+  set(DYLOC_COMMON_LIBRARY "dyloc-common-${dart_variant}")
 
-# Compile flags
-set_target_properties(
-  ${DYLOC_TARGET_NAME} PROPERTIES
-  COMPILE_FLAGS ${ADDITIONAL_COMPILE_FLAGS}
-)
+  add_library(
+    ${DYLOC_LIBRARY}
+    ${DYLOC_HEADERS}
+    ${DYLOC_SOURCES}
+  )
 
-install(
-  TARGETS ${DYLOC_TARGET_NAME}
-  DESTINATION lib)
+  target_link_libraries(
+    ${DYLOC_LIBRARY}
+    ${ADDITIONAL_LIBRARIES}
+    ${DART_LIBRARIES}
+    ${DYLOCXX_LIBRARY}
+    ${DYLOC_COMMON_LIBRARY}
+  )
+
+  # Compile flags
+  set_target_properties(
+    ${DYLOC_LIBRARY} PROPERTIES
+    COMPILE_FLAGS ${ADDITIONAL_COMPILE_FLAGS}
+  )
+
+  install(
+    TARGETS ${DYLOC_LIBRARY}
+    DESTINATION lib)
+
+endforeach() # dart_variant
 

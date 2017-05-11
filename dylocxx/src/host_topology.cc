@@ -30,7 +30,7 @@ host_topology::host_topology(const unit_mapping & unit_map) {
 
   size_t num_units;
   DYLOC_ASSERT_RETURNS(dart_team_size(team, &num_units), DART_OK);
-  DYLOC_ASSERT_MSG(num_units == unit_mapping.num_units,
+  DYLOC_ASSERT_MSG(num_units == unit_map.size(),
                    "Number of units in mapping differs from team size");
 
   // Map unit ids to their host name:
@@ -43,7 +43,7 @@ host_topology::host_topology(const unit_mapping & unit_map) {
       dart_team_unit_l2g(team, luid, &guid),
       DART_OK);
     // Add global unit id to list of units of its host:
-    std::string unit_hostname(unit_map[guid.id].hwinfo.host);
+    std::string unit_hostname(unit_map[guid.id].data()->hwinfo.host);
     DYLOC_LOG_TRACE("dylocxx::host_topology.()",
                     "team unit id:",   luid,
                     "global unit id:", guid.id,
@@ -71,20 +71,21 @@ host_topology::host_topology(const unit_mapping & unit_map) {
 
     // write host name to host domain data:
     host_name.copy(host_dom.host, host_name.size());
+    host_dom.host[host_name.size()] = '\0';
 
     DYLOC_LOG_TRACE("dylocxx::host_topology.()",
                     "mapping units to", host_name);
 
     // NUMA ids occupied by units on the host:
     std::set<int> host_numa_ids;
-    for (dart_global_unit_t host_unit_gid : host_unit_gids) {
+    for (const dart_global_unit_t & host_unit_gid : host_unit_gids) {
       dart_team_unit_t luid;
       DYLOC_ASSERT_RETURNS(
         dart_team_unit_g2l(team, host_unit_gid, &luid),
         DART_OK);
       const auto & ul   = unit_map[luid];
-      int unit_numa_id  = ul.hwinfo.numa_id;
-      int unit_num_numa = ul.hwinfo.num_numa;
+      int unit_numa_id  = ul.data()->hwinfo.numa_id;
+      int unit_num_numa = ul.data()->hwinfo.num_numa;
 
       if (unit_num_numa == 0) {
         unit_numa_id = 0;
@@ -155,16 +156,22 @@ void host_topology::collect_topology(
    */
 
   const auto & my_uloc        = unit_map[my_id];
-  const auto & local_hostname = my_uloc.hwinfo.host;
+  const auto & local_hostname = my_uloc.data()->hwinfo.host;
 
   DYLOC_LOG_TRACE("dylocxx::host_topology.collect_topology",
                   "local host:", local_hostname);
 
   for (const auto & host_dom : _host_domains) {
-    std::string host_name(host_dom.host);
-    const auto  & host_unit_gids  = _host_units[host_name];
+    std::string  host_name(host_dom.host);
+    const auto & host_unit_gids = _host_units[host_name];
 
-    dart_global_unit_t leader_unit_gid = host_unit_gids[0];
+    if (host_unit_gids.size() == 0) {
+      DYLOC_LOG_WARN("dylocxx::host_topology.collect_topology",
+                     "no units at host", host_name);
+      continue;
+    }
+
+    const dart_global_unit_t & leader_unit_gid = host_unit_gids[0];
     DYLOC_ASSERT_RETURNS(
       dart_group_addmember(leader_group, leader_unit_gid),
       DART_OK);
@@ -306,7 +313,7 @@ void host_topology::collect_topology(
    * local node:
    */
   if (DART_UNDEFINED_UNIT_ID != local_leader_unit_lid.id) {
-    dart_team_t      local_team; 
+    dart_team_t      local_team;
     dart_team_unit_t host_topo_bcast_root = local_leader_unit_lid;
     dart_team_t      host_topo_bcast_team = team;
     if (num_hosts > 1) {
@@ -449,8 +456,7 @@ void host_topology::local_topology(
       DYLOC_LOG_TRACE("dylocxx::host_topology.local_topology",
                       "hwloc: PCI device: (",
                       "name:",  coproc_obj->name,
-                      "arity:", coproc_obj->arity,
-                      ")");
+                      "arity:", coproc_obj->arity, ")");
       if (NULL != coproc_obj->name &&
           NULL != strstr(coproc_obj->name, "Xeon Phi")) {
         DYLOC_LOG_TRACE("dylocxx::host_topology.local_topology",
@@ -461,8 +467,7 @@ void host_topology::local_topology(
             DYLOC_LOG_TRACE("dylocxx::host_topology.local_topology",
                             "hwloc: Xeon Phi child node: (",
                             "name:",  coproc_child_obj->name,
-                            "arity:", coproc_child_obj->arity,
-                            ")");
+                            "arity:", coproc_child_obj->arity, ")");
 
             dyloc_module_location_t module_loc;
             char * hostname     = module_loc.host;
@@ -498,8 +503,7 @@ void host_topology::local_topology(
                               "type:", mic_host_obj->type,
                               "->",
                               "scope:", module_loc.pos.scope,
-                              "idx:",   module_loc.pos.index,
-                              ")");
+                              "idx:",   module_loc.pos.index, ")");
             }
             module_locations.push_back(std::move(module_loc));
           }

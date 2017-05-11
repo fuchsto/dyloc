@@ -20,6 +20,13 @@
 namespace dyloc {
 namespace exception {
 
+class invalid_argument : public ::std::invalid_argument {
+public:
+  invalid_argument(const ::std::string & message)
+  : ::std::invalid_argument(message) {
+  }
+};
+
 class runtime_config_error : public ::std::runtime_error {
 public:
   runtime_config_error(const ::std::string & message)
