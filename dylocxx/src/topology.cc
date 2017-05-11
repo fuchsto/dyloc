@@ -57,22 +57,10 @@ void topology::rename_domain(
           dyloc::exception::invalid_argument,
           "expected exactly 1 unit in domain");
     }
-#if 0
-    dyloc_unit_locality_t & uloc =
-      (*_unit_mapping)[dyloc::g2l(dom.team, dom.unit_ids[0])];
-    dom.domain_tag.copy(
-      uloc.domain_tag,
-      dom.domain_tag.length());
-    uloc.domain_tag[dom.domain_tag.length()] = '\0';
-#else
-		_unit_vertices[dom.unit_ids[0].id] = _domain_vertices[new_tag];
-#endif
   }
 }
 
 void topology::update_domain_attributes(const std::string & parent_tag) {
-  DYLOC_LOG_TRACE_VAR("dylocxx::topology.update_domain_attributes",
-                      parent_tag);
   // Update domain tags, recursing down from specified domain.
   // Could also be implemented using boost::depth_first_search.
   auto parent_vx_it = _domain_vertices.find(parent_tag);
@@ -109,9 +97,6 @@ void topology::update_domain_capabilities(const std::string & domain_tag) {
   }
   typedef boost::graph_traits<graph_t>::out_edge_iterator::reference
     out_edge_ref;
-
-  DYLOC_LOG_TRACE_VAR("dylocxx::topology.update_domain_capabilities",
-                      domain_tag);
 
   auto & domain = _domains[domain_tag];
   if (domain.scope != DYLOC_LOCALITY_SCOPE_UNIT) {

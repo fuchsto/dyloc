@@ -331,11 +331,24 @@ class topology {
     for (auto it = domain_tag_first; it != domain_tag_last; ++it) {
       _graph[_domain_vertices[*it]].state = vertex_state::selected;
     }
+    remove_domains([&](const std::string & tag) {
+                         return _graph[_domain_vertices[tag]].state !=
+                                  vertex_state::selected;
+                       });
   }
 
   void select_domain(
          const std::string & domain_tag) {
     _graph[_domain_vertices[domain_tag]].state = vertex_state::selected;
+    remove_domains([&](const std::string & tag) {
+                         return _graph[_domain_vertices[tag]].state !=
+                                  vertex_state::selected;
+                       });
+  }
+
+  template <class UnaryPredicate>
+  void remove_domains(UnaryPredicate pred) {
+
   }
 
   /**

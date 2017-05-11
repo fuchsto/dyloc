@@ -167,6 +167,10 @@ foreach (dart_variant ${DART_IMPLEMENTATIONS_LIST})
     CXX_STANDARD_REQUIRED 11
   )
 
+  # Library Installation
+  install(TARGETS ${DYLOCXX_LIBRARY}
+          DESTINATION lib)
+
 endforeach() # dart_variant
 
 # ---------------------------------------------------------------------------
