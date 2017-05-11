@@ -11,6 +11,7 @@ tags
 # Build directory
 build
 build.dev
+build.mic
 
 # Compiled Object files
 *.slo

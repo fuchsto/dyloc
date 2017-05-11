@@ -1,2 +1,0 @@
-/usr/bin/ar qc libdyloc-mpi.a  CMakeFiles/dyloc-mpi.dir/src/topology.c.o CMakeFiles/dyloc-mpi.dir/src/init.cc.o
-/usr/bin/ranlib libdyloc-mpi.a

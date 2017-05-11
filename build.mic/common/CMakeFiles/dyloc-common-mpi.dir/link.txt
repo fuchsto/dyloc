@@ -1,2 +1,0 @@
-/usr/bin/ar qc libdyloc-common-mpi.a  CMakeFiles/dyloc-common-mpi.dir/src/internal/papi.c.o
-/usr/bin/ranlib libdyloc-common-mpi.a
