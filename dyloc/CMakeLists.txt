@@ -21,6 +21,17 @@ include(${CMAKE_SOURCE_DIR}/CMakeExt/InstallHelpers.cmake)
 include(${CMAKE_SOURCE_DIR}/CMakeExt/DART.cmake)
 include(${CMAKE_SOURCE_DIR}/CMakeExt/hwloc.cmake)
 
+set(Boost_USE_STATIC_LIBS     ON)
+set(Boost_USE_MULTITHREADED  OFF)
+set(Boost_USE_STATIC_RUNTIME  ON)
+
+find_package(Boost 1.56.0 REQUIRED)
+
+message(STATUS "Boost include directories: "
+        ${Boost_INCLUDE_DIRS})
+message(STATUS "Boost libraries: "
+        ${Boost_LIBRARIES})
+
 
 # ---------------------------------------------------------------------------
 # Source Files
@@ -87,6 +98,8 @@ include_directories(
   ${DYLOCXX_INCLUDE_DIRS}
   ${DYLOC_COMMON_INCLUDE_DIRS}
   ${DART_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+  ${ADDITIONAL_INCLUDES}
 )
 
 foreach (dart_variant ${DART_IMPLEMENTATIONS_LIST})
