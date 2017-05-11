@@ -38,10 +38,6 @@ namespace dyloc {
 class topology {
   typedef topology self_t;
 
-  friend std::ostream & operator<<(
-    std::ostream          & os,
-    const dyloc::topology & topo);
-
  public:
   enum class edge_type : int {
     unspecified  = 0,
@@ -88,7 +84,7 @@ class topology {
   typedef boost::adjacency_list<
             boost::vecS,           // out edge list
             boost::vecS,           // vertex list
-            boost::directedS,      // directed graph (parent -> sub)
+            boost::bidirectionalS, // directed graph (parent -> sub)
             vertex_properties,     // vertex properties
             edge_properties,       // edge properties
             boost::no_property,    // graph properties
@@ -107,6 +103,14 @@ class topology {
 
   typedef boost::graph_traits<graph_t>::edge_descriptor
     graph_edge_t;
+
+  friend std::ostream & operator<<(
+    std::ostream                  & os,
+    const dyloc::topology         & topo);
+
+  friend std::ostream & operator<<(
+    std::ostream                  & os,
+    dyloc::topology::vertex_state   state);
 
  private:
   template <class Visitor>
@@ -340,15 +344,85 @@ class topology {
   void select_domain(
          const std::string & domain_tag) {
     _graph[_domain_vertices[domain_tag]].state = vertex_state::selected;
-    remove_domains([&](const std::string & tag) {
-                         return _graph[_domain_vertices[tag]].state !=
-                                  vertex_state::selected;
-                       });
+    for_each_ancestor(
+      domain_tag,
+      [&](const locality_domain & ancestor_dom) {
+            _graph[_domain_vertices[ancestor_dom.domain_tag]].state
+               = vertex_state::selected;
+         });
+    for_each_descendant(
+      domain_tag,
+      [&](const locality_domain & desc_dom) {
+            _graph[_domain_vertices[desc_dom.domain_tag]].state
+               = vertex_state::selected;
+         });
+    remove_domains(
+      ".",
+      [&](const locality_domain & dom) {
+           return _graph[_domain_vertices[dom.domain_tag]].state !=
+                    vertex_state::selected;
+         });
+    update_domain_attributes(".");
+    update_domain_capabilities(".");
   }
 
   template <class UnaryPredicate>
-  void remove_domains(UnaryPredicate pred) {
+  void for_each_ancestor(const std::string & tag, UnaryPredicate func) {
+    auto & domain_vx = _domain_vertices[tag];
+    for (auto domain_edges = in_edges(domain_vx, _graph);
+         domain_edges.first != domain_edges.second;
+         ++domain_edges.first) {
+      auto   parent_vx = source(*domain_edges.first, _graph);
+      auto & parent    = _domains[_graph[parent_vx].domain_tag];
+      func(parent);
+      for_each_ancestor(parent.domain_tag, func);
+    }
+  }
 
+  template <class UnaryPredicate>
+  void for_each_descendant(const std::string & tag, UnaryPredicate func) {
+    auto & domain_vx = _domain_vertices[tag];
+    for (auto domain_edges = out_edges(domain_vx, _graph);
+         domain_edges.first != domain_edges.second;
+         ++domain_edges.first) {
+      auto   child_vx = target(*domain_edges.first, _graph);
+      auto & child    = _domains[_graph[child_vx].domain_tag];
+      func(child);
+      for_each_descendant(child.domain_tag, func);
+    }
+  }
+
+  template <class UnaryPredicate>
+  void for_each_descendant_inv(const std::string & tag, UnaryPredicate func) {
+    auto & domain_vx = _domain_vertices[tag];
+    for (auto domain_edges = out_edges(domain_vx, _graph);
+         domain_edges.first != domain_edges.second;
+         ++domain_edges.first) {
+      auto   child_vx = target(*domain_edges.first, _graph);
+      auto & child    = _domains[_graph[child_vx].domain_tag];
+      for_each_descendant_inv(child.domain_tag, func);
+      func(child);
+    }
+  }
+
+  template <class UnaryPredicate>
+  void remove_domains(const std::string & tag, UnaryPredicate pred) {
+    auto & domain = _domains[tag];
+    if (!pred(domain)) {
+      for_each_descendant_inv(
+        tag,
+        [&](const locality_domain & dom) {
+          remove_domains(dom.domain_tag, pred);
+        });
+    } else {
+      DYLOC_LOG_TRACE("dylocxx::topology.remove_domain",
+                      "remove:", tag);
+      _graph[_domain_vertices[tag]].state = vertex_state::hidden;
+      // boost::clear_vertex(_domain_vertices[tag], _graph);
+      // boost::remove_vertex(_domain_vertices[tag], _graph);
+      // _domains.erase(_domains.find(tag));
+      // _domain_vertices.erase(_domain_vertices.find(tag));
+    }
   }
 
   /**

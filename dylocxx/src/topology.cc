@@ -32,6 +32,19 @@ std::ostream & operator<<(
   return operator<<(os, ss.str());
 }
 
+std::ostream & operator<<(
+  std::ostream           & os,
+  topology::vertex_state   state) {
+  std::ostringstream ss;
+  switch (state) {
+    case topology::vertex_state::unspecified: ss << "U"; break;
+    case topology::vertex_state::hidden:      ss << "H"; break;
+    case topology::vertex_state::moved:       ss << "M"; break;
+    case topology::vertex_state::selected:    ss << "S"; break;
+  }
+  return operator<<(os, ss.str());
+}
+
 void topology::rename_domain(
   const std::string & old_tag,
   const std::string & new_tag) {

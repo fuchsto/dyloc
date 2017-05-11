@@ -105,7 +105,8 @@ foreach (dart_variant ${DART_IMPLEMENTATIONS_LIST})
     ${DYLOC_LIBRARY}
     ${ADDITIONAL_LIBRARIES}
     ${DART_LIBRARIES}
-    dylocxx
+    ${DYLOCXX_LIBRARY}
+    ${DYLOC_COMMON_LIBRARY}
   )
 
   # Compile flags
