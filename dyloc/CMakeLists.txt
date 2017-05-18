@@ -117,7 +117,25 @@ foreach (dart_variant ${DART_IMPLEMENTATIONS_LIST})
 
   install(
     TARGETS ${DYLOC_LIBRARY}
-    DESTINATION lib)
+    DESTINATION lib
+    EXPORT "${DYLOC_LIBRARY}-targets")
+
+  # Exports
+  install(
+    EXPORT "${DYLOC_LIBRARY}-targets"
+    DESTINATION share/cmake)
+
+  if(${CMAKE_VERSION} VERSION_GREATER 3.0.0 )
+    include(CMakePackageConfigHelpers)
+    configure_package_config_file(
+      "dyloc-config.cmake.in"
+      "${DYLOC_LIBRARY}-config.cmake"
+      INSTALL_DESTINATION "${CMAKE_INSTALL_PREFIX}/cmake"
+      PATH_VARS CMAKE_INSTALL_PREFIX)
+
+    # Install custom config
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${DYLOC_LIBRARY}-config.cmake"
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/cmake")
+  endif()
 
 endforeach() # dart_variant
-

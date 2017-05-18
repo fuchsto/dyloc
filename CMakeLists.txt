@@ -80,9 +80,7 @@ set(CMAKE_RULE_MESSAGES    ON)
 set(CMAKE_COLOR_MAKEFILE   ON)
 
 ## Install path
-if (INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX ${INSTALL_PREFIX})
-else()
+if (NOT CMAKE_INSTALL_PREFIX)
   set(CMAKE_INSTALL_PREFIX "./install/")
 endif()
 

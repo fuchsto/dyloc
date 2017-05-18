@@ -27,7 +27,7 @@ set(Boost_USE_STATIC_LIBS     ON)
 set(Boost_USE_MULTITHREADED  OFF)
 set(Boost_USE_STATIC_RUNTIME  ON)
 
-find_package(Boost 1.58.0 REQUIRED)
+find_package(Boost 1.53.0 REQUIRED)
 
 message(STATUS "Boost include directories: "
         ${Boost_INCLUDE_DIRS})
@@ -169,7 +169,28 @@ foreach (dart_variant ${DART_IMPLEMENTATIONS_LIST})
 
   # Library Installation
   install(TARGETS ${DYLOCXX_LIBRARY}
-          DESTINATION lib)
+          DESTINATION lib
+          EXPORT "${DYLOCXX_LIBRARY}-targets")
+
+  if(${CMAKE_VERSION} VERSION_GREATER 3.0.0 )
+    include(CMakePackageConfigHelpers)
+    target_include_directories("${DYLOCXX_LIBRARY}" INTERFACE
+                               $<INSTALL_INTERFACE:include>)
+
+    configure_package_config_file(
+      "dylocxx-config.cmake.in"
+      "${DYLOCXX_LIBRARY}-config.cmake"
+      INSTALL_DESTINATION "${CMAKE_INSTALL_PREFIX}/cmake"
+      PATH_VARS CMAKE_INSTALL_PREFIX)
+
+    # Exports
+    install(EXPORT "${DYLOCXX_LIBRARY}-targets"
+            DESTINATION share/cmake)
+
+  	# install custom config
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${DYLOCXXLIBRARY}-config.cmake"
+            DESTINATION share/cmake)
+  endif()
 
 endforeach() # dart_variant
 
@@ -181,15 +202,10 @@ add_subdirectory(test)
 # ---------------------------------------------------------------------------
 ## Installation
 
-# Library
-install(TARGETS ${DYLOCXX_LIBRARY}
-        DESTINATION lib)
-
 # Headers
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/dylocxx
         DESTINATION include FILES_MATCHING PATTERN "*.h")
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/dylocxx.h
         DESTINATION include)
-
 

@@ -418,7 +418,7 @@ class topology {
       DYLOC_LOG_TRACE("dylocxx::topology.remove_domain",
                       "remove:", tag);
       _graph[_domain_vertices[tag]].state = vertex_state::hidden;
-      // boost::clear_vertex(_domain_vertices[tag], _graph);
+      boost::clear_vertex(_domain_vertices[tag], _graph);
       // boost::remove_vertex(_domain_vertices[tag], _graph);
       // _domains.erase(_domains.find(tag));
       // _domain_vertices.erase(_domain_vertices.find(tag));

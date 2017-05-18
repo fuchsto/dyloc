@@ -1,0 +1,18 @@
+# - Config file for the dyloc package
+# - provides compiler flags of dyloc installation
+# - as well as all transitive dependencies
+#
+# - Automatically locates DYLOC_BASE
+
+@PACKAGE_INIT@
+
+set(DYLOCXX_VERSION_MAJOR "@DYLOC_VERSION_MAJOR@")
+set(DYLOCXX_VERSION_MINOR "@DYLOC_VERSION_MINOR@")
+set(DYLOCXX_VERSION_PATCH "@DYLOC_VERSION_PATCH@")
+
+set(DYLOCXX_LIBRARY "@DYLOCXX_LIBRARY@")
+set(DYLOC_CXX_FLAGS "@VARIANT_ADDITIONAL_COMPILE_FLAGS@ @CMAKE_CXX_FLAGS_RELEASE@")
+set(DYLOCXX_INSTALL_PREFIX "@CMAKE_INSTALL_PREFIX@")
+
+include("${DYLOCXX_INSTALL_PREFIX}/share/cmake/${DYLOCXX_LIBRARY}-targets.cmake")
+

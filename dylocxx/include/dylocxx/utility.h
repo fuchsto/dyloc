@@ -49,7 +49,7 @@ std::ostream & operator<<(
   std::ostringstream ss;
   ss << " { ";
   for (auto it = std::begin(range); it != std::end(range); ++it) {
-    ss << static_cast<const value_t>(*it) << " ";
+    ss << static_cast<value_t>(*it) << " ";
   }
   ss << "}";
   return operator<<(os, ss.str());
@@ -70,7 +70,7 @@ std::ostream & operator<<(
   std::ostringstream ss;
   ss << " { ";
   for (auto it = std::begin(rng); it != std::end(rng); ++it) {
-    ss << static_cast<const value_t>(*it) << " ";
+    ss << static_cast<value_t>(*it) << " ";
   }
   ss << "}";
   return operator<<(os, ss.str());
