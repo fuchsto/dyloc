@@ -1,4 +1,8 @@
 
+
+#include <algorithm>
+#include <memory>
+
 #include "topology_test.h"
 #include "test_globals.h"
 
@@ -12,8 +16,6 @@
 
 #include <boost/graph/graph_utility.hpp>
 #include <boost/graph/depth_first_search.hpp>
-
-#include <algorithm>
 
 
 namespace dyloc {

@@ -132,6 +132,7 @@ include_directories(
   ${DYLOC_COMMON_INCLUDE_DIRS}
   ${DART_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
+  ${ADDITIONAL_INCLUDES}
 )
 
 foreach (dart_variant ${DART_IMPLEMENTATIONS_LIST})
