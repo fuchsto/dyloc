@@ -102,13 +102,12 @@ set(
   DART_IMPLEMENTATIONS
   "mpi" CACHE STRING
   "Comma-separated list of DASH runtime implementations to use.
-   Default is 'mpi'"
-)
+   Default is 'mpi'")
+
 string(
   REPLACE "," ";"
   DART_IMPLEMENTATIONS_LIST
-  ${DART_IMPLEMENTATIONS}
-)
+  ${DART_IMPLEMENTATIONS})
 
 
 # ------------------------------------------------------------------------
