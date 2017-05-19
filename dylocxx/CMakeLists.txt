@@ -189,7 +189,7 @@ foreach (dart_variant ${DART_IMPLEMENTATIONS_LIST})
             DESTINATION share/cmake)
 
   	# install custom config
-    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${DYLOCXXLIBRARY}-config.cmake"
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${DYLOCXX_LIBRARY}-config.cmake"
             DESTINATION share/cmake)
   endif()
 
