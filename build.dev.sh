@@ -19,6 +19,8 @@ rm -Rf $BUILD_DIR/*
         \
         -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
         \
+        -DBUILD_TESTS=ON \
+        \
         -DENABLE_LOGGING=ON \
         -DENABLE_PAPI=OFF \
         \

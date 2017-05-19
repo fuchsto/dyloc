@@ -13,6 +13,8 @@ set(ENABLE_LOGGING    ${ENABLE_LOGGING}
     PARENT_SCOPE)
 set(ENABLE_ASSERTIONS ${ENABLE_ASSERTIONS}
     PARENT_SCOPE)
+set(BUILD_TESTS       ${BUILD_TESTS}
+    PARENT_SCOPE)
 
 # ---------------------------------------------------------------------------
 # Dependencies
@@ -198,7 +200,9 @@ endforeach() # dart_variant
 # ---------------------------------------------------------------------------
 # Test Build Target
 
-add_subdirectory(test)
+if (BUILD_TESTS)
+  add_subdirectory(test)
+endif()
 
 # ---------------------------------------------------------------------------
 ## Installation

@@ -29,6 +29,8 @@ endif(POLICY CMP0016)
 
 
 ## Build options
+option(BUILD_TESTS
+       "Whether to build tests" on)
 option(ENABLE_LOGGING
        "Specify whether logging should be enabled" off)
 option(ENABLE_ASSERTIONS
