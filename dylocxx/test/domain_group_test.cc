@@ -133,6 +133,10 @@ TEST_F(DomainGroupTest, GroupNUMALeaders) {
   // Tags of locality domains in NUMA scope:
   auto numa_domain_tags = topo.scope_domain_tags(
                             DYLOC_LOCALITY_SCOPE_NUMA);
+  if (numa_domain_tags.empty()) {
+    numa_domain_tags = topo.scope_domain_tags(
+                         DYLOC_LOCALITY_SCOPE_PACKAGE);
+  }
 
   // Select first unit in NUMA domain as leader:
   std::vector<dart_global_unit_t> leader_unit_ids;
