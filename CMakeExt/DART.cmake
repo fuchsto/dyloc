@@ -14,6 +14,9 @@ if (NOT DART_FOUND)
 
 include(${CMAKE_SOURCE_DIR}/CMakeExt/MPI.cmake)
 
+if (NOT DART_PREFIX AND NOT ${DART_BASE} STREQUAL "")
+  set(DART_PREFIX ${DART_BASE})
+endif()
 
 if (NOT DART_PREFIX AND NOT $ENV{DART_BASE} STREQUAL "")
   set(DART_PREFIX $ENV{DART_BASE})
@@ -42,11 +45,13 @@ find_library(
   HINTS ${DART_PREFIX}/lib
 )
 
-find_path(
-  DART_INCLUDE_DIRS
-  NAMES dash/dart/if/dart.h
-  HINTS ${DART_PREFIX}/include
-)
+if (NOT DART_INCLUDE_DIRS)
+  find_path(
+    DART_INCLUDE_DIRS
+    NAMES dash/dart/if/dart.h
+    HINTS ${DART_PREFIX}/include
+  )
+endif()
 
 set  (DART_LIBRARIES "")
 list (APPEND DART_LIBRARIES    ${DART_BASE_LIBRARY})

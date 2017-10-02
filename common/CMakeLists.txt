@@ -136,7 +136,8 @@ endforeach() # dart_variant
 
 # Library
 install(TARGETS ${DYLOC_COMMON_LIBRARY}
-        DESTINATION lib)
+        DESTINATION lib
+        EXPORT "${DYLOC_COMMON_LIBRARY}-config")
 
 # Headers
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/dyloc
@@ -145,3 +146,6 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/dyloc
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/dyloc/dyloc_common.h
         DESTINATION include)
 
+# Export dependencies
+install(EXPORT "${DYLOC_COMMON_LIBRARY}-config"
+        DESTINATION share/cmake)

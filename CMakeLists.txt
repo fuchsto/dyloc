@@ -29,6 +29,8 @@ endif(POLICY CMP0016)
 
 
 ## Build options
+option(BUILD_TESTS
+       "Whether to build tests" on)
 option(ENABLE_LOGGING
        "Specify whether logging should be enabled" off)
 option(ENABLE_ASSERTIONS
@@ -81,9 +83,7 @@ set(CMAKE_RULE_MESSAGES    ON)
 set(CMAKE_COLOR_MAKEFILE   ON)
 
 ## Install path
-if (INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX ${INSTALL_PREFIX})
-else()
+if (NOT CMAKE_INSTALL_PREFIX)
   set(CMAKE_INSTALL_PREFIX "./install/")
 endif()
 
@@ -104,13 +104,12 @@ set(
   DART_IMPLEMENTATIONS
   "mpi" CACHE STRING
   "Comma-separated list of DASH runtime implementations to use.
-   Default is 'mpi'"
-)
+   Default is 'mpi'")
+
 string(
   REPLACE "," ";"
   DART_IMPLEMENTATIONS_LIST
-  ${DART_IMPLEMENTATIONS}
-)
+  ${DART_IMPLEMENTATIONS})
 
 
 # ------------------------------------------------------------------------

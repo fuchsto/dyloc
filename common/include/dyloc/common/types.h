@@ -70,7 +70,7 @@ dyloc_locality_scope_t;
 #define DYLOC_LOCALITY_DOMAIN_TAG_MAX_SIZE ((int)(32))
 
 /** Maximum number of domain scopes in \ref dyloc_hwinfo_t */
-#define DYLOC_LOCALITY_MAX_DOMAIN_SCOPES   ((int)(12))
+#define DYLOC_LOCALITY_MAX_DOMAIN_SCOPES   ((int)(16))
 
 /** Maximum size of a domain tag string in \ref dyloc_hwinfo_t */
 #define DYLOC_LOCALITY_UNIT_MAX_CPUS       ((int)(64))
@@ -90,13 +90,17 @@ typedef struct {
 dyloc_locality_scope_pos_t;
 
 /**
- * Hardware locality information for a single locality domain.
+ * Invariant hardware locality capabilities for a single locality domain.
+ *
+ * The values of these properties refer to physical traits of the system
+ * architecture and are not adjusted for a logical context such as topology
+ * graph structure or unit placements.
  *
  * Note that \c dyloc_locality_domain_t must have static size as it is
  * used for an all-to-all exchange of locality data across all units
  * using \c dyloc_allgather.
  *
- * \ingroup DartTypes
+ * \ingroup DylocTypes
  */
 typedef struct
 {
@@ -166,19 +170,39 @@ dyloc_module_location_t;
 /**
  * A domain is a group of processing entities such as cores in a specific
  * NUMA domain or a Intel MIC entity.
- * Domains are organized in a hierarchy.
- * In this, a domain may consist of heterogenous child domains.
- * Processing entities in domains on the lowest locality level are
- * homogenous.
  *
- * Domains represent the actual hardware topology but also can represent
- * grouping from user-defined team specifications.
+ * The domain data structure itself realizes a tree that represents a
+ * well-defined containment hierarchy.
+ * In this, a domain may consist of heterogenous child domains.
+ * Processing entities in domains below scope `MODULE` are homogenous.
+ *
+ * Domains can be organized in an arbitrary logical structure based on an
+ * external graph.
  *
  */
 struct dyloc_locality_domain_s
 {
-    /** Hostname of the domain's node or 0 if unspecified. */
+    /**
+     * Hostname of the domain's node or 0 if unspecified.
+     * Invariant property.
+     */
     char host[DYLOC_LOCALITY_HOST_MAX_SIZE];
+
+    /**
+     * Node (machine) index of the domain or -1 if domain contains
+     * multiple compute nodes.
+     * Invariant property.
+     */
+    int                               node_id;
+
+    /**
+     * Locality scope of the domain.
+     * Invariant property.
+     */
+    dyloc_locality_scope_t            scope;
+
+
+
 
     /**
      * Hierarchical domain identifier, represented as dot-separated list
@@ -190,13 +214,12 @@ struct dyloc_locality_domain_s
 
     int                               num_aliases;
 
-    /** Locality scope of the domain. */
-    dyloc_locality_scope_t            scope;
     /** Level in the domain locality hierarchy. */
     int                               level;
 
     /** The domain's global index within its scope. */
     int                               global_index;
+
     /** The domain's index within its parent domain. */
     int                               relative_index;
 
@@ -222,9 +245,6 @@ struct dyloc_locality_domain_s
 
     /* The number of compute nodes in the domain. */
     int                               num_nodes;
-    /* Node (machine) index of the domain or -1 if domain contains
-     * multiple compute nodes. */
-    int                               node_id;
 
     /* Number of cores in the domain. Cores may be heterogeneous unless
      * `is_symmetric` is different from 0. */
@@ -248,7 +268,7 @@ typedef struct dyloc_locality_domain_s
  * used for an all-to-all exchange of locality data across all units
  * using \c dyloc_allgather.
  *
- * \ingroup DartTypes
+ * \ingroup DylocTypes
  */
 typedef struct {
     /** Unit ID relative to team. */
@@ -259,8 +279,6 @@ typedef struct {
 
     /** Hardware specification of the unit's affinity. */
     dyloc_hwinfo_t            hwinfo;
-
-//  char                      domain_tag[DYLOC_LOCALITY_DOMAIN_TAG_MAX_SIZE];
 }
 dyloc_unit_locality_t;
 
