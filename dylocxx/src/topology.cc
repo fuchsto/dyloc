@@ -242,10 +242,12 @@ void topology::build_hierarchy(
         root_domain,
         DYLOC_LOCALITY_SCOPE_NODE,
         node_index);
+    ++node_index;
+
     node_domain.unit_ids = host_topo.unit_ids(node_hostname);
     node_domain.host     = node_hostname;
 
-    DYLOC_LOG_DEBUG("dylocxx::topology.build_node_level",
+    DYLOC_LOG_DEBUG("dylocxx::topology.build_hierarchy",
                     "add domain:", node_domain);
 
     _domains.insert(
@@ -268,8 +270,6 @@ void topology::build_hierarchy(
       host_topo,
       _domains[node_domain.domain_tag],
       node_domain_vertex);
-
-    ++node_index;
   }
 }
 
@@ -291,15 +291,18 @@ void topology::build_node_level(
     node_domain_vertex,
     0);
 
-  int module_index = 0;
   for (auto & node_module : node_modules) {
-    const auto & module_hostname = node_module.get().host;
+    const auto & module_hostname   = node_module.get().host;
+    auto         node_domain_arity = out_degree(node_domain_vertex, _graph);
     DYLOC_LOG_DEBUG("dylocxx::topology.build_node_level",
-                    "module host name:", module_hostname);
+                    "node domain arity:", node_domain_arity,
+                    "module host name:",  module_hostname);
+
     locality_domain module_domain(
         node_domain,
         DYLOC_LOCALITY_SCOPE_MODULE,
-        module_index);
+        node_domain_arity);
+
     module_domain.unit_ids = host_topo.unit_ids(module_hostname);
     module_domain.host     = module_hostname;
 
@@ -327,8 +330,6 @@ void topology::build_node_level(
       _domains[module_domain.domain_tag],
       module_domain_vertex,
       0);
-
-    ++module_index;
   }
 }
 

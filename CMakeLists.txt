@@ -54,6 +54,7 @@ include(${CMAKE_SOURCE_DIR}/CMakeExt/DART.cmake)
 include(${CMAKE_SOURCE_DIR}/CMakeExt/MPI.cmake)
 include(${CMAKE_SOURCE_DIR}/CMakeExt/PAPI.cmake)
 include(${CMAKE_SOURCE_DIR}/CMakeExt/NUMA.cmake)
+include(${CMAKE_SOURCE_DIR}/CMakeExt/Environment.cmake)
 
 # ------------------------------------------------------------------------
 # Version

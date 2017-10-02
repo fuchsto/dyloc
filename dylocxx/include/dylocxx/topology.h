@@ -15,6 +15,7 @@
 
 #include <dash/dart/if/dart.h>
 
+#include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/undirected_graph.hpp>
 #include <boost/graph/depth_first_search.hpp>
 #include <boost/graph/connected_components.hpp>
@@ -271,7 +272,7 @@ class topology {
     std::string domain_prefix = dyloc::htag::ancestor(domain_tag_first,
                                                       domain_tag_last);
     if (domain_prefix.back() == '.') {
-      domain_prefix.pop_back();
+      domain_prefix.resize(domain_prefix.size() - 1);
     }
     return _domains.at(domain_prefix);
   }

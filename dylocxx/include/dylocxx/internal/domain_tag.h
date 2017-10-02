@@ -61,7 +61,7 @@ class htag {
     }
     auto common_prefix = dyloc::longest_common_prefix(first, last);
     if (common_prefix.back() == '.') {
-      common_prefix.pop_back();
+      common_prefix.resize(common_prefix.size() - 1);
     }
     return common_prefix;
   }
