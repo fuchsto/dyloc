@@ -327,6 +327,7 @@ class topology {
       _graph[*sv].state = vertex_state::hidden;
       exclude_domain(_graph[*sv].domain_tag);
     }
+    _domains.erase(_domains.find(tag));
   }
 
   template <class Iterator, class Sentinel>
@@ -363,8 +364,8 @@ class topology {
            return _graph[_domain_vertices[dom.domain_tag]].state !=
                     vertex_state::selected;
          });
-    update_domain_attributes(".");
-    update_domain_capabilities(".");
+  //update_domain_attributes(".");
+    update_domain_capacities(".");
   }
 
   template <class UnaryPredicate>
@@ -421,7 +422,7 @@ class topology {
       _graph[_domain_vertices[tag]].state = vertex_state::hidden;
       boost::clear_vertex(_domain_vertices[tag], _graph);
       // boost::remove_vertex(_domain_vertices[tag], _graph);
-      // _domains.erase(_domains.find(tag));
+      _domains.erase(_domains.find(tag));
       // _domain_vertices.erase(_domain_vertices.find(tag));
     }
   }
@@ -463,7 +464,7 @@ class topology {
           const std::string & tag,
           const std::string & new_tag);
 
-  void update_domain_capabilities(const std::string & tag);
+  void update_domain_capacities(const std::string & tag);
   void update_domain_attributes(const std::string & tag);
 
   int  subdomain_distance(

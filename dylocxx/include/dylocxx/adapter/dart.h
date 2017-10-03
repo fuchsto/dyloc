@@ -49,4 +49,29 @@ static inline size_t num_units(dart_team_t t) {
 
 } // namespace dyloc
 
+
+static inline bool operator==(
+  const dart_global_unit_t a,
+  const dart_global_unit_t b) {
+  return a.id == b.id;
+}
+
+static inline bool operator!=(
+  const dart_global_unit_t a,
+  const dart_global_unit_t b) {
+  return not(a == b);
+}
+
+static inline bool operator==(
+  const dart_team_unit_t a,
+  const dart_team_unit_t b) {
+  return a.id == b.id;
+}
+
+static inline bool operator!=(
+  const dart_team_unit_t a,
+  const dart_team_unit_t b) {
+  return not(a == b);
+}
+
 #endif // DYLOCXX__ADAPTER__DART_H__INCLUDED

@@ -43,16 +43,18 @@ public:
     }
     dyloc::topology::vertex_state  ldom_st  = g[u].state;
     const dyloc::locality_domain & ldom     = ldom_it->second;
-    std::cout << std::left << std::setw(7)  << u          << " "
-              << std::left << std::setw(3)  << ldom_st    << " "
-              << std::left << std::setw(7)  << ldom.scope << " "
-              << std::left << std::setw(4)  << ldom.level << " "
-              << std::left << std::setw(20) << ldom_tag   << " | "
-              << "units:"
-              << dyloc::make_range(
-                  ldom.unit_ids.begin(),
-                  ldom.unit_ids.end())
-              << std::endl;
+    std::cout << std::left  << std::setw(7)  << u              << " "
+              << std::left  << std::setw(3)  << ldom_st        << " "
+              << std::left  << std::setw(7)  << ldom.scope     << " "
+              << std::left  << std::setw(4)  << ldom.level     << " [g:"
+              << std::right << std::setw(2)  << ldom.g_index   << "]"
+              << std::left  << std::setw(20) << ldom_tag       << " | cores:"
+              << std::right << std::setw(3)  << ldom.num_cores << " "
+                                             << "units:"
+                                             << dyloc::make_range(
+                                                 ldom.unit_ids.begin(),
+                                                 ldom.unit_ids.end())
+                                             << std::endl;
   }
 };
 

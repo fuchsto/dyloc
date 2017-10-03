@@ -27,7 +27,8 @@ class locality_domain {
   int                             r_index   = -1;
   dart_team_t                     team      = DART_TEAM_NULL;
   std::vector<dart_global_unit_t> unit_ids;
-  std::vector<int>                core_ids;
+//std::vector<int>                core_ids;
+  int                             num_cores = -1;
 
   template <class LocalityDomain>
   class subdomain_iterator

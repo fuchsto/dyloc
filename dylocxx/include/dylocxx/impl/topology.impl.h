@@ -151,7 +151,7 @@ locality_domain & topology::group_domains(
     }
 
     update_domain_attributes(group_domain.domain_tag);
-    update_domain_capabilities(group_domain_parent.domain_tag);
+    update_domain_capacities(group_domain_parent.domain_tag);
 
     return _domains[group_domain.domain_tag];
   }
@@ -269,7 +269,7 @@ locality_domain & topology::group_subdomains(
   }
 
   update_domain_attributes(group_domain.domain_tag);
-  update_domain_capabilities(domain.domain_tag);
+  update_domain_capacities(domain.domain_tag);
 
   return _domains[group_domain.domain_tag];
 }

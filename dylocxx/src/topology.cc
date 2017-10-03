@@ -1,6 +1,7 @@
 
 #include <dylocxx/topology.h>
 #include <dylocxx/utility.h>
+#include <dylocxx/hwinfo.h>
 
 #include <dylocxx/internal/logging.h>
 #include <dylocxx/internal/assert.h>
@@ -95,14 +96,17 @@ void topology::update_domain_attributes(const std::string & parent_tag) {
       auto sub_domain_vx = target(parent_domain_edge, _graph);
       const auto & sub_domain_old_tag = _graph[sub_domain_vx].domain_tag;
       std::ostringstream ss;
-      ss << parent_tag << "." << rel_index;
+      if (parent_tag != ".") {
+        ss << parent_tag;
+      }
+      ss << "." << rel_index;
       rename_domain(sub_domain_old_tag, ss.str());
       update_domain_attributes(ss.str());
       ++rel_index;
     });
 }
 
-void topology::update_domain_capabilities(const std::string & domain_tag) {
+void topology::update_domain_capacities(const std::string & domain_tag) {
   // Accumulate domain capacities
   auto parent_vx_it = _domain_vertices.find(domain_tag);
   if (parent_vx_it == _domain_vertices.end()) {
@@ -114,7 +118,8 @@ void topology::update_domain_capabilities(const std::string & domain_tag) {
   auto & domain = _domains[domain_tag];
   if (domain.scope != DYLOC_LOCALITY_SCOPE_UNIT) {
     domain.unit_ids.clear();
-    domain.core_ids.clear();
+//  domain.core_ids.clear();
+    domain.num_cores = 0;
     auto & domain_vx    = parent_vx_it->second;
     auto   domain_edges = out_edges(domain_vx, _graph);
     std::for_each(
@@ -125,20 +130,21 @@ void topology::update_domain_capabilities(const std::string & domain_tag) {
         const auto & sub_domain_tag = _graph[sub_domain_vx].domain_tag;
         auto & sub_domain           = _domains[sub_domain_tag];
         // depth-first recurse:
-        update_domain_capabilities(sub_domain_tag);
+        update_domain_capacities(sub_domain_tag);
         // accumulate:
         domain.unit_ids.insert(domain.unit_ids.begin(),
                                sub_domain.unit_ids.begin(),
                                sub_domain.unit_ids.end());
-        domain.core_ids.insert(domain.core_ids.begin(),
-                               sub_domain.core_ids.begin(),
-                               sub_domain.core_ids.end());
+        domain.num_cores += sub_domain.num_cores;
+//      domain.core_ids.insert(domain.core_ids.begin(),
+//                             sub_domain.core_ids.begin(),
+//                             sub_domain.core_ids.end());
       });
     std::sort(domain.unit_ids.begin(),
               domain.unit_ids.end(),
               [](dart_global_unit_t a,
                  dart_global_unit_t b) { return a.id < b.id; });
-    std::sort(domain.core_ids.begin(), domain.core_ids.end());
+//  std::sort(domain.core_ids.begin(), domain.core_ids.end());
   }
 }
 
@@ -244,8 +250,10 @@ void topology::build_hierarchy(
         node_index);
     ++node_index;
 
-    node_domain.unit_ids = host_topo.unit_ids(node_hostname);
-    node_domain.host     = node_hostname;
+    node_domain.host      = node_hostname;
+    node_domain.unit_ids  = host_topo.unit_ids(node_hostname);
+    node_domain.num_cores = host_topo.nodes().at(node_domain.host)
+                                             .get().num_cores;
 
     DYLOC_LOG_DEBUG("dylocxx::topology.build_hierarchy",
                     "add domain:", node_domain);
@@ -281,9 +289,11 @@ void topology::build_node_level(
   DYLOC_LOG_DEBUG("dylocxx::topology.build_node_level",
                   "node:", node_domain.host);
   // units located at node:
-  node_domain.unit_ids = host_topo.unit_ids(node_domain.host);
+  node_domain.unit_ids  = host_topo.unit_ids(node_domain.host);
+  node_domain.num_cores = host_topo.nodes().at(node_domain.host)
+                                           .get().num_cores;
   // modules located at node:
-  auto & node_modules  = host_topo.node_modules(node_domain.host);
+  auto & node_modules   = host_topo.node_modules(node_domain.host);
 
   build_module_level(
     host_topo,
@@ -303,8 +313,9 @@ void topology::build_node_level(
         DYLOC_LOCALITY_SCOPE_MODULE,
         node_domain_arity);
 
-    module_domain.unit_ids = host_topo.unit_ids(module_hostname);
-    module_domain.host     = module_hostname;
+    module_domain.unit_ids  = host_topo.unit_ids(module_hostname);
+    module_domain.host      = module_hostname;
+    module_domain.num_cores = node_module.get().num_cores;
 
     DYLOC_LOG_DEBUG("dylocxx::topology.build_node_level",
                     "add domain:", module_domain);
@@ -507,6 +518,8 @@ void topology::build_module_level(
         unit_domain.g_index = unit_gid.id;
 
         unit_domain.unit_ids.push_back(unit_gid);
+        unit_domain.num_cores = module_subdomain.num_cores /
+                                module_subdomain.unit_ids.size();
 
         // Update unit mapping, set domain tag of unit locality:
         // auto unit_lid = dyloc::g2l(module_subdomain.team, unit_gid);
