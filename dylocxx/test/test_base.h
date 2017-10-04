@@ -40,14 +40,22 @@ public:
     if (ldom_it == _domains.end()) {
       DYLOC_LOG_ERROR("locality_domain_dfs_output_visitor.discover_vertex",
                       "domain not found:", ldom_tag);
+      return;
     }
-    dyloc::topology::vertex_state  ldom_st  = g[u].state;
+    std::string ldom_st = ( g[u].state == dyloc::topology::vertex_state::hidden
+                            ? "hidden"
+                            : g[u].state == dyloc::topology::vertex_state::selected
+                            ? "selected"
+                            : g[u].state == dyloc::topology::vertex_state::moved
+                            ? "moved"
+                            : "" );
     const dyloc::locality_domain & ldom     = ldom_it->second;
-    std::cout << std::left  << std::setw(7)  << u              << " "
-              << std::left  << std::setw(3)  << ldom_st        << " "
+    std::cout << std::left  << std::setw(4)  << u              << " "
+              << std::left  << std::setw(12) << ldom.host      << " "
+              << std::left  << std::setw(9)  << ldom_st        << " "
               << std::left  << std::setw(7)  << ldom.scope     << " "
-              << std::left  << std::setw(4)  << ldom.level     << " [g:"
-              << std::right << std::setw(2)  << ldom.g_index   << "]"
+              << std::left  << std::setw(4)  << ldom.level     << " g:"
+              << std::right << std::setw(2)  << ldom.g_index   << " |"
               << std::left  << std::setw(20) << ldom_tag       << " | cores:"
               << std::right << std::setw(3)  << ldom.num_cores << " "
                                              << "units:"

@@ -272,9 +272,12 @@ class topology {
     // specified domain tag list:
     std::string domain_prefix = dyloc::htag::ancestor(domain_tag_first,
                                                       domain_tag_last);
-    if (domain_prefix.back() == '.') {
+    if (domain_prefix.size() > 1 && domain_prefix.back() == '.') {
       domain_prefix.resize(domain_prefix.size() - 1);
+    } else if (domain_prefix.size() == 0) {
+      domain_prefix = ".";
     }
+    DYLOC_LOG_TRACE_VAR("dylocxx::topology.ancestor", domain_prefix);
     return _domains.at(domain_prefix);
   }
 
@@ -365,7 +368,15 @@ class topology {
            return _graph[_domain_vertices[dom.domain_tag]].state !=
                     vertex_state::selected;
          });
-  //update_domain_attributes(".");
+#if 1 || TMP_DEBUGGING
+    update_domain_attributes(".");
+#else
+    for_each_descendant(
+      domain_tag,
+      [&](const locality_domain & desc_dom) {
+	    update_domain_attributes(desc_dom.domain_tag);
+         });
+#endif
     update_domain_capacities(".");
   }
 
