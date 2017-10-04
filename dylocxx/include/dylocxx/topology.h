@@ -43,6 +43,7 @@ class topology {
   enum class edge_type : int {
     unspecified  = 0,
     contains     = 100,
+    adjacent,
     sibling,
     alias
   };

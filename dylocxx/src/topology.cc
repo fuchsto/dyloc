@@ -194,7 +194,6 @@ void topology::move_domain(
 std::vector<std::string>
 topology::scope_domain_tags(
   dyloc_locality_scope_t scope) const {
-  std::vector<std::string> scope_dom_tags;
   std::vector<graph_vertex_t> vx_matches;
   const auto vx_range = vertices(_graph);
   std::for_each(
@@ -208,12 +207,14 @@ topology::scope_domain_tags(
 
   DYLOC_LOG_DEBUG("dylocxx::topology.scope_domain_tags",
                   "num. domains matched:", vx_matches.size());
-  std::for_each(
+  std::vector<std::string> scope_dom_tags(vx_matches.size());
+  std::transform(
     vx_matches.begin(),
     vx_matches.end(),
+    scope_dom_tags.begin(),
     [&](const graph_vertex_t & vx) {
-          scope_dom_tags.push_back(_graph[vx].domain_tag);
-        });
+      return _graph[vx].domain_tag;
+    });
   return scope_dom_tags;
 }
 
