@@ -44,12 +44,18 @@ TEST_F(DomainFilterTest, SelectLeaderDomains) {
   dyloc::topology topo_cp(topo_all);
   DYLOC_LOG_DEBUG("DomainFilterTest.SelectLeaderDomains", "< clone topology");
 
+  dart_barrier(DART_TEAM_ALL);
+
   locality_domain_dfs_output_visitor<typename topology::domain_map>
     vis_cp(topo_cp.domains());
 
   // Tags of locality domains in NUMA scope:
   auto numa_domain_tags = topo_cp.scope_domain_tags(
                             DYLOC_LOCALITY_SCOPE_NUMA);
+  if (numa_domain_tags.empty()) {
+    numa_domain_tags = topo_cp.scope_domain_tags(
+                          DYLOC_LOCALITY_SCOPE_PACKAGE);
+  }
 
   // Select first unit in NUMA domain as leader:
   std::vector<dart_global_unit_t> leader_unit_ids;
@@ -72,13 +78,15 @@ TEST_F(DomainFilterTest, SelectLeaderDomains) {
   auto & leader_group_domain = topo_cp.group_domains(
                                  leader_unit_domain_tags.begin(),
                                  leader_unit_domain_tags.end());
+
   if (dyloc::myid().id == 0) {
     std::cout << "\n\n" << "Cloned topology after grouping:" << std::endl;
     topo_cp.depth_first_search(vis_cp);
   }
+  dart_barrier(DART_TEAM_ALL);
+
   topo_cp.select_domain(leader_group_domain.domain_tag);
 
-  dart_barrier(DART_TEAM_ALL);
 
   if (dyloc::myid().id == 0) {
     std::cout << "\n\n" << "Original topology after select:" << std::endl;

@@ -16,7 +16,10 @@ namespace dyloc {
 template <class Iterator, class Sentinel>
 locality_domain & topology::group_domains(
        const Iterator & group_domain_tag_first,
-       const Sentinel & group_domain_tag_last) {
+       const Sentinel & group_domain_tag_last)
+{
+  DYLOC_LOG_DEBUG("dylocxx::topology.group_domains", "(first,last)");
+
   if (std::distance(group_domain_tag_first, group_domain_tag_last) == 0) {
     DYLOC_THROW(
         dyloc::exception::invalid_argument,
@@ -26,13 +29,16 @@ locality_domain & topology::group_domains(
   // ancestor:
   auto & group_domain_parent       = ancestor(group_domain_tag_first,
                                               group_domain_tag_last);
+
+  DYLOC_LOG_DEBUG("dylocxx::topology.group_domains",
+                  "ancestor:", group_domain_parent);
+
   auto   group_domain_parent_vx    = _domain_vertices[
                                        group_domain_parent.domain_tag];
   auto   group_domain_parent_arity = out_degree(
                                        group_domain_parent_vx, _graph);
 
   DYLOC_LOG_DEBUG("dylocxx::topology.group_domains",
-                  "group parent domain:", group_domain_parent,
                   "arity:", group_domain_parent_arity);
 
   // Find parents of specified subdomains that are an immediate child node
