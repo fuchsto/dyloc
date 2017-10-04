@@ -62,7 +62,11 @@ host_topology::host_topology(const unit_mapping & unit_map) {
     const auto  & host_unit_gids  = host_units_mapping.second;
     dyloc_host_domain_t host_dom;
 
-    // host_dom.num_units = host_unit_gids.size();
+    if (host_unit_gids.empty()) {
+      DYLOC_LOG_WARN("dylocxx::host_topology.()",
+                     "no units mapped to", host_name);
+      continue;
+    }
 
     // host domain data:
     host_dom.level           = 0;
@@ -83,17 +87,25 @@ host_topology::host_topology(const unit_mapping & unit_map) {
       DYLOC_ASSERT_RETURNS(
         dart_team_unit_g2l(team, host_unit_gid, &luid),
         DART_OK);
-      const auto & ul   = unit_map[luid];
-      int unit_numa_id  = ul.data()->hwinfo.numa_id;
-      int unit_num_numa = ul.data()->hwinfo.num_numa;
+      const auto & ul    = unit_map[luid];
+      int unit_numa_id   = ul.data()->hwinfo.numa_id;
+      int unit_num_numa  = ul.data()->hwinfo.num_numa;
 
-      if (unit_num_numa == 0) {
+      DYLOC_LOG_TRACE_VAR("dylocxx::host_topology.()", ul.data()->hwinfo);
+
+      if (unit_num_numa <= 0) {
         unit_numa_id = 0;
+      }
+
+      // number of cores visible to first unit mapped to host:
+      if (host_dom.num_cores <= 0) {
+        host_dom.num_cores = ul.data()->hwinfo.num_cores;
       }
 
       DYLOC_LOG_TRACE("dylocxx::host_topology.()",
                       "mapping unit", luid.id,
                       "to host",      host_name,
+                      "num. cores:",  host_dom.num_cores,
                       "NUMA id:",     unit_numa_id);
       if (unit_numa_id >= 0) {
         host_numa_ids.insert(unit_numa_id);

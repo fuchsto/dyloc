@@ -368,7 +368,7 @@ class topology {
            return _graph[_domain_vertices[dom.domain_tag]].state !=
                     vertex_state::selected;
          });
-#if 1 || TMP_DEBUGGING
+#if TMP_DEBUGGING
     update_domain_attributes(".");
 #else
     for_each_descendant(

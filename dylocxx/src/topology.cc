@@ -257,7 +257,8 @@ void topology::build_hierarchy(
                                              .get().num_cores;
 
     DYLOC_LOG_DEBUG("dylocxx::topology.build_hierarchy",
-                    "add domain:", node_domain);
+                    "add domain:", node_domain,
+                    "num. cores:", node_domain.num_cores);
 
     _domains.insert(
         std::make_pair(

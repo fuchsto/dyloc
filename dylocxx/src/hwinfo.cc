@@ -298,11 +298,13 @@ void hwinfo::collect() {
 
   hwloc_topology_destroy(topology);
   DYLOC_LOG_TRACE("dylocxx::hwinfo.collect", "hwloc:",
-                  "num_numa:",  _hw.num_numa,
-                  "numa_id:",   _hw.numa_id,
-                  "num_cores:", _hw.num_cores,
-                  "core_id:",   _hw.core_id,
-                  "cpu_id:",    _hw.cpu_id);
+                  "num_numa:",    _hw.num_numa,
+                  "numa_id:",     _hw.numa_id,
+                  "num_cores:",   _hw.num_cores,
+                  "min.threads:", _hw.min_threads,
+                  "max.threads:", _hw.max_threads,
+                  "core_id:",     _hw.core_id,
+                  "cpu_id:",      _hw.cpu_id);
 #endif /* DYLOC_ENABLE_HWLOC */
 
 #ifdef DYLOC_ENABLE_PAPI

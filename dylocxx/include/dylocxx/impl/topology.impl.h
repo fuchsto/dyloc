@@ -126,6 +126,7 @@ locality_domain & topology::group_domains(
                       DYLOC_LOCALITY_SCOPE_GROUP,
                       group_domain_parent_arity);
     group_domain.level = group_domain_parent.level;
+    group_domain.host  = group_domain_parent.host;
 
     DYLOC_LOG_TRACE("dylocxx::topology.group_domains", 
                     "add group domain:", group_domain);
@@ -156,8 +157,9 @@ locality_domain & topology::group_domains(
         group_domain.domain_tag); // e.g. .0.3
     }
 
-    update_domain_attributes(group_domain.domain_tag);
-    update_domain_capacities(group_domain_parent.domain_tag);
+    update_domain_attributes(group_domain_parent.domain_tag);
+    // update_domain_capacities(group_domain_parent.domain_tag);
+    update_domain_capacities(".");
 
     return _domains[group_domain.domain_tag];
   }

@@ -21,6 +21,7 @@ std::ostream & operator<<(
   std::ostringstream ss;
   ss << "locality_domain { "
      << "tag:"    << ld.domain_tag << " "
+     << "host:"   << ld.host       << " "
      << "level:"  << ld.level      << " "
      << "scope:"  << ld.scope      << " "
      << "rindex:" << ld.r_index    << " "
@@ -50,6 +51,7 @@ locality_domain::locality_domain(
   r_index    = child_index;
   g_index    = child_index;
   team       = parent.team;
+  host       = parent.host;
   domain_tag = ss.str();
 }
 
