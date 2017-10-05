@@ -24,6 +24,9 @@ const unit_locality & query_unit_locality(
 topology & team_topology(
   dart_team_t t = DART_TEAM_ALL);
 
+const dyloc::host_topology & team_host_topology(
+  dart_team_t t = DART_TEAM_ALL);
+
 } // namespace dyloc
 
 #endif // DYLOCXX__INIT_H__INCLUDED

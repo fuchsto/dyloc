@@ -40,7 +40,13 @@ class runtime {
     return _unit_mappings.at(DART_TEAM_ALL)[u.id];
   }
 
-  topology & team_topology(
+  const dyloc::host_topology & team_host_topology(
+    dart_team_t t) {
+    DYLOC_LOG_DEBUG("dylocxx::runtime.team_host_topology", "() team:", t);
+    return _host_topologies.at(t);
+  }
+
+  dyloc::topology & team_topology(
     dart_team_t t) {
     return _topologies.at(t);
   }

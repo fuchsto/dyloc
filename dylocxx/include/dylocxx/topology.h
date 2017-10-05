@@ -43,6 +43,7 @@ class topology {
   enum class edge_type : int {
     unspecified  = 0,
     contains     = 100,
+    logical,
     adjacent,
     sibling,
     alias
@@ -374,8 +375,8 @@ class topology {
     for_each_descendant(
       domain_tag,
       [&](const locality_domain & desc_dom) {
-	    update_domain_attributes(desc_dom.domain_tag);
-         });
+        update_domain_attributes(desc_dom.domain_tag);
+      });
 #endif
     update_domain_capacities(".");
   }

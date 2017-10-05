@@ -1,7 +1,10 @@
 #ifndef DYLOCXX__LOCALITY_DOMAIN_H__INCLUDED
 #define DYLOCXX__LOCALITY_DOMAIN_H__INCLUDED
 
+#include <dylocxx/host_topology.h>
+
 #include <dylocxx/internal/iterator.h>
+#include <dylocxx/internal/logging.h>
 
 #include <dyloc/common/types.h>
 
@@ -14,6 +17,8 @@
 
 
 namespace dyloc {
+
+const dyloc::host_topology & team_host_topology(dart_team_t);
 
 class locality_domain {
   typedef locality_domain self_t;
@@ -82,6 +87,11 @@ class locality_domain {
 
   locality_domain       & operator[](int child_rel_index)       noexcept;
   const locality_domain & operator[](int child_rel_index) const noexcept;
+
+  inline const dyloc_hwinfo_t & hwinfo() const {
+    DYLOC_LOG_DEBUG_VAR("dylocxx::locality_domain.hwinfo()", host);
+    return dyloc::team_host_topology(team).module_hwinfo(host);
+  }
 
 };
 

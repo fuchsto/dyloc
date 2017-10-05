@@ -14,7 +14,10 @@
 
 #include <boost/graph/graph_utility.hpp>
 #include <boost/graph/depth_first_search.hpp>
-// #include <boost/graph/graphviz.hpp>
+
+#if DYLOC_ENABLE_GRAPHVIZ
+#include <boost/graph/graphviz.hpp>
+#endif
 
 #include <string>
 #include <iostream>
@@ -51,28 +54,36 @@ public:
         ? "moved"
         : "" );
     const dyloc::locality_domain & ldom     = ldom_it->second;
+    auto  ldom_maxthreads                   = ldom.host.size() > 0 &&
+                                              ldom.team != DART_TEAM_NULL
+                                              ? ldom.hwinfo().max_threads
+                                              : -1;
+
     std::ostringstream ldom_sc_s;
     ldom_sc_s << std::string(ldom.level, ' ')
               << ldom.scope;
+
     std::cout << std::left  << std::setw(4)  << u               << " "
               << std::left  << std::setw(12) << ldom.host       << " "
               << std::left  << std::setw(9)  << ldom_st         << " "
               << std::left  << std::setw(14) << ldom_sc_s.str() << " "
               << std::left  << std::setw(4)  << ldom.level      << " g:"
               << std::right << std::setw(2)  << ldom.g_index    << " |"
-              << std::left  << std::setw(20) << ldom_tag        << " | cores:"
-              << std::right << std::setw(3)  << ldom.num_cores  << " "
-                                             << "units:"
-                                             << dyloc::make_range(
-                                                 ldom.unit_ids.begin(),
-                                                 ldom.unit_ids.end())
-                                             << std::endl;
+              << std::left  << std::setw(20) << ldom_tag        << " |"
+              << " nc:" << std::right << std::setw(3) << ldom.num_cores  
+              << " nt:" << std::right << std::setw(3) << ldom_maxthreads
+              << " "
+              << "units:"
+              << dyloc::make_range(
+                  ldom.unit_ids.begin(),
+                  ldom.unit_ids.end())
+              << std::endl;
   }
 };
 
 template <class Graph>
 void graphviz_out(const Graph & graph, const std::string & filename) {
-#if 0
+#if DYLOC_ENABLE_GRAPHVIZ
   std::ofstream of(filename);
   write_graphviz(of, graph,
                  boost::make_label_writer(

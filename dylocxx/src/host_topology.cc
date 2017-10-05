@@ -99,7 +99,10 @@ host_topology::host_topology(const unit_mapping & unit_map) {
 
       // number of cores visible to first unit mapped to host:
       if (host_dom.num_cores <= 0) {
-        host_dom.num_cores = ul.data()->hwinfo.num_cores;
+        host_dom.num_cores        = ul.data()->hwinfo.num_cores;
+      }
+      if (_module_hwinfo.count(host_name) == 0) {
+        _module_hwinfo[host_name] = ul.data()->hwinfo;
       }
 
       DYLOC_LOG_TRACE("dylocxx::host_topology.()",

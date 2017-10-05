@@ -3,6 +3,8 @@
 
 #include <dylocxx/unit_mapping.h>
 
+#include <dyloc/common/types.h>
+
 #include <unordered_map>
 #include <vector>
 #include <string>
@@ -34,6 +36,10 @@ class host_topology {
           = std::vector<
                 std::reference_wrapper<dyloc_host_domain_t> >;
 
+  using module_hwinfo_t
+          = std::unordered_map<
+              std::string,
+              dyloc_hwinfo_t >;
 
   // mapping <node host name> -> <node domain>
   using node_domain_map_t
@@ -56,6 +62,8 @@ class host_topology {
   host_units_map_t          _host_units;
   // Mapping host name to basic host domain data.
   host_domain_map_t         _host_domains;
+
+  module_hwinfo_t           _module_hwinfo;
 
   node_domain_map_t         _node_domains;
   module_domain_map_t       _module_domains;
@@ -85,6 +93,12 @@ class host_topology {
       const std::string & hostname) const noexcept {
     return _host_units.at(hostname);
   }
+
+  inline const dyloc_hwinfo_t & module_hwinfo(
+      const std::string & module_hostname) const noexcept {
+    return _module_hwinfo.at(module_hostname);
+  }
+
 
  private:
   void collect_topology(

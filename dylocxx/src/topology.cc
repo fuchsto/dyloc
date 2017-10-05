@@ -118,10 +118,10 @@ void topology::update_domain_capacities(const std::string & domain_tag) {
   auto & domain = _domains[domain_tag];
   if (domain.scope != DYLOC_LOCALITY_SCOPE_UNIT) {
     domain.unit_ids.clear();
-//  domain.core_ids.clear();
-    domain.num_cores = 0;
-    auto & domain_vx    = parent_vx_it->second;
-    auto   domain_edges = out_edges(domain_vx, _graph);
+    auto & domain_vx      = parent_vx_it->second;
+    auto   domain_edges   = out_edges(domain_vx, _graph);
+    auto   num_subdomains = std::distance(domain_edges.first,
+                                          domain_edges.second);
     std::for_each(
       domain_edges.first,
       domain_edges.second,
@@ -129,22 +129,18 @@ void topology::update_domain_capacities(const std::string & domain_tag) {
         auto sub_domain_vx          = target(domain_edge, _graph);
         const auto & sub_domain_tag = _graph[sub_domain_vx].domain_tag;
         auto & sub_domain           = _domains[sub_domain_tag];
+        sub_domain.num_cores        = domain.num_cores / num_subdomains;
         // depth-first recurse:
         update_domain_capacities(sub_domain_tag);
         // accumulate:
         domain.unit_ids.insert(domain.unit_ids.begin(),
                                sub_domain.unit_ids.begin(),
                                sub_domain.unit_ids.end());
-        domain.num_cores += sub_domain.num_cores;
-//      domain.core_ids.insert(domain.core_ids.begin(),
-//                             sub_domain.core_ids.begin(),
-//                             sub_domain.core_ids.end());
       });
     std::sort(domain.unit_ids.begin(),
               domain.unit_ids.end(),
               [](dart_global_unit_t a,
                  dart_global_unit_t b) { return a.id < b.id; });
-//  std::sort(domain.core_ids.begin(), domain.core_ids.end());
   }
 }
 
@@ -199,8 +195,7 @@ topology::scope_domain_tags(
   std::for_each(
     vx_range.first, vx_range.second,
     [&](const graph_vertex_t & vx) {
-      if (_domains.at(_graph[vx].domain_tag).scope
-           == scope) {
+      if (_domains.at(_graph[vx].domain_tag).scope == scope) {
         vx_matches.push_back(vx);
       }
     });
@@ -226,10 +221,11 @@ void topology::build_hierarchy(
 
   locality_domain root_domain(team);
 
-  root_domain.scope   = DYLOC_LOCALITY_SCOPE_GLOBAL;
-  root_domain.level   = 0;
-  root_domain.g_index = 0;
-  root_domain.r_index = 0;
+  root_domain.scope     = DYLOC_LOCALITY_SCOPE_GLOBAL;
+  root_domain.level     = 0;
+  root_domain.g_index   = 0;
+  root_domain.r_index   = 0;
+  root_domain.num_cores = 0;
 
   _domains.insert(std::make_pair(".", root_domain));
 
@@ -280,6 +276,9 @@ void topology::build_hierarchy(
       host_topo,
       _domains[node_domain.domain_tag],
       node_domain_vertex);
+
+    _domains[root_domain.domain_tag].num_cores +=
+      _domains[node_domain.domain_tag].num_cores;
   }
 }
 
@@ -290,10 +289,6 @@ void topology::build_node_level(
        graph_vertex_t      & node_domain_vertex) {
   DYLOC_LOG_DEBUG("dylocxx::topology.build_node_level",
                   "node:", node_domain.host);
-  // units located at node:
-  node_domain.unit_ids  = host_topo.unit_ids(node_domain.host);
-  node_domain.num_cores = host_topo.nodes().at(node_domain.host)
-                                           .get().num_cores;
   // modules located at node:
   auto & node_modules   = host_topo.node_modules(node_domain.host);
 
@@ -317,7 +312,8 @@ void topology::build_node_level(
 
     module_domain.unit_ids  = host_topo.unit_ids(module_hostname);
     module_domain.host      = module_hostname;
-    module_domain.num_cores = node_module.get().num_cores;
+    module_domain.num_cores = node_module.get().num_cores /
+                              node_modules.size();
 
     DYLOC_LOG_DEBUG("dylocxx::topology.build_node_level",
                     "add domain:", module_domain);
@@ -468,8 +464,9 @@ void topology::build_module_level(
         module_domain,
         module_scopes[subdomain_gid_idx],
         sd);
-    module_subdomain.host    = module_domain.host;
-    module_subdomain.g_index = module_subdomain_gids[sd];
+    module_subdomain.host      = module_domain.host;
+    module_subdomain.g_index   = module_subdomain_gids[sd];
+    module_subdomain.num_cores = module_domain.num_cores / num_subdomains;
 
     for (auto module_unit_gid : module_domain.unit_ids) {
       dart_team_unit_t module_unit_lid
@@ -516,8 +513,8 @@ void topology::build_module_level(
             module_subdomain,
             DYLOC_LOCALITY_SCOPE_UNIT,
             ud);
-        unit_domain.host    = module_domain.host;
-        unit_domain.g_index = unit_gid.id;
+        unit_domain.host      = module_domain.host;
+        unit_domain.g_index   = unit_gid.id;
 
         unit_domain.unit_ids.push_back(unit_gid);
         unit_domain.num_cores = module_subdomain.num_cores /

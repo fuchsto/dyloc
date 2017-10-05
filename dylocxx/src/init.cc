@@ -63,9 +63,14 @@ const unit_locality & query_unit_locality(
 }
 #endif
 
-topology & team_topology(
+dyloc::topology & team_topology(
   dart_team_t t) {
   return rt.team_topology(t);
+}
+
+const dyloc::host_topology & team_host_topology(
+  dart_team_t t) {
+  return rt.team_host_topology(t);
 }
 
 } // namespace dyloc
