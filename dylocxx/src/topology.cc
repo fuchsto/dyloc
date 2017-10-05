@@ -118,6 +118,7 @@ void topology::update_domain_capacities(const std::string & domain_tag) {
   auto & domain = _domains[domain_tag];
   if (domain.scope != DYLOC_LOCALITY_SCOPE_UNIT) {
     domain.unit_ids.clear();
+    domain.num_cores      = 0;
     auto & domain_vx      = parent_vx_it->second;
     auto   domain_edges   = out_edges(domain_vx, _graph);
     auto   num_subdomains = std::distance(domain_edges.first,
@@ -129,13 +130,13 @@ void topology::update_domain_capacities(const std::string & domain_tag) {
         auto sub_domain_vx          = target(domain_edge, _graph);
         const auto & sub_domain_tag = _graph[sub_domain_vx].domain_tag;
         auto & sub_domain           = _domains[sub_domain_tag];
-        sub_domain.num_cores        = domain.num_cores / num_subdomains;
         // depth-first recurse:
         update_domain_capacities(sub_domain_tag);
         // accumulate:
         domain.unit_ids.insert(domain.unit_ids.begin(),
                                sub_domain.unit_ids.begin(),
                                sub_domain.unit_ids.end());
+        domain.num_cores += sub_domain.num_cores;
       });
     std::sort(domain.unit_ids.begin(),
               domain.unit_ids.end(),

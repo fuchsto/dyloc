@@ -58,6 +58,11 @@ public:
                                               ldom.team != DART_TEAM_NULL
                                               ? ldom.hwinfo().max_threads
                                               : -1;
+    auto  ldom_shcache                      = ldom.host.size() > 0 &&
+                                              ldom.team != DART_TEAM_NULL
+                                              ? ldom.hwinfo().cache_sizes[2] /
+                                                1024
+                                              : -1;
 
     std::ostringstream ldom_sc_s;
     ldom_sc_s << std::string(ldom.level, ' ')
@@ -70,8 +75,9 @@ public:
               << std::left  << std::setw(4)  << ldom.level      << " g:"
               << std::right << std::setw(2)  << ldom.g_index    << " |"
               << std::left  << std::setw(20) << ldom_tag        << " |"
-              << " nc:" << std::right << std::setw(3) << ldom.num_cores  
-              << " nt:" << std::right << std::setw(3) << ldom_maxthreads
+              << " nc:"  << std::right << std::setw(3) << ldom.num_cores  
+              << " nt:"  << std::right << std::setw(3) << ldom_maxthreads
+              << " l3d:" << std::right << std::setw(5) << ldom_shcache << "K"
               << " "
               << "units:"
               << dyloc::make_range(

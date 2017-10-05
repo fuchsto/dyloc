@@ -382,6 +382,26 @@ class topology {
   }
 
   template <class UnaryPredicate>
+  void remove_domains(const std::string & tag, UnaryPredicate pred) {
+    auto & domain = _domains[tag];
+    if (!pred(domain)) {
+      for_each_descendant_inv(
+        tag,
+        [&](const locality_domain & dom) {
+          remove_domains(dom.domain_tag, pred);
+        });
+    } else {
+      DYLOC_LOG_TRACE("dylocxx::topology.remove_domain",
+                      "remove:", tag);
+      _graph[_domain_vertices[tag]].state = vertex_state::hidden;
+      boost::clear_vertex(_domain_vertices[tag], _graph);
+      // boost::remove_vertex(_domain_vertices[tag], _graph);
+      _domains.erase(_domains.find(tag));
+      // _domain_vertices.erase(_domain_vertices.find(tag));
+    }
+  }
+
+  template <class UnaryPredicate>
   void for_each_ancestor(const std::string & tag, UnaryPredicate func) {
     auto & domain_vx = _domain_vertices[tag];
     for (auto domain_edges = in_edges(domain_vx, _graph);
@@ -417,26 +437,6 @@ class topology {
       auto & child    = _domains[_graph[child_vx].domain_tag];
       for_each_descendant_inv(child.domain_tag, func);
       func(child);
-    }
-  }
-
-  template <class UnaryPredicate>
-  void remove_domains(const std::string & tag, UnaryPredicate pred) {
-    auto & domain = _domains[tag];
-    if (!pred(domain)) {
-      for_each_descendant_inv(
-        tag,
-        [&](const locality_domain & dom) {
-          remove_domains(dom.domain_tag, pred);
-        });
-    } else {
-      DYLOC_LOG_TRACE("dylocxx::topology.remove_domain",
-                      "remove:", tag);
-      _graph[_domain_vertices[tag]].state = vertex_state::hidden;
-      boost::clear_vertex(_domain_vertices[tag], _graph);
-      // boost::remove_vertex(_domain_vertices[tag], _graph);
-      _domains.erase(_domains.find(tag));
-      // _domain_vertices.erase(_domain_vertices.find(tag));
     }
   }
 
