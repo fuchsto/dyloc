@@ -64,7 +64,7 @@ typedef enum
 dyloc_locality_scope_t;
 
 /** Maximum size of a host name string in \ref dyloc_hwinfo_t */
-#define DYLOC_LOCALITY_HOST_MAX_SIZE       ((int)(30))
+#define DYLOC_LOCALITY_HOST_MAX_SIZE       ((int)(HOST_NAME_MAX))
 
 /** Maximum size of a domain tag string in \ref dyloc_hwinfo_t */
 #define DYLOC_LOCALITY_DOMAIN_TAG_MAX_SIZE ((int)(32))

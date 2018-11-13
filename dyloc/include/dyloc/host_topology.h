@@ -1,6 +1,8 @@
 #ifndef DYLOC__HOST_TOPOLOGY_H__INCLUDED
 #define DYLOC__HOST_TOPOLOGY_H__INCLUDED
 
+#include <dyloc/common/types.h>
+
 typedef struct
 {
   char                       host[DYLOC_LOCALITY_HOST_MAX_SIZE];
