@@ -26,6 +26,7 @@ rm -Rf $BUILD_DIR/*
         -DCMAKE_EXPORT_COMPILE_COMMANDS=OFF \
         \
         -DENABLE_LOGGING=OFF \
+        -DHWLOC_PREFIX=${HWLOC_BASE} \
         -DENABLE_PAPI=OFF \
         \
         -DPAPI_PREFIX=${PAPI_BASE} \

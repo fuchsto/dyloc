@@ -3,6 +3,7 @@ BUILD_DIR=./build.dev
 
 export DASH_BASE=${HOME}/opt/dash-0.3.0-dev
 export DART_BASE=$DASH_BASE
+export HWLOC_BASE=~/opt/hwloc-2.1
 
 if [ "${PAPI_BASE}" = "" ]; then
   PAPI_BASE=$PAPI_HOME
@@ -30,9 +31,10 @@ rm -Rf $BUILD_DIR/*
         -DBUILD_TESTS=ON \
         \
         -DENABLE_LOGGING=ON \
-        -DENABLE_PAPI=OFF \
+        -DENABLE_PAPI=ON \
         \
         -DPAPI_PREFIX=${PAPI_BASE} \
+        -DHWLOC_PREFIX=${HWLOC_BASE} \
         -DDART_PREFIX=${DART_BASE} \
         \
         -DGTEST_LIBRARY_PATH=${HOME}/opt/gtest/lib \
