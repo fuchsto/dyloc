@@ -1,7 +1,7 @@
 
 BUILD_DIR=./build.dev
 
-export DASH_BASE=${HOME}/opt/dash-0.3.0-dev
+export DASH_BASE=${HOME}/opt/dash-0.4.0-dev
 export DART_BASE=$DASH_BASE
 
 if [ "${PAPI_BASE}" = "" ]; then
