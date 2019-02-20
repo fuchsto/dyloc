@@ -30,7 +30,7 @@ rm -Rf $BUILD_DIR/*
         -DBUILD_TESTS=ON \
         \
         -DENABLE_LOGGING=ON \
-        -DENABLE_PAPI=OFF \
+        -DENABLE_PAPI=ON \
         \
         -DPAPI_PREFIX=${PAPI_BASE} \
         -DDART_PREFIX=${DART_BASE} \
