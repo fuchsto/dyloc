@@ -28,8 +28,8 @@ TEST_F(TopologyTest, DistanceMetric) {
 
   auto & topo = dyloc::team_topology();
 
-  auto domain dom_source = topo.domains()[0];
-  auto domain dom_target = topo.domains()[1];
+  const auto & dom_source = topo.domains().at(".0.0");
+  const auto & dom_target = topo.domains().at(".0.1");
 
   DYLOC_LOG_DEBUG("TopologyTest.DistanceMetric", "Total Distance:");
 

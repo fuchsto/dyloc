@@ -66,6 +66,10 @@ class topology {
     int          distance;
   };
 
+  typedef int             Metric;
+  typedef locality_domain Domain;
+
+
   /*
    * Using boost graph with domain data as external properties, see:
    *
@@ -446,8 +450,12 @@ class topology {
   std::vector<std::string> scope_domain_tags(
          dyloc_locality_scope_t scope) const;
 
-// Jakub TODO
-  void add_distance_metric(std::string metric_name, std::function<int(int)> fn){
+
+  void add_distance_metric(
+        std::string metric_name,
+        std::function<Metric(const Domain && source,
+                             const Domain && target)> fn)
+  {
     _distance_metrics[metric_name]=fn;
   }
   
@@ -461,7 +469,10 @@ class topology {
   }
 
  private:
-  std::map<std::string,std::function<int(int)>> _distance_metrics; 
+  std::map<std::string,
+           std::function<Metric(const Domain && source,
+                                const Domain && target)>
+          > _distance_metrics;
 
   void build_hierarchy(
           dart_team_t           team,

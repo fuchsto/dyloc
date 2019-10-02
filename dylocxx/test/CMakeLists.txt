@@ -94,12 +94,12 @@ foreach (dart_variant ${DART_IMPLEMENTATIONS_LIST})
   )
   set_target_properties(
     ${DYLOCXX_TEST} PROPERTIES
-    CXX_STANDARD 11
+    CXX_STANDARD 14
   )
 
   set_target_properties(
     ${DYLOCXX_TEST} PROPERTIES
-    CXX_STANDARD_REQUIRED 11
+    CXX_STANDARD_REQUIRED 14
   )
 
   DeployBinary(${DYLOCXX_TEST})

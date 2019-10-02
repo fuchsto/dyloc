@@ -13,7 +13,7 @@ endif()
 # Set C++ compiler flags:
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES ".*Clang")
   # using Clang
-  set (CXX_STD_FLAG "--std=c++11"
+  set (CXX_STD_FLAG "--std=c++14"
        CACHE STRING "C++ compiler std flag")
   set (CXX_GDB_FLAG "-g"
        CACHE STRING "C++ compiler (clang++) debug symbols flag")
@@ -26,7 +26,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES ".*Clang")
 
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
   # using GCC
-  set (CXX_STD_FLAG "--std=c++11"
+  set (CXX_STD_FLAG "--std=c++14"
        CACHE STRING "C++ compiler std flag")
   set (CXX_GDB_FLAG "-ggdb3 -rdynamic"
        CACHE STRING "C++ compiler GDB debug symbols flag")
@@ -42,7 +42,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
 
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Intel")
   # using Intel C++
-  set (CXX_STD_FLAG "-std=c++11"
+  set (CXX_STD_FLAG "-std=c++14"
        CACHE STRING "C++ compiler std flag")
 
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "15.0.0")
