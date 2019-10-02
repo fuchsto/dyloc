@@ -1,7 +1,7 @@
 
 BUILD_DIR=./build
 
-export DASH_BASE=${HOME}/opt/dash-0.3.0
+export DASH_BASE=${HOME}/opt/dash-0.4.0
 export DART_BASE=$DASH_BASE
 
 if [ "${PAPI_BASE}" = "" ]; then
@@ -15,13 +15,14 @@ fi
 #                    -DGTEST_INCLUDE_PATH=${HOME}/opt/gtest/include \
 #
 
+INSTALL_BASE="${HOME}/opt/"
 
 mkdir -p $BUILD_DIR
 rm -Rf $BUILD_DIR/*
 
 (cd $BUILD_DIR && \
   cmake -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX=$BUILD_DIR/install/ \
+        -DCMAKE_INSTALL_PREFIX=$INSTALL_BASE/dyloc-0.1.0 \
         \
         -DCMAKE_EXPORT_COMPILE_COMMANDS=OFF \
         \
@@ -34,5 +35,5 @@ rm -Rf $BUILD_DIR/*
         -DGTEST_LIBRARY_PATH=${HOME}/opt/gtest/lib \
         -DGTEST_INCLUDE_PATH=${HOME}/opt/gtest/include \
   .. && \
-  make install)
+  make -j 4 install)
 

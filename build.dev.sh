@@ -16,7 +16,7 @@ fi
 #
 
 
-INSTALL_BASE="$(pwd)/$BUILD_DIR/install"
+INSTALL_BASE="${HOME}/opt/"
 
 mkdir -p $BUILD_DIR
 rm -Rf $BUILD_DIR/*
