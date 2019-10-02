@@ -21,6 +21,32 @@
 namespace dyloc {
 namespace test {
 
+
+// Jakub
+TEST_F(TopologyTest, DistanceMetric) {
+  dyloc::init(&TESTENV.argc, &TESTENV.argv);
+
+  auto & topo = dyloc::team_topology();
+
+  auto domain dom_source = topo.domains()[0];
+  auto domain dom_target = topo.domains()[1];
+
+  DYLOC_LOG_DEBUG("TopologyTest.DistanceMetric", "Total Distance:");
+
+  auto dist_fn = [](const auto & a, const auto & b){ return 10; };
+
+  ASSERT_EQ(10, dist_fn(dom_source, dom_target));
+
+  topo.add_distance_metric("user_metric", dist_fn);
+
+  auto dist_metrics = topo.list_distance_metrics();
+
+  DYLOC_LOG_DEBUG_VAR("TopologyTest.DistanceMetric", dist_metrics);
+
+  dyloc::finalize();
+}
+
+
 TEST_F(TopologyTest, ExcludeDomains) {
   dyloc::init(&TESTENV.argc, &TESTENV.argv);
 
@@ -142,6 +168,8 @@ TEST_F(TopologyTest, ScopeDomains) {
 
   dyloc::finalize();
 }
+
+
 
 } // namespace dyloc
 } // namespace test
