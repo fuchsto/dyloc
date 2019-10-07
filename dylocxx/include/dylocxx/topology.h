@@ -446,7 +446,23 @@ class topology {
   std::vector<std::string> scope_domain_tags(
          dyloc_locality_scope_t scope) const;
 
+// Jakub TODO
+  void add_distance_metric(std::string metric_name, std::function<int(int)> fn){
+    _distance_metrics[metric_name]=fn;
+  }
+  
+  std::string list_distance_metrics(){
+    std::string DMs="";
+    for (auto m : _distance_metrics){
+      DMs +=m.first;
+    }    
+    DYLOC_LOG_DEBUG("Dyloc::Topology.list_distance_metrics ", DMs);
+    return DMs;
+  }
+
  private:
+  std::map<std::string,std::function<int(int)>> _distance_metrics; 
+
   void build_hierarchy(
           dart_team_t           team,
           const host_topology & host_topo);

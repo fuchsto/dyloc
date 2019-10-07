@@ -1,7 +1,7 @@
 
 BUILD_DIR=./build.dev
 
-export DASH_BASE=${HOME}/opt/dash-0.3.0-dev
+export DASH_BASE=${HOME}/opt/dash-0.4.0-dev
 export DART_BASE=$DASH_BASE
 
 if [ "${PAPI_BASE}" = "" ]; then
@@ -30,7 +30,7 @@ rm -Rf $BUILD_DIR/*
         -DBUILD_TESTS=ON \
         \
         -DENABLE_LOGGING=ON \
-        -DENABLE_PAPI=OFF \
+        -DENABLE_PAPI=ON \
         \
         -DPAPI_PREFIX=${PAPI_BASE} \
         -DDART_PREFIX=${DART_BASE} \
